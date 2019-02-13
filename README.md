@@ -1,3 +1,6 @@
+## My multi Twitch template
+![screenshot](https://gist.githubusercontent.com/gregoire78/820a3433779004af57a2b798302d1464/raw/0ddff94cd01381430e69cb837324c513134a46f7/screen2.png)
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
