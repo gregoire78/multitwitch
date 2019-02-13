@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import _ from "lodash";
 import { WidthProvider, Responsive } from "react-grid-layout";
 import './App.css';
+import '../node_modules/react-resizable/css/styles.css';
+import '../node_modules/react-grid-layout/css/styles.css'
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
@@ -23,7 +25,8 @@ class App extends Component {
     this.state = {
       layouts: JSON.parse(JSON.stringify(originalLayouts)),
       pseudos: _.compact(window.location.pathname.split("/")),
-      input: ''
+      input: '',
+      showOverlay: false,
     };
 
     this.onLayoutChange = this.onLayoutChange.bind(this);
@@ -31,6 +34,8 @@ class App extends Component {
     this.onBreakpointChange = this.onBreakpointChange.bind(this);
     this.addPseudo = this.addPseudo.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.showOverlay = this.showOverlay.bind(this);
+    this.hideOverlay = this.hideOverlay.bind(this);
   }
 
   componentWillMount() {
@@ -38,7 +43,7 @@ class App extends Component {
 
   generateDOM() {
    const layout = this.generateLayout(this.state.pseudos);
-    return _.map(layout, function(l,k) {
+    return _.map(layout, (l,k) => {
       return (
         <div key={k} data-grid={l} style={{ padding: 5 }}>
           <iframe
@@ -52,6 +57,7 @@ class App extends Component {
             scrolling="no"
             allowFullScreen={true}
           />
+          <div className="overlay" style={{width:'100%', height:'100%', position: "absolute", top:0, right:0, display: this.state.showOverlay?"block":"none"}}></div>
           {/*<iframe frameborder="0"
             scrolling="no"
             id="chat_embed"
@@ -95,16 +101,18 @@ class App extends Component {
 
   addPseudo(){
     const pseudos = this.state.pseudos;
-    pseudos.push(this.state.input);
-    window.history.replaceState('','',`${window.location}/${this.state.input}`);
-    this.setState({pseudos, input: ''});
+    if(this.state.input.length > 0) {
+      window.history.replaceState('','',`${window.location}${window.location.href.slice(-1) === '/' ? '' : '/'}${this.state.input}`);
+      pseudos.push(this.state.input);
+      this.setState({pseudos, input: ''});
+    }
   }
 
   handleChange(e) {
     this.setState({ input: e.target.value });
   }
 
-  onResize(layout, oldLayoutItem, layoutItem, placeholder) {
+  onResize(layout, oldLayoutItem, layoutItem, placeholder, e, element) {
     // `oldLayoutItem` contains the state of the item before the resize.
     // You can modify `layoutItem` to enforce constraints.
     /*if (layoutItem.h < 3 && layoutItem.w > 2) {
@@ -116,6 +124,14 @@ class App extends Component {
       layoutItem.w = 2;
       placeholder.w = 2;
     }*/
+    console.log(element.parentElement)
+  }
+
+  showOverlay() {
+    this.setState({showOverlay:true})
+  }
+  hideOverlay() {
+    this.setState({showOverlay:false})
   }
 
   render() {
@@ -128,12 +144,16 @@ class App extends Component {
           onResize={this.onResize}
           layouts={this.state.layouts}
           onBreakpointChange={this.onBreakpointChange}
+          onResizeStart={this.showOverlay}
+          onResizeStop={this.hideOverlay}
+          onDragStart={this.showOverlay}
+          onDragStop={this.hideOverlay}
           {...this.props}
         >
           {this.generateDOM()}
         </ResponsiveReactGridLayout>
         <button onClick={this.resetLayout}>Reset Layout</button>
-        <input type="text" value={this.state.input} onChange={ this.handleChange }/><button onClick={this.addPseudo}>Ajouter</button>
+        <input type="text" value={this.state.input} onChange={ this.handleChange }/><button onClick={this.addPseudo} disabled={this.state.input.length <= 0}>Ajouter</button>
       </div>
     );
   }
