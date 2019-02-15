@@ -109,7 +109,7 @@ class App extends Component {
   }
 
   handleChange(e) {
-    this.setState({ input: e.target.value });
+    this.setState({ input: e.target.value.toLowerCase() });
   }
 
   onResize(layout, oldLayoutItem, layoutItem, placeholder, e, element) {
