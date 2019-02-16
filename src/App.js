@@ -99,7 +99,8 @@ class App extends Component {
     //this.props.onLayoutChange(layout);
   }
 
-  addPseudo(){
+  addPseudo(event){
+    event.preventDefault();
     const pseudos = this.state.pseudos;
     if(this.state.input.length > 0) {
       window.history.replaceState('','',`${window.location}${window.location.href.slice(-1) === '/' ? '' : '/'}${this.state.input}`);
@@ -153,7 +154,9 @@ class App extends Component {
           {this.generateDOM()}
         </ResponsiveReactGridLayout>
         <button onClick={this.resetLayout}>Reset Layout</button>
-        <input type="text" value={this.state.input} onChange={ this.handleChange }/><button onClick={this.addPseudo} disabled={this.state.input.length <= 0}>Ajouter</button>
+        <form onSubmit={this.addPseudo}>
+          <input type="text" value={this.state.input} onChange={ this.handleChange } placeholder="pseudo stream"/><button type="submit" disabled={this.state.input.length <= 0}>Ajouter</button>
+        </form>
       </div>
     );
   }
