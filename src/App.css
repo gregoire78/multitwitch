@@ -106,3 +106,21 @@ li b {
   cursor: se-resize;
   background-color: #6441A4 ;
 }
+
+.inner-border {
+  box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    width: 100px;
+    height: 100px;
+    border: 20px solid #f00;
+    background: #00f;
+    margin: 10px;
+}
+
+.header-player {
+  width: 100%;
+  position: absolute;
+  top:0;
+  background: #5a3a93;
+}
