@@ -24,6 +24,7 @@ class App extends Component {
 
     this.state = {
       layouts: JSON.parse(JSON.stringify(originalLayouts)),
+      layout: this.generateLayout(_.compact(window.location.pathname.split("/"))),
       pseudos: _.compact(window.location.pathname.split("/")),
       input: '',
       showOverlay: false,
@@ -48,10 +49,9 @@ class App extends Component {
   }
 
   generateDOM() {
-   const layout = this.generateLayout(this.state.pseudos);
-    return _.map(layout, (l,k) => {
+    return _.map(this.state.layout, (l,k) => {
       return (
-        <div key={k} data-grid={l} style={this.state.isEditMode?{border:'5px solid #7354ad', outline: '5px dashed #5a3a93', outlineOffset: '-5px', cursor:'grab'}:''}>
+        <div key={k} data-grid={l} style={this.state.isEditMode?{border:'5px solid #7354ad', outline: '5px dashed #5a3a93', outlineOffset: '-5px', cursor:'grab'}:{}}>
           {/*<div className="header-player" style={{display: this.state.isEditMode?"block":"none"}}>{l.channel}</div>*/}
           {/*<iframe
             title={k}
@@ -64,10 +64,7 @@ class App extends Component {
             scrolling="no"
             allowFullScreen={true}
           />*/}
-         <Twitch style={{
-            height: "calc(100%)",
-            width: "calc(100%)"
-          }} channel={l.channel} targetID={`twitch-embed-${l.channel}`}/>
+         <Twitch style={{ height: "calc(100%)", width: "calc(100%)"}} channel={l.channel} targetID={`twitch-embed-${l.channel}`}/>
           {/*<iframe frameborder="0"
             scrolling="no"
             id="chat_embed"
@@ -76,7 +73,7 @@ class App extends Component {
             width="250">
           </iframe>*/}
           <div className="overlay" style={{width:'100%', height:'100%', position: "absolute", top:0, right:0, display: this.state.showOverlay?"block":"none"}}></div>
-          <button
+          {/*<button
             className="remove"
             style={{
               position: "absolute",
@@ -84,10 +81,10 @@ class App extends Component {
               top: 0,
               cursor: "pointer"
             }}
-            onClick={() => this.onRemoveItem(k)}
+            onClick={() => this.onRemoveItem(l.channel)}
           >
             x
-          </button>
+          </button>*/}
         </div>
       );
     });
@@ -109,10 +106,14 @@ class App extends Component {
     });
   }
 
-  onRemoveItem(i) {
-    console.log("removing", i);
-    this.setState({ pseudos: _.reject(this.state.pseudos, [i]) });
-    console.log(this.state.pseudos)
+  onRemoveItem(index) {
+    console.log("removing", index);
+    let pseudos = _.filter(this.state.pseudos, ( obj ) => {
+      return obj !== index;
+    });
+    let layout = _.filter(this.state.layout, (obj) => {return obj.channel !== index});
+    this.setState({ pseudos, layout});
+    console.log(pseudos, layout)
   }
 
   onBreakpointChange(newBreakpoint, newCols){
@@ -186,8 +187,8 @@ class App extends Component {
     return (
       <div>
         <ResponsiveReactGridLayout
-          margin={[5,5]}
-          containerPadding={[5,5]}
+          margin={[10,10]}
+          containerPadding={[10,10]}
           onLayoutChange={this.onLayoutChange}
           onResize={this.onResize}
           layouts={this.state.layouts}
