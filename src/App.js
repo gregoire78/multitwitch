@@ -28,6 +28,7 @@ class App extends Component {
       input: '',
       showOverlay: false,
       isEditMode: false,
+      mounted: false
     };
 
     this.onLayoutChange = this.onLayoutChange.bind(this);
@@ -42,7 +43,8 @@ class App extends Component {
     this.onDragStop = this.onDragStop.bind(this);
   }
 
-  componentWillMount() {
+  componentDidMount() {
+    this.setState({ mounted: true });
   }
 
   generateDOM() {
@@ -62,7 +64,7 @@ class App extends Component {
             scrolling="no"
             allowFullScreen={true}
           />*/}
-          <Twitch style={{
+         <Twitch style={{
             height: "calc(100%)",
             width: "calc(100%)"
           }} channel={l.channel} targetID={`twitch-embed-${l.channel}`}/>
@@ -74,7 +76,18 @@ class App extends Component {
             width="250">
           </iframe>*/}
           <div className="overlay" style={{width:'100%', height:'100%', position: "absolute", top:0, right:0, display: this.state.showOverlay?"block":"none"}}></div>
-         
+          <button
+            className="remove"
+            style={{
+              position: "absolute",
+              right: "2px",
+              top: 0,
+              cursor: "pointer"
+            }}
+            onClick={() => this.onRemoveItem(k)}
+          >
+            x
+          </button>
         </div>
       );
     });
@@ -87,13 +100,19 @@ class App extends Component {
       const h = 14;
       return {
         x: Math.floor((i * 12/2) % 12),
-        y: Math.floor(i / 6),
+        y: Infinity,
         w: w,
         h: h,
         i: i.toString(),
         channel: item
       };
     });
+  }
+
+  onRemoveItem(i) {
+    console.log("removing", i);
+    this.setState({ pseudos: _.reject(this.state.pseudos, [i]) });
+    console.log(this.state.pseudos)
   }
 
   onBreakpointChange(newBreakpoint, newCols){
@@ -177,6 +196,7 @@ class App extends Component {
           onResizeStop={this.hideOverlay}
           onDragStart={this.onDragStart}
           onDragStop={this.onDragStop}
+          measureBeforeMount={true}
           {...this.props}
         >
           {this.generateDOM()}
