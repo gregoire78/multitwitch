@@ -2,11 +2,17 @@ import React, { Component } from 'react';
 import _ from "lodash";
 import { WidthProvider, Responsive } from "react-grid-layout";
 import Twitch from './Twitch';
+
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTimes } from '@fortawesome/free-solid-svg-icons'
+
 import '../node_modules/react-resizable/css/styles.css';
 import '../node_modules/react-grid-layout/css/styles.css'
 import './App.css';
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
+library.add(faTimes)
 
 class App extends Component {
   static defaultProps = {
@@ -54,7 +60,7 @@ class App extends Component {
     return _.map(this.state.layout, (l,k) => {
       return (
         <div key={l.i} data-grid={l} style={this.state.isEditMode?{border:'5px solid #7354ad', outline: '5px dashed #5a3a93', outlineOffset: '-5px', cursor:'grab'}:''}>
-          {/*<div className="header-player" style={{display: this.state.isEditMode?"block":"none"}}>{l.channel}</div>*/}
+          <div className="header-player" style={{display: this.state.isEditMode?"block":"none"}}>{l.channel}</div>
           {/*<iframe
             title={k}
             style={{
@@ -81,11 +87,13 @@ class App extends Component {
               position: "absolute",
               right: 0,
               top: 0,
-              cursor: "pointer"
+              cursor: "pointer",
+              backgroundColor: "#6441A4",
+              border: "none"
             }}
             onClick={this.onRemoveItem.bind(this, l)}
           >
-            x
+            <FontAwesomeIcon icon="times" />
           </button>
         </div>
       );
