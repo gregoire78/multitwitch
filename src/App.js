@@ -62,6 +62,7 @@ class App extends Component {
     document.body.style.backgroundPosition = "center";
     document.body.style.backgroundRepeat = "no-repeat";
     document.body.style.backgroundSize = "contain";
+    document.body.style.backgroundAttachment = "fixed";
     this.setState({ mounted: true });
   }
 
