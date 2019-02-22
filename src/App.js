@@ -207,7 +207,6 @@ class App extends Component {
             <button onClick={this.onToogleCollapse}><FontAwesomeIcon icon={this.state.isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
           </header>
         </CSSTransition>
-        
 
         {this.state.pseudos.length > 0 ?
         <ResponsiveReactGridLayout

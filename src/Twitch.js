@@ -26,5 +26,6 @@ Twitch.defaultProps = {
     targetID: 'twitch-embed',
     width: '100%',
     height: '100%',
-    theme: 'dark'
+    theme: 'dark',
+    layout: 'video-with-chat'
 }

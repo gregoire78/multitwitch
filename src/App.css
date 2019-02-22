@@ -2,6 +2,7 @@ html {height: 100%;}
 body {
   background: #5a3a93;/*#6441A4;*/
   overflow-y: scroll;
+  overflow-x: hidden;
   padding: 0;
   margin: 0;
 }
@@ -145,7 +146,7 @@ li b {
   width: 100%;
   position: absolute;
   top:0;
-  background: #5a3a93;
+  background: transparent;
   height: 24px;
 }
 
