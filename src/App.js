@@ -2,17 +2,20 @@ import React, { Component } from 'react';
 import _ from "lodash";
 import { WidthProvider, Responsive } from "react-grid-layout";
 import Twitch from './Twitch';
+import MyIcon from './Combo_Purple_RGB.svg'
+
+import { CSSTransition } from 'react-transition-group';
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTimes, faEdit, faLayerGroup, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft } from '@fortawesome/free-solid-svg-icons'
 
 import '../node_modules/react-resizable/css/styles.css';
 import '../node_modules/react-grid-layout/css/styles.css'
 import './App.css';
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
-library.add(faTimes, faEdit, faLayerGroup, faPlus)
+library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft)
 
 class App extends Component {
   static defaultProps = {
@@ -36,8 +39,9 @@ class App extends Component {
       pseudos: urlparse,
       input: '',
       showOverlay: false,
-      isEditMode: false,
-      mounted: false
+      isEditMode: true,
+      mounted: false,
+      isCollapse: false
     };
 
     this.onLayoutChange = this.onLayoutChange.bind(this);
@@ -47,12 +51,17 @@ class App extends Component {
     this.handleChange = this.handleChange.bind(this);
     this.showOverlay = this.showOverlay.bind(this);
     this.hideOverlay = this.hideOverlay.bind(this);
-    this.onEditChange = this.onEditChange.bind(this);
     this.onDragStart = this.onDragStart.bind(this);
     this.onDragStop = this.onDragStop.bind(this);
+    this.handleEdit = this.handleEdit.bind(this);
+    this.onToogleCollapse = this.onToogleCollapse.bind(this);
   }
 
   componentDidMount() {
+    document.body.style.backgroundImage = "url("+MyIcon+")";
+    document.body.style.backgroundPosition = "center";
+    document.body.style.backgroundRepeat = "no-repeat";
+    document.body.style.backgroundSize = "contain";
     this.setState({ mounted: true });
   }
 
@@ -60,7 +69,7 @@ class App extends Component {
     return _.map(this.state.layout, (l,k) => {
       return (
         <div key={l.i} data-grid={l} style={this.state.isEditMode?{border:'5px solid #7354ad', outline: '5px dashed #5a3a93', outlineOffset: '-5px', cursor:'grab'}:''}>
-          <div className="header-player" style={{display: this.state.isEditMode?"block":"none", color: "white"}}>{l.channel}</div>
+          <div className="header-player" style={{display: this.state.isEditMode?"block":"none", color: "white", textAlign: "center"}}>{l.channel}</div>
           <Twitch style={{ height: "calc(100%)", width: "calc(100%)"}} channel={l.channel} targetID={`twitch-embed-${l.channel}`}/>
           <div className="overlay" style={{width:'100%', height:'100%', position: "absolute", top:0, right:0, display: this.state.showOverlay?"block":"none"}}></div>
           <button
@@ -155,12 +164,10 @@ class App extends Component {
     this.setState({showOverlay:false})
   }
 
-  onEditChange(e) {
-    if(e.target.checked){
-      this.setState({isEditMode: true});
-    } else {
-      this.setState({isEditMode: false});
-    }
+  handleEdit() {
+    this.setState(prevState => ({
+      isEditMode: !prevState.isEditMode
+    }));
   }
 
   onDragStart(layout, oldItem, newItem, placeholder, e, element) {
@@ -173,17 +180,33 @@ class App extends Component {
     element.style.cursor = "grab";
   }
 
+  onToogleCollapse() {
+    this.setState(prevState => ({
+      isCollapse: !prevState.isCollapse
+    }));
+  }
+
   render() {
     return (
       <div>
-        <header style={{position: "fixed", zIndex: 2, top: 0, left: 0}}>
-          <form onSubmit={this.addPseudo} style={{display: "inline-block"}}>
-            <input type="text" value={this.state.input} onChange={ this.handleChange } placeholder="pseudo stream"/>
-            <button type="submit" disabled={this.state.input.length <= 0 || this.state.pseudos.find((v,k) => v === this.state.input)}><FontAwesomeIcon icon="plus" /></button>
-          </form>
-          <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" /></button>
-          <label htmlFor="edit-mode">{/*<FontAwesomeIcon icon="edit" />*/}</label><input onChange={this.onEditChange} type="checkbox" name="edit-mode" id="edit-mode"/>
-        </header>
+        <CSSTransition
+          in={this.state.isCollapse}
+          classNames="header"
+          timeout={300}
+        >
+          <header>
+            <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" /></button>
+            <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={this.state.isEditMode ? "black" : "grey"} /></button>
+
+            <form onSubmit={this.addPseudo}>
+              <input type="text" value={this.state.input} onChange={ this.handleChange } placeholder="pseudo stream"/>
+              <button type="submit" disabled={this.state.input.length <= 0 || this.state.pseudos.find((v,k) => v === this.state.input)}><FontAwesomeIcon icon="plus" /></button>
+            </form>
+
+            <button onClick={this.onToogleCollapse}><FontAwesomeIcon icon={this.state.isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
+          </header>
+        </CSSTransition>
+        
 
         {this.state.pseudos.length > 0 ?
         <ResponsiveReactGridLayout

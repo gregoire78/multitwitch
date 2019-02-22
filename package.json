@@ -10,6 +10,7 @@
     "react-dom": "^16.8.1",
     "react-grid-layout": "^0.16.6",
     "react-scripts": "2.1.4",
+    "react-transition-group": "^2.5.3",
     "react-twitch-embed-video": "^1.0.1"
   },
   "scripts": {
