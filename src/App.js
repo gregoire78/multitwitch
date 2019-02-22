@@ -5,14 +5,14 @@ import Twitch from './Twitch';
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTimes, faEdit, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faEdit, faLayerGroup, faPlus } from '@fortawesome/free-solid-svg-icons'
 
 import '../node_modules/react-resizable/css/styles.css';
 import '../node_modules/react-grid-layout/css/styles.css'
 import './App.css';
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
-library.add(faTimes, faEdit, faLayerGroup)
+library.add(faTimes, faEdit, faLayerGroup, faPlus)
 
 class App extends Component {
   static defaultProps = {
@@ -60,7 +60,7 @@ class App extends Component {
     return _.map(this.state.layout, (l,k) => {
       return (
         <div key={l.i} data-grid={l} style={this.state.isEditMode?{border:'5px solid #7354ad', outline: '5px dashed #5a3a93', outlineOffset: '-5px', cursor:'grab'}:''}>
-          <div className="header-player" style={{display: this.state.isEditMode?"block":"none"}}>{l.channel}</div>
+          <div className="header-player" style={{display: this.state.isEditMode?"block":"none", color: "white"}}>{l.channel}</div>
           <Twitch style={{ height: "calc(100%)", width: "calc(100%)"}} channel={l.channel} targetID={`twitch-embed-${l.channel}`}/>
           <div className="overlay" style={{width:'100%', height:'100%', position: "absolute", top:0, right:0, display: this.state.showOverlay?"block":"none"}}></div>
           <button
@@ -176,11 +176,13 @@ class App extends Component {
   render() {
     return (
       <div>
-        <header style={{textAlign: "center", background: "white"}}>
-          <form onSubmit={this.addPseudo}>
-            <input type="text" value={this.state.input} onChange={ this.handleChange } placeholder="pseudo stream"/><button type="submit" disabled={this.state.input.length <= 0 || this.state.pseudos.find((v,k) => v === this.state.input)}>Ajouter</button>
+        <header style={{position: "fixed", zIndex: 2, top: 0, left: 0}}>
+          <form onSubmit={this.addPseudo} style={{display: "inline-block"}}>
+            <input type="text" value={this.state.input} onChange={ this.handleChange } placeholder="pseudo stream"/>
+            <button type="submit" disabled={this.state.input.length <= 0 || this.state.pseudos.find((v,k) => v === this.state.input)}><FontAwesomeIcon icon="plus" /></button>
           </form>
-          <label htmlFor="edit-mode"><FontAwesomeIcon icon="edit" /></label><input onChange={this.onEditChange} type="checkbox" name="edit-mode" id="edit-mode"/><button onClick={this.resetLayout}>Reset <FontAwesomeIcon icon="layer-group" /></button>
+          <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" /></button>
+          <label htmlFor="edit-mode">{/*<FontAwesomeIcon icon="edit" />*/}</label><input onChange={this.onEditChange} type="checkbox" name="edit-mode" id="edit-mode"/>
         </header>
 
         {this.state.pseudos.length > 0 ?
