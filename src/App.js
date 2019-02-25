@@ -70,7 +70,7 @@ class App extends Component {
     return _.map(this.state.layout, (l,k) => {
       return (
         <div key={l.i} data-grid={l} style={this.state.isEditMode?{padding:'5px', outline: '5px dashed #5a3a93', outlineOffset: '-5px', cursor:'grab'}:''}>
-          <div className="header-player" style={{marginTop: this.state.isEditMode?"5px":"0"}}>{this.state.isEditMode?l.channel.toUpperCase():''}</div>
+          <div className="header-player" style={{marginTop: this.state.isEditMode?"5px":"0"}}>{this.state.isEditMode?l.channel:''}</div>
           <Twitch style={{ height: "calc(100%)", width: "calc(100%)"}} channel={l.channel} targetID={`twitch-embed-${l.channel}`} layout="video-with-chat"/>
           <div className="overlay" style={{width:'100%', height:'100%', position: "absolute", top:0, right:0, display: this.state.showOverlay?"block":"none"}}></div>
           <button
