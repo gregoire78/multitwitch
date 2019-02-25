@@ -69,9 +69,9 @@ class App extends Component {
   generateDOM() {
     return _.map(this.state.layout, (l,k) => {
       return (
-        <div key={l.i} data-grid={l} style={this.state.isEditMode?{border:'5px solid #7354ad', outline: '5px dashed #5a3a93', outlineOffset: '-5px', cursor:'grab'}:''}>
-          <div className="header-player" style={{display: this.state.isEditMode?"block":"none", color: "white", textAlign: "center"}}>{l.channel}</div>
-          <Twitch style={{ height: "calc(100%)", width: "calc(100%)"}} channel={l.channel} targetID={`twitch-embed-${l.channel}`}/>
+        <div key={l.i} data-grid={l} style={this.state.isEditMode?{padding:'5px', outline: '5px dashed #5a3a93', outlineOffset: '-5px', cursor:'grab'}:''}>
+          <div className="header-player" style={{marginTop: this.state.isEditMode?"5px":"0"}}>{this.state.isEditMode?l.channel.toUpperCase():''}</div>
+          <Twitch style={{ height: "calc(100%)", width: "calc(100%)"}} channel={l.channel} targetID={`twitch-embed-${l.channel}`} layout="video-with-chat"/>
           <div className="overlay" style={{width:'100%', height:'100%', position: "absolute", top:0, right:0, display: this.state.showOverlay?"block":"none"}}></div>
           <button
             className="remove"
@@ -80,8 +80,12 @@ class App extends Component {
               right: 0,
               top: 0,
               cursor: "pointer",
-              backgroundColor: "#6441A4",
-              border: "none"
+              color: "rgba(255, 255, 255, 0.6)",
+              backgroundColor: this.state.isEditMode?"#5a3a93":"transparent",
+              border: "none",
+              width: "20px",
+              height: "20px",
+              borderRadius: this.state.isEditMode?"0 0 0 8px":"0"
             }}
             onClick={this.onRemoveItem.bind(this, l)}
           >
@@ -103,7 +107,8 @@ class App extends Component {
         w: w,
         h: h,
         i: item,
-        channel: item
+        channel: item,
+        draggableHandle: ".react-grid-dragHandleExample"
       };
     });
   }
@@ -144,6 +149,7 @@ class App extends Component {
   }
 
   onResize(layout, oldLayoutItem, layoutItem, placeholder, e, element) {
+    element.style.cursor = "se-resize";
     // `oldLayoutItem` contains the state of the item before the resize.
     // You can modify `layoutItem` to enforce constraints.
     /*if (layoutItem.h < 3 && layoutItem.w > 2) {
@@ -200,7 +206,7 @@ class App extends Component {
             <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={this.state.isEditMode ? "black" : "grey"} /></button>
 
             <form onSubmit={this.addPseudo}>
-              <input type="text" value={this.state.input} onChange={ this.handleChange } placeholder="pseudo stream"/>
+              <input type="text" value={this.state.input} onChange={ this.handleChange } placeholder="channel twitch"/>
               <button type="submit" disabled={this.state.input.length <= 0 || this.state.pseudos.find((v,k) => v === this.state.input)}><FontAwesomeIcon icon="plus" /></button>
             </form>
 
