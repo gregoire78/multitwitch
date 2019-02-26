@@ -13,7 +13,7 @@ class TwitchEmbedVideo extends PureComponent {
         /** Optional for VOD embeds; otherwise, required. Name of the chat room and channel to stream. */
         channel: PropTypes.string.isRequired,
         /** ID of a VOD to play. Chat replay is not supported. */
-        video: PropTypes.string.isRequired,
+        video: PropTypes.string,
         /** Width of video embed including chat */
         width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         /** Maximum width of the rendered element, in pixels. This can be expressed as a percentage, by passing a string like 100% */
@@ -58,6 +58,14 @@ class TwitchEmbedVideo extends PureComponent {
         layout: 'video-with-chat'
     };
 
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            layout: this.props.layout
+        }
+    }
+
     componentDidMount() {
         let embed;
         if (window.Twitch && window.Twitch.Embed) {
@@ -75,6 +83,14 @@ class TwitchEmbedVideo extends PureComponent {
             });
 
             document.body.appendChild(script);
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if((this.props.layout === "video" || this.props.layout === "video-with-chat") && this.props.layout !== this.state.layout) {
+            this.setState({layout: this.props.layout})
+            document.getElementById(this.props.targetID).innerHTML = "";
+            new window.Twitch.Embed(this.props.targetID, { ...this.props });
         }
     }
 

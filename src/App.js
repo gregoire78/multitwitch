@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import _ from "lodash";
 import { WidthProvider, Responsive } from "react-grid-layout";
-import Twitch from './Twitch';
+//import Twitch from './Twitch';
 import MyIcon from './Combo_Purple_RGB.svg'
 
 import { CSSTransition } from 'react-transition-group';
@@ -13,9 +13,10 @@ import { faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubl
 import '../node_modules/react-resizable/css/styles.css';
 import '../node_modules/react-grid-layout/css/styles.css'
 import './App.css';
+import GridTwitch from './GridTwitch';
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
-library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft)
+library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft);
 
 class App extends Component {
   static defaultProps = {
@@ -55,6 +56,7 @@ class App extends Component {
     this.onDragStop = this.onDragStop.bind(this);
     this.handleEdit = this.handleEdit.bind(this);
     this.onToogleCollapse = this.onToogleCollapse.bind(this);
+    this.onRemoveItem = this.onRemoveItem.bind(this);
   }
 
   componentDidMount() {
@@ -66,7 +68,7 @@ class App extends Component {
     this.setState({ mounted: true });
   }
 
-  generateDOM() {
+  /*generateDOM() {
     return _.map(this.state.layout, (l,k) => {
       return (
         <div key={l.i} data-grid={l} style={this.state.isEditMode?{padding:'5px', outline: '5px dashed #5a3a93', outlineOffset: '-5px', cursor:'grab'}:''}>
@@ -94,7 +96,7 @@ class App extends Component {
         </div>
       );
     });
-  }
+  }*/
 
   generateLayout(pseudos) {
     //const p = this.props;
@@ -229,7 +231,14 @@ class App extends Component {
           measureBeforeMount={true}
           {...this.props}
         >
-          {this.generateDOM()}
+          {_.map(this.state.layout, (l,k) => {
+            return (
+              <div key={l.i} data-grid={l} style={this.state.isEditMode?{padding:'5px', outline: '5px dashed #5a3a93', outlineOffset: '-5px'}:''}>
+                <GridTwitch isEditMode={this.state.isEditMode} showOverlay={this.state.showOverlay} l={l} onRemoveItem={this.onRemoveItem} />
+              </div>
+            )
+          })
+          }
         </ResponsiveReactGridLayout> : ''}
       </div>
     );
