@@ -1,7 +1,9 @@
 @import url('https://fonts.googleapis.com/css?family=Acme');
 
 *{  outline: none;}
+
 html {height: 100%;}
+
 body {
   background: #5a3a93;/*#6441A4;*/
   overflow-y: scroll;
@@ -9,28 +11,70 @@ body {
   padding: 0;
   margin: 0;
 }
+
 button {
   height: 24px;
+  width: 24px;
   vertical-align: top;
   border: none;
+  cursor: pointer;
 }
+
+button:hover {
+  background: rgb(130, 107, 173);
+  color: white;
+}
+
 input {
   height: 24px;
+  width: 170px;
   padding: 0 5px;
   margin: 0;
   vertical-align: top;
   border: none;
 }
+hr {
+  padding: 0;
+  margin: 0;
+  height: 2px;
+  border: none;
+  background-color: #5a3a93;
+}
 form {
   display: inline;
 }
+
 header {
-  border: 1px solid white;
   position: fixed;
-  z-index: 2;
+  z-index: 1000;
   top: 0;
   transform: scale(1);
 }
+header nav {
+  border: 1px solid white;
+}
+
+.streams {
+  background: #6441A4;
+  max-width: 252px;
+  border: 5px dashed #5a3a93;
+  border-top: none;
+  border-left: none;
+  color: white;
+}
+.streams p {
+  font-family: 'Acme', cursive;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.streams p:hover {
+  color: white;
+  padding: 0;
+  margin: 0;
+  background-color: #5a3a93;
+}
+
 #content {
   width: 100%;
 }
@@ -174,11 +218,11 @@ li b {
   transform: translateX(0);
 }
 .header-enter-active {
-  transform: translateX(-255px);
+  transform: translateX(-252px);
   transition: all 300ms ease-out;
 }
 .header-exit, .header-enter-done {
-  transform: translateX(-255px);
+  transform: translateX(-252px);
 }
 .header-exit-active {
   transform: translateX(0);
