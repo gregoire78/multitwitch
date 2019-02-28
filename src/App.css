@@ -27,6 +27,11 @@ button:hover {
   color: white;
 }
 
+button[type="submit"]:disabled {
+  color: lightgrey;
+  pointer-events: none;
+}
+
 input {
   height: 24px;
   width: 170px;

@@ -211,6 +211,7 @@ class App extends Component {
     this.setState(prevState => ({
       isCollapse: !prevState.isCollapse
     }));
+    if(!this.state.isCollapse && this.state.isAuth) {this.getFollowedStream()}
   }
 
   /*openPopup() {
@@ -271,7 +272,7 @@ class App extends Component {
         { opened &&
           <NewWindow
             onUnload={this.handleClosePopup.bind(this)}
-            url={`https://id.twitch.tv/oauth2/authorize?client_id=wkyn43dnz5yumupaqv8vwkz1j4thi1&redirect_uri=https://twitch.gregoirejoncour.xyz/&response_type=token&scope=user_read`}
+            url={`https://id.twitch.tv/oauth2/authorize?client_id=znypnycqt375st6jwrujwy0x4qixgz&redirect_uri=http://localhost:3000/&response_type=token&scope=user_read`}
             features={ { left: (window.innerWidth / 2) - (600 / 2), top: (window.innerHeight / 2) - (600 / 2), width: 600, height: 600 } }
           >
             <h5>Here is a textbox. Type something in it and see it mirror to the parent.</h5>
@@ -298,23 +299,23 @@ class App extends Component {
               <button onClick={this.logout} title="Logout"><FontAwesomeIcon icon="sign-out-alt" /></button>
               }
               <button onClick={this.onToogleCollapse}><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
-
             </nav>
+
             {(!_.isEmpty(streams) && isEditMode) &&
             <nav className="streams">
                 <p style={{textAlign: "center", background: "#b34646", cursor: "default"}}>Streams on air</p>
                 {_.map(streams, (v,k) => {
                   return (
-                    <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} title={v.channel.status}><span role="img" aria-label="on air">🔴</span>{v.channel.display_name}</p>
+                    <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} title={v.channel.status}><span role="img" aria-label="on air">🔴</span>{v.channel.display_name}{v.channel.mature && "🔞"}</p>
                   )
                 })}
-                <IntervalTimer
-                  timeout={1000}
-                  callback={this.getFollowedStream.bind(this)}
-                  enabled={!isCollapse}
-                  repeat={true}
-                />
             </nav>}
+            <IntervalTimer
+              timeout={10000}
+              callback={this.getFollowedStream.bind(this)}
+              enabled={!isCollapse && isEditMode}
+              repeat={true}
+            />
           </header>
         </CSSTransition>
 
