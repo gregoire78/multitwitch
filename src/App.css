@@ -18,6 +18,8 @@ button {
   vertical-align: top;
   border: none;
   cursor: pointer;
+  background: #b34646;
+  color: white;
 }
 
 button:hover {
@@ -46,21 +48,25 @@ form {
 
 header {
   position: fixed;
-  z-index: 1000;
+  z-index: 2;
   top: 0;
   transform: scale(1);
 }
 header nav {
-  border: 1px solid white;
+  /*border: 1px solid white;*/
 }
 
 .streams {
   background: #6441A4;
   max-width: 252px;
-  border: 5px dashed #5a3a93;
+  border: 5px dashed #b34646;
   border-top: none;
   border-left: none;
   color: white;
+  opacity: 1;
+}
+header:hover .streams{
+  opacity: 1;
 }
 .streams p {
   font-family: 'Acme', cursive;
@@ -72,7 +78,7 @@ header nav {
   color: white;
   padding: 0;
   margin: 0;
-  background-color: #5a3a93;
+  background-color: #b34646;
 }
 
 #content {

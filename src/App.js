@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import _ from "lodash";
 import NewWindow from 'react-new-window';
 import axios from 'axios';
+import IntervalTimer from 'react-interval-timer';
 import { WidthProvider, Responsive } from "react-grid-layout";
 //import Twitch from './Twitch';
 import MyIcon from './Combo_Purple_RGB.svg'
@@ -219,8 +220,8 @@ class App extends Component {
     const url = `https://id.twitch.tv/oauth2/authorize?client_id=wkyn43dnz5yumupaqv8vwkz1j4thi1&redirect_uri=http://localhost:3000/&response_type=token&scope=user_read`
 
     return window.open(url, '',
-      `toolbar=no, location=no, directories=no, status=no, menubar=no, 
-      scrollbars=no, resizable=no, copyhistory=no, width=${width}, 
+      `toolbar=no, location=no, directories=no, status=no, menubar=no,
+      scrollbars=no, resizable=no, copyhistory=no, width=${width},
       height=${height}, top=${top}, left=${left}`
     )
   }*/
@@ -242,11 +243,11 @@ class App extends Component {
   }
 
   getFollowedStream() {
-    axios.get(`https://api.twitch.tv/kraken/streams/followed`, { 
-      headers: { 
+    axios.get(`https://api.twitch.tv/kraken/streams/followed`, {
+      headers: {
         'Authorization': `OAuth ${localStorage.getItem('token')}`,
-        'Client-ID': 'wkyn43dnz5yumupaqv8vwkz1j4thi1' 
-      } 
+        'Client-ID': 'wkyn43dnz5yumupaqv8vwkz1j4thi1'
+      }
     } ).then(res => {
         const streams = res.data.streams;
         this.setState({ streams });
@@ -270,7 +271,7 @@ class App extends Component {
         { opened &&
           <NewWindow
             onUnload={this.handleClosePopup.bind(this)}
-            url={`https://id.twitch.tv/oauth2/authorize?client_id=wkyn43dnz5yumupaqv8vwkz1j4thi1&redirect_uri=http://localhost:3000/&response_type=token&scope=user_read`}
+            url={`https://id.twitch.tv/oauth2/authorize?client_id=wkyn43dnz5yumupaqv8vwkz1j4thi1&redirect_uri=https://twitch.gregoirejoncour.xyz/&response_type=token&scope=user_read`}
             features={ { left: (window.innerWidth / 2) - (600 / 2), top: (window.innerHeight / 2) - (600 / 2), width: 600, height: 600 } }
           >
             <h5>Here is a textbox. Type something in it and see it mirror to the parent.</h5>
@@ -285,27 +286,34 @@ class App extends Component {
           <header>
             <nav>
               <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" /></button>
-              <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={isEditMode ? "black" : "grey"} /></button>
+              <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={isEditMode ? "lightgrey" : ''} /></button>
 
               <form onSubmit={this.addPseudo}>
                 <input type="text" value={input} onChange={ this.handleChange } placeholder="channel twitch"/>
                 <button type="submit" disabled={input.length <= 0 || pseudos.find((v,k) => v === input)}><FontAwesomeIcon icon="plus" /></button>
               </form>
 
-              {!isAuth ? 
-              <button onClick={this.handleWindow} title="Login to twitch account"><FontAwesomeIcon icon={["fab","twitch"]} color="#6441A4" /></button> : 
-              <button onClick={this.logout} title="Logout"><FontAwesomeIcon icon="sign-out-alt" color="#6441A4" /></button>
+              {!isAuth ?
+              <button onClick={this.handleWindow} title="Login to twitch account"><FontAwesomeIcon icon={["fab","twitch"]} /></button> :
+              <button onClick={this.logout} title="Logout"><FontAwesomeIcon icon="sign-out-alt" /></button>
               }
               <button onClick={this.onToogleCollapse}><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
-              
+
             </nav>
-            {!_.isEmpty(streams) && isEditMode && <nav className="streams">
-                <p style={{textAlign: "center", background: "#5a3a93"}}>Streams on air</p>
+            {(!_.isEmpty(streams) && isEditMode) &&
+            <nav className="streams">
+                <p style={{textAlign: "center", background: "#b34646", cursor: "default"}}>Streams on air</p>
                 {_.map(streams, (v,k) => {
                   return (
-                    <p key={k} onClick={this.addFollow.bind(this, v.channel.name)}><span role="img" aria-label="on air">🔴</span>{v.channel.display_name}</p>
+                    <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} title={v.channel.status}><span role="img" aria-label="on air">🔴</span>{v.channel.display_name}</p>
                   )
                 })}
+                <IntervalTimer
+                  timeout={1000}
+                  callback={this.getFollowedStream.bind(this)}
+                  enabled={!isCollapse}
+                  repeat={true}
+                />
             </nav>}
           </header>
         </CSSTransition>
