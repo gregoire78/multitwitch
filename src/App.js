@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import _ from "lodash";
 import NewWindow from 'react-new-window';
 import axios from 'axios';
+import moment from 'moment';
+import localization from 'moment/locale/fr';
 import IntervalTimer from 'react-interval-timer';
 import { WidthProvider, Responsive } from "react-grid-layout";
 //import Twitch from './Twitch';
@@ -11,7 +13,7 @@ import { CSSTransition } from 'react-transition-group';
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faSignOutAlt, faHandshake, faClock } from '@fortawesome/free-solid-svg-icons'
 import { faTwitch } from '@fortawesome/free-brands-svg-icons';
 
 import '../node_modules/react-resizable/css/styles.css';
@@ -20,7 +22,8 @@ import './App.css';
 import GridTwitch from './GridTwitch';
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
-library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt);
+library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt, faHandshake, faClock);
+moment.locale('fr', localization);
 
 class App extends Component {
   static defaultProps = {
@@ -306,7 +309,9 @@ class App extends Component {
                 <p style={{textAlign: "center", background: "#b34646", cursor: "default"}}>ON AIR</p>
                 {_.map(streams, (v,k) => {
                   return (
-                    <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} title={v.channel.status}><span role="img" aria-label="on air">📺</span>{v.channel.display_name}{v.channel.mature && "🔞"}</p>
+                    <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} title={`${v.channel.status} - ${v.game} - ${v.channel.broadcaster_language}${v.channel.mature ? " - 🔞" : ""}`}>
+                      <img alt="logo" height={22} src={v.channel.logo} /> {v.channel.display_name} <FontAwesomeIcon icon="clock" color="grey" title={`en live depuis ${moment.utc(moment()-moment(v.created_at)).format("HH[h]mm")}`} /> {v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />}
+                    </p>
                   )
                 })}
             </nav>}

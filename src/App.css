@@ -79,6 +79,10 @@ header:hover .streams{
   margin: 0;
   cursor: pointer;
 }
+.streams img {
+  vertical-align: bottom;
+  height: 22px;
+}
 .streams p:hover {
   color: white;
   padding: 0;
