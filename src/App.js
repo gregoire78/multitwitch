@@ -275,7 +275,7 @@ class App extends Component {
         { opened &&
           <NewWindow
             onUnload={this.handleClosePopup.bind(this)}
-            url={`https://id.twitch.tv/oauth2/authorize?client_id=znypnycqt375st6jwrujwy0x4qixgz&redirect_uri=http://localhost:3000/&response_type=token&scope=user_read`}
+            url={`https://id.twitch.tv/oauth2/authorize?client_id=wkyn43dnz5yumupaqv8vwkz1j4thi1&redirect_uri=https://twitch.gregoirejoncour.xyz/&response_type=token&scope=user_read`}
             features={ { left: (window.innerWidth / 2) - (600 / 2), top: (window.innerHeight / 2) - (600 / 2), width: 600, height: 600 } }
           >
             <h5>Here is a textbox. Type something in it and see it mirror to the parent.</h5>
@@ -310,7 +310,7 @@ class App extends Component {
                 {_.map(streams, (v,k) => {
                   return (
                     <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} title={`${v.channel.status} - ${v.game} - ${v.channel.broadcaster_language}${v.channel.mature ? " - 🔞" : ""}`}>
-                      <img alt="logo" height={22} src={v.channel.logo} /> {v.channel.display_name} <FontAwesomeIcon icon="clock" color="grey" title={`en live depuis ${moment.utc(moment()-moment(v.created_at)).format("HH[h]mm")}`} /> {v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />}
+                      <img alt="logo" height={22} src={v.channel.logo} /> {v.channel.display_name} <FontAwesomeIcon icon="clock" color="lightgrey" title={`live depuis ${moment.utc(moment()-moment(v.created_at)).format("HH[h et ]mm[min]")}`} />{/*v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />*/}
                     </p>
                   )
                 })}

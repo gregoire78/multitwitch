@@ -82,6 +82,7 @@ header:hover .streams{
 .streams img {
   vertical-align: bottom;
   height: 22px;
+  background: rgba(0, 0, 0, 0.9);
 }
 .streams p:hover {
   color: white;
