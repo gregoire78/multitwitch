@@ -211,7 +211,7 @@ class App extends Component {
     this.setState(prevState => ({
       isCollapse: !prevState.isCollapse
     }));
-    if(!this.state.isCollapse && this.state.isAuth) {this.getFollowedStream()}
+    if(this.state.isCollapse && this.state.isAuth) {this.getFollowedStream()}
   }
 
   /*openPopup() {
@@ -250,7 +250,7 @@ class App extends Component {
         'Client-ID': 'wkyn43dnz5yumupaqv8vwkz1j4thi1'
       }
     } ).then(res => {
-        const streams = res.data.streams;
+        const streams = _.orderBy(res.data.streams, 'channel.name');
         this.setState({ streams });
       })
   }
@@ -303,10 +303,10 @@ class App extends Component {
 
             {(!_.isEmpty(streams) && isEditMode) &&
             <nav className="streams">
-                <p style={{textAlign: "center", background: "#b34646", cursor: "default"}}>Streams on air</p>
+                <p style={{textAlign: "center", background: "#b34646", cursor: "default"}}>ON AIR</p>
                 {_.map(streams, (v,k) => {
                   return (
-                    <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} title={v.channel.status}><span role="img" aria-label="on air">🔴</span>{v.channel.display_name}{v.channel.mature && "🔞"}</p>
+                    <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} title={v.channel.status}><span role="img" aria-label="on air">📺</span>{v.channel.display_name}{v.channel.mature && "🔞"}</p>
                   )
                 })}
             </nav>}
