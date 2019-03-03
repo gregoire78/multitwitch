@@ -3,7 +3,7 @@ import _ from "lodash";
 import NewWindow from 'react-new-window';
 import axios from 'axios';
 import moment from 'moment';
-import localization from 'moment/locale/fr';
+import 'moment/locale/fr';
 import IntervalTimer from 'react-interval-timer';
 import { WidthProvider, Responsive } from "react-grid-layout";
 //import Twitch from './Twitch';
@@ -23,7 +23,7 @@ import GridTwitch from './GridTwitch';
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
 library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt, faHandshake, faClock);
-moment.locale('fr', localization);
+moment.locale('fr');
 
 class App extends Component {
   static defaultProps = {
@@ -275,6 +275,7 @@ class App extends Component {
         { opened &&
           <NewWindow
             onUnload={this.handleClosePopup.bind(this)}
+            //url={`https://id.twitch.tv/oauth2/authorize?client_id=znypnycqt375st6jwrujwy0x4qixgz&redirect_uri=http://localhost:3000/&response_type=token&scope=user_read`}
             url={`https://id.twitch.tv/oauth2/authorize?client_id=wkyn43dnz5yumupaqv8vwkz1j4thi1&redirect_uri=https://twitch.gregoirejoncour.xyz/&response_type=token&scope=user_read`}
             features={ { left: (window.innerWidth / 2) - (600 / 2), top: (window.innerHeight / 2) - (600 / 2), width: 600, height: 600 } }
           >
@@ -289,18 +290,18 @@ class App extends Component {
         >
           <header>
             <nav>
-              <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" /></button>
-              <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={isEditMode ? "lightgrey" : ''} /></button>
+              {!isAuth ?
+              <button onClick={this.handleWindow} title="Login to twitch account"><FontAwesomeIcon icon={["fab","twitch"]} /></button> :
+              <button onClick={this.logout} title="Logout"><FontAwesomeIcon icon="sign-out-alt" /></button>
+              }
 
               <form onSubmit={this.addPseudo}>
                 <input type="text" value={input} onChange={ this.handleChange } placeholder="channel twitch"/>
                 <button type="submit" disabled={input.length <= 0 || pseudos.find((v,k) => v === input)}><FontAwesomeIcon icon="plus" /></button>
               </form>
 
-              {!isAuth ?
-              <button onClick={this.handleWindow} title="Login to twitch account"><FontAwesomeIcon icon={["fab","twitch"]} /></button> :
-              <button onClick={this.logout} title="Logout"><FontAwesomeIcon icon="sign-out-alt" /></button>
-              }
+              <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" title="reset layout"/></button>
+              <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={!isEditMode ? "lightgrey" : ''} /></button>
               <button onClick={this.onToogleCollapse}><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
             </nav>
 
@@ -310,7 +311,7 @@ class App extends Component {
                 {_.map(streams, (v,k) => {
                   return (
                     <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} title={`${v.channel.status} - ${v.game} - ${v.channel.broadcaster_language}${v.channel.mature ? " - 🔞" : ""}`}>
-                      <img alt="logo" height={22} src={v.channel.logo} /> {v.channel.display_name} <FontAwesomeIcon icon="clock" color="lightgrey" title={`live depuis ${moment.utc(moment()-moment(v.created_at)).format("HH[h et ]mm[min]")}`} />{/*v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />*/}
+                      <img alt="logo" height={22} src={v.channel.logo} /> {v.channel.display_name} <FontAwesomeIcon icon="clock" color="lightgrey" title={`live depuis ${moment.utc(moment()-moment(v.created_at)).format("HH[h et ]mm[m]")}`} />{/*v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />*/}
                     </p>
                   )
                 })}
@@ -324,7 +325,7 @@ class App extends Component {
           </header>
         </CSSTransition>
 
-        {pseudos.length > 0 ?
+        {pseudos.length > 0 &&
         <ResponsiveReactGridLayout
           margin={[10,10]}
           containerPadding={[10,10]}
@@ -347,7 +348,7 @@ class App extends Component {
             )
           })
           }
-        </ResponsiveReactGridLayout> : ''}
+        </ResponsiveReactGridLayout>}
       </>
     );
   }

@@ -57,9 +57,9 @@ header {
   top: 0;
   transform: scale(1);
 }
-header nav {
-  /*border: 1px solid white;*/
-}
+/*header nav {
+  border: 1px solid white;
+}*/
 
 .streams {
   background: #6441A4;
