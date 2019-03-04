@@ -11,6 +11,7 @@
     "moment": "^2.24.0",
     "react": "^16.8.1",
     "react-dom": "^16.8.1",
+    "react-ga": "^2.5.7",
     "react-grid-layout": "^0.16.6",
     "react-interval-timer": "^1.0.5",
     "react-new-window": "0.0.11",

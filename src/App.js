@@ -4,6 +4,7 @@ import NewWindow from 'react-new-window';
 import axios from 'axios';
 import moment from 'moment';
 import 'moment/locale/fr';
+import ReactGA from 'react-ga';
 import IntervalTimer from 'react-interval-timer';
 import { WidthProvider, Responsive } from "react-grid-layout";
 //import Twitch from './Twitch';
@@ -72,6 +73,11 @@ class App extends Component {
   }
 
   componentDidMount() {
+    ReactGA.initialize(process.env.REACT_APP_GTAG_ID, {
+      debug: process.env.NODE_ENV !== 'production'
+    });
+    ReactGA.pageview(window.location.pathname);
+
     if(window.location.hash) {
       let search = window.location.hash.substring(1);
       search = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}');
@@ -154,16 +160,14 @@ class App extends Component {
     let layout = _.reject(this.state.layout, { i: l.i });
     this.setState({ pseudos, layout});
     window.history.replaceState('','',`${window.origin}/${pseudos.join('/')}`);
+    ReactGA.pageview(window.location.pathname);
   }
 
   addPseudo(event){
     event.preventDefault();
-    const pseudos = this.state.pseudos;
     if(this.state.input.length > 0) {
-      window.history.replaceState('','',`${window.location}${window.location.href.slice(-1) === '/' ? '' : '/'}${this.state.input}`);
-      pseudos.push(this.state.input);
-      let layout = this.generateLayout(pseudos)
-      this.setState({pseudos, input: '', layout});
+      this.addFollow(this.state.input);
+      this.setState({input: ''});
     }
   }
 
@@ -250,7 +254,7 @@ class App extends Component {
     axios.get(`https://api.twitch.tv/kraken/streams/followed`, {
       headers: {
         'Authorization': `OAuth ${localStorage.getItem('token')}`,
-        'Client-ID': 'wkyn43dnz5yumupaqv8vwkz1j4thi1'
+        'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
       }
     } ).then(res => {
         const streams = _.orderBy(res.data.streams, 'channel.name');
@@ -265,6 +269,7 @@ class App extends Component {
       pseudos.push(name);
       let layout = this.generateLayout(pseudos)
       this.setState({pseudos, layout});
+      ReactGA.pageview(window.location.pathname);
     }
   }
 
@@ -275,8 +280,7 @@ class App extends Component {
         { opened &&
           <NewWindow
             onUnload={this.handleClosePopup.bind(this)}
-            //url={`https://id.twitch.tv/oauth2/authorize?client_id=znypnycqt375st6jwrujwy0x4qixgz&redirect_uri=http://localhost:3000/&response_type=token&scope=user_read`}
-            url={`https://id.twitch.tv/oauth2/authorize?client_id=wkyn43dnz5yumupaqv8vwkz1j4thi1&redirect_uri=https://twitch.gregoirejoncour.xyz/&response_type=token&scope=user_read`}
+            url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&redirect_uri=${process.env.REACT_APP_TWITCH_URI}&response_type=token&scope=user_read`}
             features={ { left: (window.innerWidth / 2) - (600 / 2), top: (window.innerHeight / 2) - (600 / 2), width: 600, height: 600 } }
           >
             <h5>Here is a textbox. Type something in it and see it mirror to the parent.</h5>
