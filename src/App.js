@@ -15,7 +15,7 @@ import { CSSTransition } from 'react-transition-group';
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faSignOutAlt, faHandshake, faClock } from '@fortawesome/free-solid-svg-icons'
-import { faTwitch } from '@fortawesome/free-brands-svg-icons';
+import { faTwitch, faGithub } from '@fortawesome/free-brands-svg-icons';
 
 import '../node_modules/react-resizable/css/styles.css';
 import '../node_modules/react-grid-layout/css/styles.css'
@@ -23,7 +23,7 @@ import './App.css';
 import GridTwitch from './GridTwitch';
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
-library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt, faHandshake, faClock);
+library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt, faHandshake, faClock, faGithub);
 moment.locale('fr');
 
 class App extends Component {
@@ -52,7 +52,7 @@ class App extends Component {
       mounted: false,
       isCollapse: false,
       opened: false,
-      isAuth: localStorage.getItem('token'),
+      isAuth: localStorage.getItem('token') && localStorage.getItem('token').length > 0,
       streams: []
     };
 
@@ -146,12 +146,15 @@ class App extends Component {
   }
 
   resetLayout() {
+    saveToLS("layouts", {});
     this.setState({ layouts: {} });
   }
 
   onLayoutChange(layout, layouts) {
-    saveToLS("layouts", layouts);
-    this.setState({ layouts });
+    if(this.state.pseudos.length){
+      saveToLS("layouts", layouts);
+      this.setState({ layouts });
+    }
     //this.props.onLayoutChange(layout);
   }
 
@@ -246,7 +249,7 @@ class App extends Component {
   }
 
   handleClosePopup() {
-    this.setState({opened: false, isAuth: localStorage.getItem('token') && true});
+    this.setState({opened: false, isAuth: localStorage.getItem('token').length > 0});
     this.getFollowedStream();
   }
 
@@ -323,36 +326,74 @@ class App extends Component {
             <IntervalTimer
               timeout={10000}
               callback={this.getFollowedStream.bind(this)}
-              enabled={!isCollapse && isEditMode}
+              enabled={!isCollapse && isEditMode && isAuth}
               repeat={true}
             />
           </header>
         </CSSTransition>
 
-        {pseudos.length > 0 &&
-        <ResponsiveReactGridLayout
-          margin={[10,10]}
-          containerPadding={[10,10]}
-          onLayoutChange={this.onLayoutChange}
-          onResize={this.onResize}
-          layouts={layouts}
-          onBreakpointChange={this.onBreakpointChange}
-          onResizeStart={this.showOverlay}
-          onResizeStop={this.hideOverlay}
-          onDragStart={this.onDragStart}
-          onDragStop={this.onDragStop}
-          measureBeforeMount={true}
-          {...this.props}
-        >
-          {_.map(layout, (l,k) => {
-            return (
-              <div key={l.i} data-grid={l} style={isEditMode && {padding:'5px', outline: '5px dashed #5a3a93', outlineOffset: '-5px'}}>
-                <GridTwitch isEditMode={isEditMode} showOverlay={showOverlay} l={l} onRemoveItem={this.onRemoveItem} />
-              </div>
-            )
-          })
-          }
-        </ResponsiveReactGridLayout>}
+        {pseudos.length > 0 ?
+          <ResponsiveReactGridLayout
+            margin={[10, 10]}
+            containerPadding={[10, 10]}
+            onLayoutChange={this.onLayoutChange}
+            onResize={this.onResize}
+            layouts={layouts}
+            onBreakpointChange={this.onBreakpointChange}
+            onResizeStart={this.showOverlay}
+            onResizeStop={this.hideOverlay}
+            onDragStart={this.onDragStart}
+            onDragStop={this.onDragStop}
+            measureBeforeMount={true}
+            {...this.props}
+          >
+            {_.map(layout, (l, k) => {
+              return (
+                <div key={l.i} data-grid={l} style={isEditMode && { padding: '5px', outline: '5px dashed #5a3a93', outlineOffset: '-5px' }}>
+                  <GridTwitch isEditMode={isEditMode} showOverlay={showOverlay} l={l} onRemoveItem={this.onRemoveItem} />
+                </div>
+              )
+            })
+            }
+          </ResponsiveReactGridLayout>
+        :
+          <ResponsiveReactGridLayout
+            className="layout"
+            isResizable={true}
+            onDragStart={(layout, oldItem, newItem, placeholder, e, element) => { element.style.cursor = "grabbing"; }}
+            onDragStop={(layout, oldItem, newItem, placeholder, e, element) => { element.style.cursor = "grab"; }}
+            compactType={null}
+            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+            cols={{ lg: 12, md: 12, sm: 6, xs: 6, xxs: 6 }}>
+            <div key="welcome" className="welcome" data-grid={{ x: 3, y: 1, w: 6, h: 3, minH: 3, minW: 6 }}>
+              <h1>Welcome to MultiTwitch.co</h1>
+              <p>
+                In MultiTwitch.co you can watch a multi streams of <a href="https://twitch.tv/" target="_blank" rel="noopener noreferrer" style={{fontSize: "1em"}}>twitch.tv</a>.
+                </p>
+              <p>Simply add the channel ID in <i>"channel twitch"</i> input at the top of the page or in the url. <br/><i>(ex: <a href={`${window.location.origin}/peteur_pan/psykaoz`}>multitwitch.co/peteur_pan/psykaoz/other_channel_id</a>)</i></p>
+              <p style={{ textAlign: "center" }}>or</p>
+              <p>You can also connect your twitch account to watch live of followed channels.</p>
+              <p>
+                {!isAuth ?
+                  <button onClick={this.handleWindow} title="Login to your twitch account"><FontAwesomeIcon icon={["fab", "twitch"]} /> Connect your Twitch account</button>
+                  :
+                  <>Congratulation you are login in with your twitch account ! <button onClick={this.logout}>logout <FontAwesomeIcon icon="sign-out-alt" /></button></> }
+              </p>
+              <small>Created by Grégoire Joncour - <a href="https://github.com/gregoire78/multitwitch" target="_blank" rel="noopener noreferrer"><FontAwesomeIcon icon={["fab", "github"]} /> view the project on github</a> - &copy; 2019 multitwitch.co</small>
+            </div>
+          </ResponsiveReactGridLayout>
+        /*<div className="main-welcome">
+          <div className="welcome">
+            <h1>Welcome to MultiTwitch.co</h1>
+            <p>
+              In MultiTwitch.co you can watch a multi streams of twitch.tv.
+                </p>
+            <p>Simply add the channel ID in <i>"channel twitch"</i> input at the top of the page. (ex: peteur_pan)</p>
+            <p style={{ textAlign: "center" }}>or</p>
+            <p>You can also connect your twitch account to watch live of followed channels.</p>
+            <button>Connect my Twitch account</button>
+          </div>
+        </div>*/}
       </>
     );
   }

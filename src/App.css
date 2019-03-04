@@ -12,7 +12,7 @@ body {
   margin: 0;
 }
 
-button {
+header button {
   height: 24px;
   width: 24px;
   vertical-align: top;
@@ -22,17 +22,17 @@ button {
   color: white;
 }
 
-button:hover {
+header button:hover {
   background: rgb(130, 107, 173);
   color: white;
 }
 
-button[type="submit"]:disabled {
+header button[type="submit"]:disabled {
   color: lightgrey;
   pointer-events: none;
 }
 
-input {
+header input {
   height: 24px;
   width: 170px;
   padding: 0 5px;
@@ -168,7 +168,7 @@ li b {
 }
 
 .react-grid-item.react-grid-placeholder {
-  background: red;
+  background: #b34646;
   opacity: 0.2;
   transition-duration: 100ms;
   z-index: 2;
@@ -243,4 +243,39 @@ li b {
 .header-exit-active {
   transform: translateX(0);
   transition: all 300ms ease-out;
+}
+
+.main-welcome{
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  height: 100vh;
+}
+.welcome {
+  background-color: #6441a4;
+  padding: 20px;
+  color: white;
+  outline: rgb(90, 58, 147) dashed 5px;
+  outline-offset: -5px;
+}
+.welcome h1 {
+  font-size: 1.5em;
+  text-align: center;
+}
+.welcome small {position: absolute; bottom: 20px; text-align: center;width: calc(100% - 40px);}
+.welcome a {color: white;font-size: 0.8em;}
+.welcome a:hover {background-color: #b34646;}
+.welcome button {
+  text-align: center;
+  height: 24px;
+  vertical-align: top;
+  border: none;
+  cursor: pointer;
+  background: rgb(130, 107, 173);
+  color: white;
+}
+.welcome button:hover {
+  background: #b34646;
+  color: white;
 }
