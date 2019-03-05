@@ -1,9 +1,18 @@
 ## My multi Twitch template
+![screenshot](https://gist.githubusercontent.com/gregoire78/820a3433779004af57a2b798302d1464/raw/67b83d7d244289497c471746abc179e1aa2c9644/screen3.png)
 ![screenshot](https://gist.githubusercontent.com/gregoire78/820a3433779004af57a2b798302d1464/raw/0ddff94cd01381430e69cb837324c513134a46f7/screen2.png)
 
 [📺🔴.ws/aypierre](http://📺🔴.ws/aypierre)
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+If you have sugestion to submit please contact me, it would be a pleasure . 😉
+
+#run project
+
+## Config
+
+For config go to the .env.developpement for development and .env.production for production.
 
 ## Available Scripts
 
