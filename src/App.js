@@ -5,6 +5,8 @@ import axios from 'axios';
 import moment from 'moment';
 import 'moment/locale/fr';
 import ReactGA from 'react-ga';
+import { withCookies, Cookies } from 'react-cookie';
+import { instanceOf } from 'prop-types';
 import IntervalTimer from 'react-interval-timer';
 import { WidthProvider, Responsive } from "react-grid-layout";
 //import Twitch from './Twitch';
@@ -27,6 +29,9 @@ library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDo
 moment.locale('fr');
 
 class App extends Component {
+  static propTypes = {
+    cookies: instanceOf(Cookies).isRequired
+  };
   static defaultProps = {
     isDraggable: true,
     isResizable: true,
@@ -39,6 +44,7 @@ class App extends Component {
 
   constructor(props) {
     super(props);
+    const { cookies } = props;
 
     // get pseudo from url
     const urlparse = _.uniqBy(_.compact(window.location.pathname.split("/")));
@@ -52,7 +58,8 @@ class App extends Component {
       mounted: false,
       isCollapse: false,
       opened: false,
-      isAuth: localStorage.getItem('token') && localStorage.getItem('token').length > 0,
+      user: {},
+      isAuth: cookies.get('token') && cookies.get('token').length > 0,
       streams: []
     };
 
@@ -72,19 +79,14 @@ class App extends Component {
     this.logout = this.logout.bind(this);
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     ReactGA.initialize(process.env.REACT_APP_GTAG_ID, {
       debug: process.env.NODE_ENV !== 'production'
     });
     ReactGA.pageview(window.location.pathname);
-
-    if(window.location.hash) {
-      let search = window.location.hash.substring(1);
-      search = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}');
-      localStorage.setItem('token', search.access_token)
-      window.close();
-    }
+    //this.compononentLoginWindow();
     if(this.state.isAuth) {
+      this.setState({user: (await this.getTwitchUser()).data[0]});
       this.getFollowedStream();
     }
     document.body.style.backgroundImage = "url("+MyIcon+")";
@@ -93,6 +95,18 @@ class App extends Component {
     document.body.style.backgroundSize = "contain";
     document.body.style.backgroundAttachment = "fixed";
     this.setState({ mounted: true });
+  }
+
+  componentWillMount() {
+    const { cookies } = this.props;
+    if(window.location.hash) {
+      document.body.display="none";
+      let search = window.location.hash.substring(1);
+      search = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}');
+      //set cookie to save twitch token
+      cookies.set('token', search.access_token, {expires: moment().add(1, 'year').toDate(), domain: process.env.REACT_APP_DOMAIN});
+      window.close();
+    }
   }
 
   /*generateDOM() {
@@ -243,20 +257,35 @@ class App extends Component {
     }));
   }
 
-  logout() {
-    this.setState({isAuth: false, streams: []});
-    localStorage.removeItem('token');
+  async getTwitchUser(){
+    return (await axios.get(`https://api.twitch.tv/helix/users`, {
+      headers: {
+        'Authorization': `Bearer ${this.props.cookies.get('token')}`,
+        'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
+      }
+    })).data;
   }
 
-  handleClosePopup() {
-    this.setState({opened: false, isAuth: localStorage.getItem('token').length > 0});
+  async revokeTwitchToken(token) {
+    await axios.post(`https://id.twitch.tv/oauth2/revoke?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&token=${token}`)
+  }
+
+  async logout() {
+    const { cookies } = this.props;
+    await this.revokeTwitchToken(cookies.get('token'))
+    this.setState({isAuth: false, streams: [], user: {}});
+    cookies.remove('token', {domain: process.env.REACT_APP_DOMAIN});
+  }
+
+  async handleClosePopup() {
+    this.setState({opened: false, isAuth: this.props.cookies.get('token').length > 0, user: (await this.getTwitchUser()).data[0]});
     this.getFollowedStream();
   }
 
   getFollowedStream() {
     axios.get(`https://api.twitch.tv/kraken/streams/followed`, {
       headers: {
-        'Authorization': `OAuth ${localStorage.getItem('token')}`,
+        'Authorization': `OAuth ${this.props.cookies.get('token')}`,
         'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
       }
     } ).then(res => {
@@ -277,7 +306,7 @@ class App extends Component {
   }
 
   render() {
-    const { opened, isEditMode, input, pseudos, isCollapse, showOverlay, layout, layouts, isAuth, streams } = this.state
+    const { opened, isEditMode, input, pseudos, isCollapse, showOverlay, layout, layouts, isAuth, streams, user } = this.state
     return (
       <>
         { opened &&
@@ -286,7 +315,7 @@ class App extends Component {
             url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&redirect_uri=${process.env.REACT_APP_TWITCH_URI}&response_type=token&scope=user_read`}
             features={ { left: (window.innerWidth / 2) - (600 / 2), top: (window.innerHeight / 2) - (600 / 2), width: 600, height: 600 } }
           >
-            <h5>Here is a textbox. Type something in it and see it mirror to the parent.</h5>
+            <h5 style={{color: "white"}}>Connecting to twitch id</h5>
           </NewWindow>
         }
 
@@ -297,10 +326,7 @@ class App extends Component {
         >
           <header>
             <nav>
-              {!isAuth ?
-              <button onClick={this.handleWindow} title="Login to twitch account"><FontAwesomeIcon icon={["fab","twitch"]} /></button> :
-              <button onClick={this.logout} title="Logout"><FontAwesomeIcon icon="sign-out-alt" /></button>
-              }
+              
 
               <form onSubmit={this.addPseudo}>
                 <input type="text" value={input} onChange={ this.handleChange } placeholder="channel twitch"/>
@@ -308,13 +334,14 @@ class App extends Component {
               </form>
 
               <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" title="reset layout"/></button>
+              <button onClick={this.onToogleCollapse} className="collapse-btn"><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
+              {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile" style={{backgroundImage: `url(${user.profile_image_url})`, backgroundSize: '24px 24px'}}></button> : <button onClick={this.handleWindow} title="connect your twitch account"><FontAwesomeIcon icon={["fab","twitch"]} /></button>}
               <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={!isEditMode ? "lightgrey" : ''} /></button>
-              <button onClick={this.onToogleCollapse}><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
             </nav>
 
             {(!_.isEmpty(streams) && isEditMode) &&
             <nav className="streams">
-                <p style={{textAlign: "center", background: "#b34646", cursor: "default"}}>ON AIR</p>
+                <p style={{textAlign: "center", background: "#b34646", cursor: "default", height: "24px"}}><button onClick={this.logout} title="Logout" style={{position: "absolute",left: 0}}><FontAwesomeIcon icon="sign-out-alt" /></button><span style={{lineHeight: "24px"}}>{user.display_name}</span></p>
                 {_.map(streams, (v,k) => {
                   return (
                     <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} title={`${v.channel.status} - ${v.game} - ${v.channel.broadcaster_language}${v.channel.mature ? " - 🔞" : ""}`}>
@@ -377,7 +404,7 @@ class App extends Component {
                 {!isAuth ?
                   <button onClick={this.handleWindow} title="Login to your twitch account"><FontAwesomeIcon icon={["fab", "twitch"]} /> Connect your Twitch account</button>
                   :
-                  <>Congratulation you are login in with your twitch account ! <button onClick={this.logout}>logout <FontAwesomeIcon icon="sign-out-alt" /></button></> }
+                  <>Congratulation <span style={{background: "rgb(130, 107, 173)"}}><img src={user.profile_image_url} alt={`img ${user.login}`} style={{height: "21px", verticalAlign: "top", backgroundColor: "black"}}/> {user.display_name} </span>&nbsp;you are login in ! <button onClick={this.logout}>logout <FontAwesomeIcon icon="sign-out-alt" /></button></> }
               </p>
               <small>Created by Grégoire Joncour - <a href="https://github.com/gregoire78/multitwitch" target="_blank" rel="noopener noreferrer"><FontAwesomeIcon icon={["fab", "github"]} /> view the project on github</a> - &copy; 2019 multitwitch.co</small>
             </div>
@@ -422,4 +449,4 @@ function saveToLS(key, value) {
   }
 }
 
-export default App;
+export default withCookies(App);

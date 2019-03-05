@@ -63,7 +63,7 @@ header {
 
 .streams {
   background: #6441A4;
-  max-width: 252px;
+  max-width: 228px;
   border: 5px dashed #b34646;
   border-top: none;
   border-left: none;
@@ -89,6 +89,10 @@ header:hover .streams{
   padding: 0;
   margin: 0;
   background-color: #b34646;
+}
+.img-profile {
+  padding: 0;
+  margin: 0
 }
 
 #content {
@@ -234,11 +238,11 @@ li b {
   transform: translateX(0);
 }
 .header-enter-active {
-  transform: translateX(-252px);
+  transform: translateX(-228px);
   transition: all 300ms ease-out;
 }
 .header-exit, .header-enter-done {
-  transform: translateX(-252px);
+  transform: translateX(-228px);
 }
 .header-exit-active {
   transform: translateX(0);
