@@ -103,8 +103,10 @@ class App extends Component {
       document.body.display="none";
       let search = window.location.hash.substring(1);
       search = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}');
-      //set cookie to save twitch token
-      cookies.set('token', search.access_token, {expires: moment().add(1, 'year').toDate(), domain: process.env.REACT_APP_DOMAIN});
+      if('access_token' in search) {
+        //set cookie to save twitch token
+        cookies.set('token', search.access_token, {expires: moment().add(1, 'year').toDate(), domain: process.env.REACT_APP_DOMAIN});
+      }
       window.close();
     }
   }
@@ -278,8 +280,12 @@ class App extends Component {
   }
 
   async handleClosePopup() {
-    this.setState({opened: false, isAuth: this.props.cookies.get('token').length > 0, user: (await this.getTwitchUser()).data[0]});
-    this.getFollowedStream();
+    if(this.props.cookies.get('token')){
+      this.setState({opened: false, isAuth: this.props.cookies.get('token').length > 0, user: (await this.getTwitchUser()).data[0]});
+      this.getFollowedStream();
+    } else {
+      this.setState({opened: false})
+    }
   }
 
   getFollowedStream() {

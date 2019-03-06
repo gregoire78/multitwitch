@@ -1,15 +1,20 @@
 {
-  "short_name": "Multi Twitch",
-  "name": "Multi POV Twitch stream",
+  "name": "MultiTwitch",
+  "short_name": "MultiTwitch",
   "icons": [
-    {
-      "src": "favicon144.png",
-      "sizes": "144x144 64x64 32x32 24x24 16x16",
-      "type": "image/png"
-    }
+      {
+          "src": "/android-chrome-192x192.png",
+          "sizes": "192x192 144x144",
+          "type": "image/png"
+      },
+      {
+          "src": "/android-chrome-512x512.png",
+          "sizes": "512x512",
+          "type": "image/png"
+      }
   ],
+  "theme_color": "#8763c5",
+  "background_color": "#8763c5",
   "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#5a3a93",
-  "background_color": "#6441A4"
+  "display": "standalone"
 }
