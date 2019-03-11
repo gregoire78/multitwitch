@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import _ from "lodash";
+import _ from 'lodash';
 import NewWindow from 'react-new-window';
 import axios from 'axios';
 import moment from 'moment';
@@ -24,6 +24,7 @@ import '../node_modules/react-grid-layout/css/styles.css';
 import './App.css';
 import GridTwitch from './GridTwitch';
 import Welcome from './Welcome';
+import SearchBox from './SearchBox';
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
 library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt, faHandshake, faClock, faGithub);
@@ -68,7 +69,6 @@ class App extends Component {
     this.resetLayout = this.resetLayout.bind(this);
     this.onBreakpointChange = this.onBreakpointChange.bind(this);
     this.addPseudo = this.addPseudo.bind(this);
-    this.handleChange = this.handleChange.bind(this);
     this.showOverlay = this.showOverlay.bind(this);
     this.hideOverlay = this.hideOverlay.bind(this);
     this.onDragStart = this.onDragStart.bind(this);
@@ -189,10 +189,6 @@ class App extends Component {
       this.addFollow(this.state.input);
       this.setState({input: ''});
     }
-  }
-
-  handleChange(e) {
-    this.setState({ input: e.target.value.trim().toLowerCase() });
   }
 
   onResize(layout, oldLayoutItem, layoutItem, placeholder, e, element) {
@@ -334,7 +330,7 @@ class App extends Component {
           <header>
             <nav>
               <form onSubmit={this.addPseudo}>
-                <input type="text" value={input} onChange={ this.handleChange } placeholder="channel twitch"/>
+                <SearchBox placeholder="Search channel" queryCallback={(query)=>this.setState({input: query.trim().toLowerCase()})} input={input}/>
                 <button type="submit" disabled={input.length <= 0 || pseudos.find((v,k) => v === input)}><FontAwesomeIcon icon="plus" /></button>
               </form>
 

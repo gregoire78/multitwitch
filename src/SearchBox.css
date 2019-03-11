@@ -1,0 +1,18 @@
+.search-box {
+    border-radius: 3px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 12px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 0px;
+    font-size: 90%;
+    position: fixed;
+    overflow: auto;
+    /* max-height: 50%; */
+    left: 0px;
+    top: 24px;
+    min-width: 170px;
+    z-index: 1000;
+}
+
+.search-box .item img{
+    vertical-align: bottom;
+}

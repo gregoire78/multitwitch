@@ -2,10 +2,10 @@ import React, { Component } from 'react';
 import { WidthProvider, Responsive } from "react-grid-layout";
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faSignOutAlt, faHandshake, faClock } from '@fortawesome/free-solid-svg-icons';
+import {faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { faTwitch, faGithub } from '@fortawesome/free-brands-svg-icons';
 
-library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt, faHandshake, faClock, faGithub);
+library.add(faTwitch, faSignOutAlt, faGithub);
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
 export default class Welcome extends Component {
