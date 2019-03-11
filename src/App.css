@@ -34,7 +34,7 @@ header button[type="submit"]:disabled {
 
 header input {
   height: 24px;
-  width: 170px;
+  width: 180px;
   padding: 0 5px;
   margin: 0;
   vertical-align: top;

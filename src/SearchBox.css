@@ -1,18 +1,33 @@
+@import url('https://fonts.googleapis.com/css?family=Acme');
+
 .search-box {
-    border-radius: 3px;
+    border-radius: 0;
     box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 12px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 2px 0px;
-    font-size: 90%;
+    color: white;
+    font-family: 'Acme', cursive;
     position: fixed;
     overflow: auto;
+    background: rgb(130, 107, 173);
     /* max-height: 50%; */
     left: 0px;
     top: 24px;
-    min-width: 170px;
+    width: calc(180px - 10px);
     z-index: 1000;
+    /*padding: 5px;
+    outline: 5px solid white;
+    outline-offset: -5px;*/
+    border: 5px solid white;
+    border-top: 0;
+}
+
+.search-box .item {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
 }
 
 .search-box .item img{
+    background-color: black;
     vertical-align: bottom;
 }

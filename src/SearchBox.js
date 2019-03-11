@@ -9,17 +9,18 @@ export default class SearchBox extends Component {
         super(props);
         this.state = {
             query: this.props.input && '',
-            openDropdown: false,
-            itemsSearch: []
+            itemsSearch: [],
+            openDropdown: false
         };
         this.handleChange = this.handleChange.bind(this);
         this.onSelect = this.onSelect.bind(this);
+        this.onMenuVisibilityChange = this.onMenuVisibilityChange.bind(this);
     }
 
     componentWillReceiveProps(prevProps, prevState) {
-        console.log(prevProps, this.props.input)
-        if(this.props.input !== prevProps.input) {
-            this.setState({ query : this.props.input })
+        if(prevProps.input !== this.props.input){
+            this.setState({ query : prevProps.input})
+            if(prevProps.input.length <= 0) this.setState({ itemsSearch: [] })
         }
     }
 
@@ -41,20 +42,25 @@ export default class SearchBox extends Component {
     async handleSearch(query) {
         if(query.trim().length > 0) {
             const result = await this.searchTwitchChannel(query);
-            this.setState({ itemsSearch: result.channels });
+            this.setState({ itemsSearch: result.channels, openDropdown : result.channels.length > 0 });
         } else {
-            this.setState({ itemsSearch: [] })
+            this.setState({ itemsSearch: [], openDropdown: false })
         }
     }
 
     handleChange(event) {
-        this.setState({ query: event.target.value });
+        this.props.queryCallback(event.target.value);
+        this.setState({ query: event.target.value, openDropdown : this.state.itemsSearch.length < 0 });
         this.handleSearchDebounced();
     }
-    
+
     onSelect(item) {
+        this.props.queryCallback(item);
         this.setState({query: item});
-        this.props.queryCallback(item)
+    }
+
+    onMenuVisibilityChange(isopen) {
+        this.setState({openDropdown : !this.state.openDropdown && this.state.query.length>0});
     }
 
     render() {
@@ -63,8 +69,8 @@ export default class SearchBox extends Component {
                 getItemValue={(item) => item.name}
                 items={this.state.itemsSearch}
                 renderItem={(item, isHighlighted) =>
-                <div className="item" key={item.name} style={{ background: isHighlighted ? 'lightgray' : 'white' }}>
-                    <img src={item.logo} height="20" alt="" />{item.display_name}
+                <div className="item" key={item.name} style={{ background: isHighlighted ? '#b34646' : 'transparent' }}>
+                    <img src={item.logo} height="20" alt="" /> {item.display_name}
                 </div>
                 }
                 renderMenu={(children, value, style) => (
@@ -76,7 +82,9 @@ export default class SearchBox extends Component {
                 onChange={this.handleChange}
                 onSelect={this.onSelect}
                 renderInput={(props) => <input type="search" placeholder={this.props.placeholder} {...props}/>}
-                selectOnBlur={true}
+                onMenuVisibilityChange={this.onMenuVisibilityChange}
+                selectOnBlur={false}
+                open={this.state.openDropdown}
             />
         );
     }

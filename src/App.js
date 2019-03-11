@@ -184,9 +184,10 @@ class App extends Component {
   }
 
   addPseudo(event){
+    const pseudo = this.state.input.trim().toLowerCase()
     event.preventDefault();
-    if(this.state.input.length > 0) {
-      this.addFollow(this.state.input);
+    if(pseudo.length > 0) {
+      this.addFollow(pseudo);
       this.setState({input: ''});
     }
   }
@@ -330,7 +331,7 @@ class App extends Component {
           <header>
             <nav>
               <form onSubmit={this.addPseudo}>
-                <SearchBox placeholder="Search channel" queryCallback={(query)=>this.setState({input: query.trim().toLowerCase()})} input={input}/>
+                <SearchBox placeholder="Search a channel" queryCallback={(query)=>this.setState({input: query})} input={input}/>
                 <button type="submit" disabled={input.length <= 0 || pseudos.find((v,k) => v === input)}><FontAwesomeIcon icon="plus" /></button>
               </form>
 
