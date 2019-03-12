@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { observer } from "mobx-react";
 import _ from 'lodash';
 import NewWindow from 'react-new-window';
 import axios from 'axios';
@@ -112,36 +113,6 @@ class App extends Component {
     }
   }
 
-  /*generateDOM() {
-    return _.map(this.state.layout, (l,k) => {
-      return (
-        <div key={l.i} data-grid={l} style={this.state.isEditMode?{padding:'5px', outline: '5px dashed #5a3a93', outlineOffset: '-5px', cursor:'grab'}:''}>
-          <div className="header-player" style={{marginTop: this.state.isEditMode?"5px":"0"}}>{this.state.isEditMode?l.channel:''}</div>
-          <Twitch style={{ height: "calc(100%)", width: "calc(100%)"}} channel={l.channel} targetID={`twitch-embed-${l.channel}`} layout="video-with-chat"/>
-          <div className="overlay" style={{width:'100%', height:'100%', position: "absolute", top:0, right:0, display: this.state.showOverlay?"block":"none"}}></div>
-          <button
-            className="remove"
-            style={{
-              position: "absolute",
-              right: 0,
-              top: 0,
-              cursor: "pointer",
-              color: "rgba(255, 255, 255, 0.6)",
-              backgroundColor: this.state.isEditMode?"#5a3a93":"transparent",
-              border: "none",
-              width: "20px",
-              height: "20px",
-              borderRadius: this.state.isEditMode?"0 0 0 8px":"0"
-            }}
-            onClick={this.onRemoveItem.bind(this, l)}
-          >
-            <FontAwesomeIcon icon="times" />
-          </button>
-        </div>
-      );
-    });
-  }*/
-
   generateLayout(pseudos) {
     //const p = this.props;
     return _.map(pseudos, (item, i) => {
@@ -194,18 +165,6 @@ class App extends Component {
 
   onResize(layout, oldLayoutItem, layoutItem, placeholder, e, element) {
     element.style.cursor = "se-resize";
-    // `oldLayoutItem` contains the state of the item before the resize.
-    // You can modify `layoutItem` to enforce constraints.
-    /*if (layoutItem.h < 3 && layoutItem.w > 2) {
-      layoutItem.w = 2;
-      placeholder.w = 2;
-    }
-
-    if (layoutItem.h >= 3 && layoutItem.w < 2) {
-      layoutItem.w = 2;
-      placeholder.w = 2;
-    }*/
-    //console.log(element.parentElement)
   }
 
   showOverlay() {
@@ -237,19 +196,6 @@ class App extends Component {
     }));
     if(this.state.isCollapse && this.state.isAuth) {this.getFollowedStream()}
   }
-
-  /*openPopup() {
-    const width = 600, height = 600
-    const left = (window.innerWidth / 2) - (width / 2)
-    const top = (window.innerHeight / 2) - (height / 2)
-    const url = `https://id.twitch.tv/oauth2/authorize?client_id=wkyn43dnz5yumupaqv8vwkz1j4thi1&redirect_uri=http://localhost:3000/&response_type=token&scope=user_read`
-
-    return window.open(url, '',
-      `toolbar=no, location=no, directories=no, status=no, menubar=no,
-      scrollbars=no, resizable=no, copyhistory=no, width=${width},
-      height=${height}, top=${top}, left=${left}`
-    )
-  }*/
 
   handleWindow() {
     this.setState(prevState => ({
@@ -416,4 +362,4 @@ function saveToLS(key, value) {
   }
 }
 
-export default withCookies(App);
+export default observer(withCookies(App));
