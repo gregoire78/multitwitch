@@ -1,15 +1,29 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import DevTools from "mobx-react-devtools";
+import { observable, computed, decorate } from "mobx";
 import './index.css';
 import App from './App';
 import { CookiesProvider } from 'react-cookie';
 import * as serviceWorker from './serviceWorker';
 
+class Person {
+    name = "coucou";
+
+    get tolox() {
+        return this.name + "fdfdff";
+    }
+}
+decorate(Person, {
+    name: observable,
+    tolox: computed
+})
+const person = new Person()
+person.name = "lol"
 ReactDOM.render(
     <CookiesProvider>
         <DevTools />
-        <App />
+        <App person={person} />
     </CookiesProvider>,
     document.getElementById('root')
 );

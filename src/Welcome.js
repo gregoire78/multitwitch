@@ -21,7 +21,7 @@ export default class Welcome extends Component {
                 breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                 cols={{ lg: 12, md: 12, sm: 6, xs: 6, xxs: 6 }}>
                 <div key="welcome" className="welcome" data-grid={{ x: 3, y: 1, w: 6, h: 3, minH: 3, minW: 6 }}>
-                    <h1>Welcome to MultiTwitch.co</h1>
+                    <h1>Welcome to MultiTwitch.co {this.props.person.tolox}</h1>
                     <p>
                     In MultiTwitch.co you can watch a multi streams of <a href="https://twitch.tv/" target="_blank" rel="noopener noreferrer" style={{fontSize: "1em"}}>twitch.tv</a>.
                     </p>

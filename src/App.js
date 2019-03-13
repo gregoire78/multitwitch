@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { observer } from "mobx-react";
 import _ from 'lodash';
 import NewWindow from 'react-new-window';
 import axios from 'axios';
@@ -68,7 +67,6 @@ class App extends Component {
 
     this.onLayoutChange = this.onLayoutChange.bind(this);
     this.resetLayout = this.resetLayout.bind(this);
-    this.onBreakpointChange = this.onBreakpointChange.bind(this);
     this.addPseudo = this.addPseudo.bind(this);
     this.showOverlay = this.showOverlay.bind(this);
     this.hideOverlay = this.hideOverlay.bind(this);
@@ -130,9 +128,6 @@ class App extends Component {
     });
   }
 
-  onBreakpointChange(newBreakpoint, newCols){
-  }
-
   resetLayout() {
     saveToLS("layouts", {});
     this.setState({ layouts: {} });
@@ -175,6 +170,7 @@ class App extends Component {
   }
 
   handleEdit() {
+    this.props.person.name = (!this.state.isEditMode).toString();
     this.setState(prevState => ({
       isEditMode: !prevState.isEditMode
     }));
@@ -285,6 +281,7 @@ class App extends Component {
               <button onClick={this.onToogleCollapse} className="collapse-btn"><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
               {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile" style={{backgroundImage: `url(${user.profile_image_url})`, backgroundSize: '24px 24px'}}></button> : <button onClick={this.handleWindow} title="connect your twitch account"><FontAwesomeIcon icon={["fab","twitch"]} /></button>}
               <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={!isEditMode ? "lightgrey" : ''} /></button>
+              {this.props.person.tolox}
             </nav>
 
             {(!_.isEmpty(streams) && isEditMode) &&
@@ -314,7 +311,6 @@ class App extends Component {
             onLayoutChange={this.onLayoutChange}
             onResize={this.onResize}
             layouts={layouts}
-            onBreakpointChange={this.onBreakpointChange}
             onResizeStart={this.showOverlay}
             onResizeStop={this.hideOverlay}
             onDragStart={this.onDragStart}
@@ -332,7 +328,7 @@ class App extends Component {
             }
           </ResponsiveReactGridLayout>
         :
-          <Welcome isAuth={isAuth} user={user} handleWindow={this.handleWindow} logout={this.logout}/>
+          <Welcome isAuth={isAuth} user={user} handleWindow={this.handleWindow} logout={this.logout} person={this.props.person} />
         }
       </>
     );
@@ -362,4 +358,4 @@ function saveToLS(key, value) {
   }
 }
 
-export default observer(withCookies(App));
+export default withCookies(App);
