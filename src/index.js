@@ -1,29 +1,49 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import DevTools from "mobx-react-devtools";
-import { observable, computed, decorate } from "mobx";
+import { observable, decorate, action } from "mobx";
 import './index.css';
 import App from './App';
 import { CookiesProvider } from 'react-cookie';
 import * as serviceWorker from './serviceWorker';
 
 class Person {
-    name = "coucou";
+    isEditMode = true;
+    isCollapse = false;
+    isAuth;
+    user = {};
+    streams = [];
+    opened = false;
 
-    get tolox() {
-        return this.name + "fdfdff";
+    handleEdit() {
+        this.isEditMode = !this.isEditMode;
+    }
+
+    onToogleCollapse() {
+        this.isCollapse = !this.isCollapse;
+        //if(this.isCollapse && this.isAuth) {this.getFollowedStream()}
+    }
+
+    handleWindow() {
+        this.opened = !this.opened;
     }
 }
 decorate(Person, {
-    name: observable,
-    tolox: computed
+    isEditMode: observable,
+    isCollapse: observable,
+    isAuth: observable,
+    user: observable,
+    streams: observable,
+    opened: observable,
+    handleEdit: action,
+    onToogleCollapse: action,
+    handleWindow: action
 })
-const person = new Person()
-person.name = "lol"
+
 ReactDOM.render(
     <CookiesProvider>
         <DevTools />
-        <App person={person} />
+        <App person={new Person()} />
     </CookiesProvider>,
     document.getElementById('root')
 );

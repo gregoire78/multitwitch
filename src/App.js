@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import {observer} from "mobx-react";
 import _ from 'lodash';
 import NewWindow from 'react-new-window';
 import axios from 'axios';
@@ -46,7 +47,7 @@ class App extends Component {
 
   constructor(props) {
     super(props);
-    const { cookies } = props;
+    const { cookies, person } = props;
 
     // get pseudo from url
     const urlparse = _.uniqBy(_.compact(window.location.pathname.split("/")));
@@ -56,15 +57,15 @@ class App extends Component {
       pseudos: urlparse,
       input: '',
       showOverlay: false,
-      isEditMode: true,
       mounted: false,
-      isCollapse: false,
-      opened: false,
-      user: {},
-      isAuth: cookies.get('token') && cookies.get('token').length > 0,
-      streams: []
+      //isCollapse: false,//check
+      //opened: false,//check
+      //user: {},//check
+      //isAuth: cookies.get('token') && cookies.get('token').length > 0,//check
+      //streams: []//check
     };
-
+    
+    person.isAuth = cookies.get('token') && cookies.get('token').length > 0;
     this.onLayoutChange = this.onLayoutChange.bind(this);
     this.resetLayout = this.resetLayout.bind(this);
     this.addPseudo = this.addPseudo.bind(this);
@@ -72,10 +73,13 @@ class App extends Component {
     this.hideOverlay = this.hideOverlay.bind(this);
     this.onDragStart = this.onDragStart.bind(this);
     this.onDragStop = this.onDragStop.bind(this);
-    this.handleEdit = this.handleEdit.bind(this);
-    this.onToogleCollapse = this.onToogleCollapse.bind(this);
+    //this.handleEdit = this.handleEdit.bind(this);
+    this.handleEdit = person.handleEdit.bind(person);
+    //this.onToogleCollapse = this.onToogleCollapse.bind(this);
+    this.onToogleCollapse = person.onToogleCollapse.bind(person);
     this.onRemoveItem = this.onRemoveItem.bind(this);
-    this.handleWindow = this.handleWindow.bind(this);
+    //this.handleWindow = this.handleWindow.bind(this);
+    this.handleWindow = person.handleWindow.bind(person);
     this.logout = this.logout.bind(this);
   }
 
@@ -85,8 +89,9 @@ class App extends Component {
     });
     ReactGA.pageview(window.location.pathname);
     //this.compononentLoginWindow();
-    if(this.state.isAuth) {
-      this.setState({user: (await this.getTwitchUser()).data[0]});
+    if(this.props.person.isAuth) {
+      this.props.person.user = (await this.getTwitchUser()).data[0];
+      //this.setState({user: (await this.getTwitchUser()).data[0]});
       this.getFollowedStream();
     }
     document.body.style.backgroundImage = "url("+MyIcon+")";
@@ -170,7 +175,6 @@ class App extends Component {
   }
 
   handleEdit() {
-    this.props.person.name = (!this.state.isEditMode).toString();
     this.setState(prevState => ({
       isEditMode: !prevState.isEditMode
     }));
@@ -213,18 +217,25 @@ class App extends Component {
   }
 
   async logout() {
-    const { cookies } = this.props;
-    await this.revokeTwitchToken(cookies.get('token'))
-    this.setState({isAuth: false, streams: [], user: {}});
+    const { cookies, person } = this.props;
+    await this.revokeTwitchToken(cookies.get('token'));
+    person.isAuth = false;
+    person.user = {};
+    person.streams = [];
+    //this.setState({isAuth: false, streams: [], user: {}});
     cookies.remove('token', {domain: process.env.REACT_APP_DOMAIN});
   }
 
   async handleClosePopup() {
     if(this.props.cookies.get('token')){
-      this.setState({opened: false, isAuth: this.props.cookies.get('token').length > 0, user: (await this.getTwitchUser()).data[0]});
+      this.props.person.isAuth = this.props.cookies.get('token').length > 0;
+      this.props.person.user = (await this.getTwitchUser()).data[0];
+      this.props.person.opened = false;
+      //this.setState({opened: false, isAuth: this.props.cookies.get('token').length > 0, user: (await this.getTwitchUser()).data[0]});
       this.getFollowedStream();
     } else {
-      this.setState({opened: false})
+      this.props.person.opened = false;
+      //this.setState({opened: false})
     }
   }
 
@@ -236,7 +247,8 @@ class App extends Component {
       }
     } ).then(res => {
         const streams = _.orderBy(res.data.streams, 'channel.name');
-        this.setState({ streams });
+        this.props.person.streams = streams;
+        //this.setState({ streams });
       })
   }
 
@@ -252,7 +264,8 @@ class App extends Component {
   }
 
   render() {
-    const { opened, isEditMode, input, pseudos, isCollapse, showOverlay, layout, layouts, isAuth, streams, user } = this.state
+    const { input, pseudos, showOverlay, layout, layouts } = this.state;
+    const { isEditMode, isCollapse, isAuth, user, streams, opened} = this.props.person;
     return (
       <>
         { opened &&
@@ -266,7 +279,7 @@ class App extends Component {
         }
 
         <CSSTransition
-          in={this.state.isCollapse}
+          in={isCollapse}
           classNames="header"
           timeout={300}
         >
@@ -281,7 +294,6 @@ class App extends Component {
               <button onClick={this.onToogleCollapse} className="collapse-btn"><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
               {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile" style={{backgroundImage: `url(${user.profile_image_url})`, backgroundSize: '24px 24px'}}></button> : <button onClick={this.handleWindow} title="connect your twitch account"><FontAwesomeIcon icon={["fab","twitch"]} /></button>}
               <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={!isEditMode ? "lightgrey" : ''} /></button>
-              {this.props.person.tolox}
             </nav>
 
             {(!_.isEmpty(streams) && isEditMode) &&
@@ -328,7 +340,7 @@ class App extends Component {
             }
           </ResponsiveReactGridLayout>
         :
-          <Welcome isAuth={isAuth} user={user} handleWindow={this.handleWindow} logout={this.logout} person={this.props.person} />
+          <Welcome isAuth={isAuth} user={user} handleWindow={this.handleWindow} logout={this.logout} />
         }
       </>
     );
@@ -358,4 +370,4 @@ function saveToLS(key, value) {
   }
 }
 
-export default withCookies(App);
+export default withCookies(observer(App));
