@@ -10,7 +10,6 @@
     "axios": "^0.18.0",
     "mobx": "^5.9.0",
     "mobx-react": "^5.4.3",
-    "mobx-react-devtools": "^6.1.1",
     "moment": "^2.24.0",
     "react": "^16.8.1",
     "react-autocomplete": "^1.8.1",
@@ -38,5 +37,8 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "devDependencies": {
+    "mobx-react-devtools": "^6.1.1"
+  }
 }

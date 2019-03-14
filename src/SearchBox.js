@@ -1,32 +1,29 @@
 import React, { Component } from 'react';
 import {debounce} from 'lodash';
+import {observer} from "mobx-react";
 import axios from 'axios';
 import Autocomplete from 'react-autocomplete';
 import './SearchBox.css';
 
-export default class SearchBox extends Component {
+export default observer(class SearchBox extends Component {
     constructor(props) {
         super(props);
-        this.state = {
-            query: this.props.input && '',
-            itemsSearch: [],
-            openDropdown: false
-        };
+        const { person } = this.props;
         this.handleChange = this.handleChange.bind(this);
-        this.onSelect = this.onSelect.bind(this);
-        this.onMenuVisibilityChange = this.onMenuVisibilityChange.bind(this);
+        this.onSelect = person.onSelect.bind(person);
+        this.onMenuVisibilityChange = person.onMenuVisibilityChange.bind(person);
     }
 
-    componentWillReceiveProps(prevProps, prevState) {
+    /*componentWillReceiveProps(prevProps, prevState) {
         if(prevProps.input !== this.props.input){
             this.setState({ query : prevProps.input})
             if(prevProps.input.length <= 0) this.setState({ itemsSearch: [] })
         }
-    }
+    }*/
 
     componentWillMount() {
         this.handleSearchDebounced = debounce(() => {
-            this.handleSearch.apply(this, [this.state.query]);
+            this.handleSearch.apply(this, [this.props.person.query]);
         }, 250);
     }
 
@@ -42,32 +39,26 @@ export default class SearchBox extends Component {
     async handleSearch(query) {
         if(query.trim().length > 0) {
             const result = await this.searchTwitchChannel(query);
-            this.setState({ itemsSearch: result.channels, openDropdown : result.channels.length > 0 });
+            this.props.person.itemsSearch = result.channels;
+            this.props.person.openDropdown = result.channels.length > 0;
         } else {
-            this.setState({ itemsSearch: [], openDropdown: false })
+            this.props.person.itemsSearch = [];
+            this.props.person.openDropdown = false;
         }
     }
 
     handleChange(event) {
-        this.props.queryCallback(event.target.value);
-        this.setState({ query: event.target.value, openDropdown : this.state.itemsSearch.length < 0 });
+        //this.props.queryCallback(event.target.value);
+        this.props.person.query = event.target.value;
+        this.props.person.openDropdown = this.props.person.itemsSearch.length < 0;
         this.handleSearchDebounced();
-    }
-
-    onSelect(item) {
-        this.props.queryCallback(item);
-        this.setState({query: item});
-    }
-
-    onMenuVisibilityChange(isopen) {
-        this.setState({openDropdown : !this.state.openDropdown && this.state.query.length>0});
     }
 
     render() {
         return (
             <Autocomplete
                 getItemValue={(item) => item.name}
-                items={this.state.itemsSearch}
+                items={this.props.person.itemsSearch.slice()}
                 renderItem={(item, isHighlighted) =>
                 <div className="item" key={item.name} style={{ background: isHighlighted ? '#b34646' : 'transparent' }}>
                     <img src={item.logo} height="20" alt="" /> {item.display_name}
@@ -78,14 +69,14 @@ export default class SearchBox extends Component {
                     {children}
                 </div>
                 )}
-                value={this.state.query}
+                value={this.props.person.queryFormat}
                 onChange={this.handleChange}
                 onSelect={this.onSelect}
                 renderInput={(props) => <input type="search" placeholder={this.props.placeholder} {...props}/>}
                 onMenuVisibilityChange={this.onMenuVisibilityChange}
                 selectOnBlur={false}
-                open={this.state.openDropdown}
+                open={this.props.person.openDropdown}
             />
         );
     }
-}
+})

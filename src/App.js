@@ -56,8 +56,8 @@ class App extends Component {
       layout: this.generateLayout(urlparse),
       pseudos: urlparse,
       input: '',
-      showOverlay: false,
-      mounted: false,
+      //showOverlay: false,//check
+      //mounted: false,//check
       //isCollapse: false,//check
       //opened: false,//check
       //user: {},//check
@@ -69,18 +69,20 @@ class App extends Component {
     this.onLayoutChange = this.onLayoutChange.bind(this);
     this.resetLayout = this.resetLayout.bind(this);
     this.addPseudo = this.addPseudo.bind(this);
-    this.showOverlay = this.showOverlay.bind(this);
-    this.hideOverlay = this.hideOverlay.bind(this);
+    //this.showOverlay = this.showOverlay.bind(this);
+    //this.hideOverlay = this.hideOverlay.bind(this);
     this.onDragStart = this.onDragStart.bind(this);
     this.onDragStop = this.onDragStop.bind(this);
     //this.handleEdit = this.handleEdit.bind(this);
     this.handleEdit = person.handleEdit.bind(person);
     //this.onToogleCollapse = this.onToogleCollapse.bind(this);
-    this.onToogleCollapse = person.onToogleCollapse.bind(person);
+    this.onToogleCollapse = person.onToogleCollapse.bind(person, this.getFollowedStream.bind(this));
     this.onRemoveItem = this.onRemoveItem.bind(this);
     //this.handleWindow = this.handleWindow.bind(this);
     this.handleWindow = person.handleWindow.bind(person);
-    this.logout = this.logout.bind(this);
+    //this.logout = this.logout.bind(this);
+    this.logout = person.logout.bind(person, this.revokeTwitchToken.bind(this), cookies);
+    this.toogleOverlay = person.toogleOverlay.bind(person);
   }
 
   async componentDidMount() {
@@ -99,7 +101,8 @@ class App extends Component {
     document.body.style.backgroundRepeat = "no-repeat";
     document.body.style.backgroundSize = "contain";
     document.body.style.backgroundAttachment = "fixed";
-    this.setState({ mounted: true });
+    this.props.person.mounted = true;
+    //this.setState({ mounted: true });
   }
 
   componentWillMount() {
@@ -155,11 +158,13 @@ class App extends Component {
   }
 
   addPseudo(event){
-    const pseudo = this.state.input.trim().toLowerCase()
+    //const pseudo = this.state.input.trim().toLowerCase()
+    const pseudo = this.props.person.queryFormat;
     event.preventDefault();
     if(pseudo.length > 0) {
       this.addFollow(pseudo);
-      this.setState({input: ''});
+      this.props.person.query = '';
+      //this.setState({input: ''});
     }
   }
 
@@ -168,10 +173,12 @@ class App extends Component {
   }
 
   showOverlay() {
-    this.setState({showOverlay:true})
+    this.props.person.toogleOverlay(true);
+    //this.setState({showOverlay:true})
   }
   hideOverlay() {
-    this.setState({showOverlay:false})
+    this.props.person.toogleOverlay(false);
+    //this.setState({showOverlay:false})
   }
 
   handleEdit() {
@@ -181,12 +188,14 @@ class App extends Component {
   }
 
   onDragStart(layout, oldItem, newItem, placeholder, e, element) {
-    this.showOverlay();
+    //this.showOverlay();
+    this.toogleOverlay(true);
     element.style.cursor = "grabbing";
   }
 
   onDragStop(layout, oldItem, newItem, placeholder, e, element) {
-    this.hideOverlay();
+    //this.hideOverlay();
+    this.toogleOverlay(false);
     element.style.cursor = "grab";
   }
 
@@ -264,8 +273,8 @@ class App extends Component {
   }
 
   render() {
-    const { input, pseudos, showOverlay, layout, layouts } = this.state;
-    const { isEditMode, isCollapse, isAuth, user, streams, opened} = this.props.person;
+    const { input, pseudos, layout, layouts } = this.state;
+    const { isEditMode, isCollapse, isAuth, user, streams, opened, showOverlay, query} = this.props.person;
     return (
       <>
         { opened &&
@@ -286,8 +295,8 @@ class App extends Component {
           <header>
             <nav>
               <form onSubmit={this.addPseudo}>
-                <SearchBox placeholder="Search a channel" queryCallback={(query)=>this.setState({input: query})} input={input}/>
-                <button type="submit" disabled={input.length <= 0 || pseudos.find((v,k) => v === input)}><FontAwesomeIcon icon="plus" /></button>
+                <SearchBox placeholder="Search a channel" person={this.props.person}/>
+                <button type="submit" disabled={query.length <= 0 || pseudos.find((v,k) => v === input)}><FontAwesomeIcon icon="plus" /></button>
               </form>
 
               <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" title="reset layout"/></button>
@@ -323,8 +332,8 @@ class App extends Component {
             onLayoutChange={this.onLayoutChange}
             onResize={this.onResize}
             layouts={layouts}
-            onResizeStart={this.showOverlay}
-            onResizeStop={this.hideOverlay}
+            onResizeStart={()=>this.toogleOverlay(true)}
+            onResizeStop={()=>this.toogleOverlay(false)}
             onDragStart={this.onDragStart}
             onDragStop={this.onDragStop}
             measureBeforeMount={true}
