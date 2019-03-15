@@ -32,7 +32,7 @@ export default class Welcome extends Component {
                     {!isAuth ?
                         <button onClick={this.props.handleWindow} title="Login to your twitch account"><FontAwesomeIcon icon={["fab", "twitch"]} /> Connect your Twitch account</button>
                         :
-                        <>Congratulation <span style={{background: "rgb(130, 107, 173)"}}><img src={user.profile_image_url} alt={`img ${user.login}`} style={{height: "21px", verticalAlign: "top", backgroundColor: "black"}}/> {user.display_name} </span>&nbsp;you are connected ! <button onClick={this.props.logout}>logout <FontAwesomeIcon icon="sign-out-alt" /></button></> }
+                        <>Congratulation <span style={{background: "rgb(130, 107, 173)"}}><img src={user.profile_image_url} alt="" style={{height: "21px", verticalAlign: "top", backgroundColor: "black"}}/> {user.display_name} </span>&nbsp;you are connected ! <button onClick={this.props.logout}>logout <FontAwesomeIcon icon="sign-out-alt" /></button></> }
                     </p>
                     <small>Created by Grégoire Joncour - <a href="https://github.com/gregoire78/multitwitch" target="_blank" rel="noopener noreferrer"><FontAwesomeIcon icon={["fab", "github"]} /> view the project on github</a> - &copy; 2019 multitwitch.co</small>
                 </div>

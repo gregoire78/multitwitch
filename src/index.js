@@ -23,8 +23,9 @@ class Person {
     layout;
     layouts;
 
-    handleEdit() {
+    handleEdit(toolTipRebuild) {
         this.isEditMode = !this.isEditMode;
+        if(this.isEditMode && this.isAuth) {toolTipRebuild()}
     }
 
     onToogleCollapse(getFollowedStream) {

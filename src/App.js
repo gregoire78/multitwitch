@@ -18,7 +18,7 @@ import { CSSTransition } from 'react-transition-group';
 
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faSignOutAlt, faHandshake, faClock } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faSignOutAlt, faHandshake, faClock, faEye, faUser } from '@fortawesome/free-solid-svg-icons';
 import { faTwitch, faGithub } from '@fortawesome/free-brands-svg-icons';
 
 import '../node_modules/react-resizable/css/styles.css';
@@ -29,7 +29,7 @@ import Welcome from './Welcome';
 import SearchBox from './SearchBox';
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
-library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt, faHandshake, faClock, faGithub);
+library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt, faHandshake, faClock, faGithub, faEye, faUser);
 moment.locale('fr');
 
 class App extends Component {
@@ -62,7 +62,7 @@ class App extends Component {
     this.addPseudo = this.addPseudo.bind(this);
     this.onDragStart = this.onDragStart.bind(this);
     this.onDragStop = this.onDragStop.bind(this);
-    this.handleEdit = person.handleEdit.bind(person);
+    this.handleEdit = person.handleEdit.bind(person, this.toolTipRebuild.bind(this));
     this.onToogleCollapse = person.onToogleCollapse.bind(person, this.getFollowedStream.bind(this));
     this.onRemoveItem = this.onRemoveItem.bind(this);
     this.handleWindow = person.handleWindow.bind(person);
@@ -86,6 +86,12 @@ class App extends Component {
     document.body.style.backgroundSize = "contain";
     document.body.style.backgroundAttachment = "fixed";
     this.props.person.mounted = true;
+  }
+
+  toolTipRebuild() {
+    setTimeout(() => {
+      ReactTooltip.rebuild();
+    }, 0);
   }
 
   componentWillMount() {
@@ -188,11 +194,11 @@ class App extends Component {
         'Authorization': `OAuth ${this.props.cookies.get('token')}`,
         'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
       }
-    } ).then(res => {
-        const streams = _.orderBy(res.data.streams, 'channel.name');
-        this.props.person.streams = streams;
-        ReactTooltip.rebuild();
-      })
+    }).then(res => {
+      const streams = _.orderBy(res.data.streams, 'channel.name');
+      this.props.person.streams = streams;
+      ReactTooltip.rebuild();
+    })
   }
 
   addFollow(name){
@@ -245,7 +251,7 @@ class App extends Component {
                 {_.map(streams, (v,k) => {
                   return (
                     <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} data-for="status" data-tip={JSON.stringify(v)} /*data-tip={`${v.channel.status} - ${v.game} - ${v.channel.broadcaster_language}${v.channel.mature ? " - 🔞" : ""}`}*/ >
-                      <img alt="logo" height={22} src={v.channel.logo} /> {v.channel.display_name} <FontAwesomeIcon icon="clock" color="lightgrey" data-for="live" data-tip={`live depuis ${moment.utc(moment()-moment(v.created_at)).format("HH[h et ]mm[m]")}`} />{/*v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />*/}
+                      <img alt="" height={22} src={v.channel.logo} /> {v.channel.display_name}{/*v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />*/}
                     </p>
                   )
                 })}
@@ -285,17 +291,22 @@ class App extends Component {
         :
           <Welcome isAuth={isAuth} user={user} handleWindow={this.handleWindow} logout={this.logout} />
         }
-        <ReactTooltip id="status" place="right" border={true} className="extraClass" getContent={datumAsText => {
+
+        <ReactTooltip  id="status" place="right" border={true} className="extraClass" getContent={datumAsText => {
           if (datumAsText == null) {
             return;
           }
           let v = JSON.parse(datumAsText);
-          console.log(v)
           return (
-          <>
-            <p>{v.channel.status}</p>
-            <img alt="" src={`https://static-cdn.jtvnw.net/ttv-boxart/${v.game}-40x55.jpg`} />
-          </>
+            <div>
+              <img style={{display: "inline-block"}} alt="" src={`https://static-cdn.jtvnw.net/ttv-boxart/${v.game}-40x55.jpg`} />
+              <div style={{display: "inline-block", verticalAlign: "top", margin: "0 0 0 10px",overflow: "hidden",textOverflow: "ellipsis", whiteSpace: "nowrap",width: "calc(100% - 50px)"}}>
+                <b>{v.channel.status}</b><br/>
+                {v.game} - {v.channel.broadcaster_language.toUpperCase()}{v.channel.mature ? " - 🔞" : ""}<br/>
+                <small><FontAwesomeIcon icon="clock" /> {`${moment.utc(moment()-moment(v.created_at)).format("HH[h]mm")}`} - <FontAwesomeIcon icon="user" /> {v.viewers.toLocaleString('en-US',{ minimumFractionDigits: 0 })}</small>
+              </div><br/>
+              <img  style={{display: "block"}} alt="" src={v.preview.small} />
+            </div>
           );
         }} />
       </>

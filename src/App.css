@@ -287,9 +287,12 @@ li b {
 .extraClass {
   background-color: #6441a4 !important;
   color: white !important;
-  border-color: white !important;
+  border: 2px dashed #b34646 !important;
   padding: 5px !important;
+  border-radius: 0 !important;
 }
-.extraClass p {
-  margin: 0;
+.place-right:before, .place-right:after,
+.place-bottom:before, .place-bottom:after,
+.place-top:before, .place-top:after{
+  display: none !important;
 }
