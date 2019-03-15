@@ -20,6 +20,7 @@
     "react-interval-timer": "^1.0.5",
     "react-new-window": "0.0.11",
     "react-scripts": "2.1.4",
+    "react-tooltip": "^3.10.0",
     "react-transition-group": "^2.5.3",
     "react-twitch-embed-video": "^1.0.1"
   },

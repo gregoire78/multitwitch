@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import DevTools from "mobx-react-devtools";
+import DevTools, { configureDevtool } from "mobx-react-devtools";
 import { observable, decorate, action, computed } from "mobx";
 import './index.css';
 import App from './App';
@@ -19,6 +19,9 @@ class Person {
     query = '';
     itemsSearch = new Array(1);
     openDropdown = false;
+    pseudos;
+    layout;
+    layouts;
 
     handleEdit() {
         this.isEditMode = !this.isEditMode;
@@ -56,6 +59,11 @@ class Person {
     onSelect(item) {
         this.query = item;
     }
+
+    resetLayout(saveToLS) {
+        saveToLS("layouts", {});
+        this.layouts = {};
+    }
 }
 decorate(Person, {
     isEditMode: observable,
@@ -69,6 +77,9 @@ decorate(Person, {
     query: observable,
     itemsSearch: observable,
     openDropdown: observable,
+    pseudos: observable,
+    layout: observable,
+    layouts: observable,
 
     handleEdit: action,
     onToogleCollapse: action,
@@ -77,8 +88,13 @@ decorate(Person, {
     toogleOverlay: action,
     onMenuVisibilityChange: action,
     onSelect: action,
+    resetLayout: action,
 
     queryFormat: computed
+})
+
+configureDevtool({
+    logFilter: change => change.type === 'reaction' || change.type === 'action',
 })
 
 ReactDOM.render(

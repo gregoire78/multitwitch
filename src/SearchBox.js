@@ -14,13 +14,6 @@ export default observer(class SearchBox extends Component {
         this.onMenuVisibilityChange = person.onMenuVisibilityChange.bind(person);
     }
 
-    /*componentWillReceiveProps(prevProps, prevState) {
-        if(prevProps.input !== this.props.input){
-            this.setState({ query : prevProps.input})
-            if(prevProps.input.length <= 0) this.setState({ itemsSearch: [] })
-        }
-    }*/
-
     componentWillMount() {
         this.handleSearchDebounced = debounce(() => {
             this.handleSearch.apply(this, [this.props.person.query]);

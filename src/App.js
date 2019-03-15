@@ -51,36 +51,20 @@ class App extends Component {
 
     // get pseudo from url
     const urlparse = _.uniqBy(_.compact(window.location.pathname.split("/")));
-    this.state = {
-      layouts: JSON.parse(JSON.stringify(originalLayouts)),
-      layout: this.generateLayout(urlparse),
-      pseudos: urlparse,
-      input: '',
-      //showOverlay: false,//check
-      //mounted: false,//check
-      //isCollapse: false,//check
-      //opened: false,//check
-      //user: {},//check
-      //isAuth: cookies.get('token') && cookies.get('token').length > 0,//check
-      //streams: []//check
-    };
     
+    person.layouts = JSON.parse(JSON.stringify(originalLayouts));
+    person.layout = this.generateLayout(urlparse);
+    person.pseudos = urlparse;
     person.isAuth = cookies.get('token') && cookies.get('token').length > 0;
     this.onLayoutChange = this.onLayoutChange.bind(this);
-    this.resetLayout = this.resetLayout.bind(this);
+    this.resetLayout = person.resetLayout.bind(person, saveToLS);
     this.addPseudo = this.addPseudo.bind(this);
-    //this.showOverlay = this.showOverlay.bind(this);
-    //this.hideOverlay = this.hideOverlay.bind(this);
     this.onDragStart = this.onDragStart.bind(this);
     this.onDragStop = this.onDragStop.bind(this);
-    //this.handleEdit = this.handleEdit.bind(this);
     this.handleEdit = person.handleEdit.bind(person);
-    //this.onToogleCollapse = this.onToogleCollapse.bind(this);
     this.onToogleCollapse = person.onToogleCollapse.bind(person, this.getFollowedStream.bind(this));
     this.onRemoveItem = this.onRemoveItem.bind(this);
-    //this.handleWindow = this.handleWindow.bind(this);
     this.handleWindow = person.handleWindow.bind(person);
-    //this.logout = this.logout.bind(this);
     this.logout = person.logout.bind(person, this.revokeTwitchToken.bind(this), cookies);
     this.toogleOverlay = person.toogleOverlay.bind(person);
   }
@@ -93,7 +77,6 @@ class App extends Component {
     //this.compononentLoginWindow();
     if(this.props.person.isAuth) {
       this.props.person.user = (await this.getTwitchUser()).data[0];
-      //this.setState({user: (await this.getTwitchUser()).data[0]});
       this.getFollowedStream();
     }
     document.body.style.backgroundImage = "url("+MyIcon+")";
@@ -102,7 +85,6 @@ class App extends Component {
     document.body.style.backgroundSize = "contain";
     document.body.style.backgroundAttachment = "fixed";
     this.props.person.mounted = true;
-    //this.setState({ mounted: true });
   }
 
   componentWillMount() {
@@ -136,35 +118,28 @@ class App extends Component {
     });
   }
 
-  resetLayout() {
-    saveToLS("layouts", {});
-    this.setState({ layouts: {} });
-  }
-
   onLayoutChange(layout, layouts) {
-    if(this.state.pseudos.length){
+    if(this.props.person.pseudos.length){
       saveToLS("layouts", layouts);
-      this.setState({ layouts });
+      this.props.person.layouts = layouts;
     }
     //this.props.onLayoutChange(layout);
   }
 
   onRemoveItem(l) {
-    let pseudos = _.reject(this.state.pseudos, ( value, key ) => {return value === l.channel});
-    let layout = _.reject(this.state.layout, { i: l.i });
-    this.setState({ pseudos, layout});
+    let pseudos = _.reject(this.props.person.pseudos, ( value, key ) => {return value === l.channel});
+    this.props.person.layout = _.reject(this.props.person.layout, { i: l.i });
+    this.props.person.pseudos = pseudos;
     window.history.replaceState('','',`${window.origin}/${pseudos.join('/')}`);
     ReactGA.pageview(window.location.pathname);
   }
 
   addPseudo(event){
-    //const pseudo = this.state.input.trim().toLowerCase()
     const pseudo = this.props.person.queryFormat;
     event.preventDefault();
     if(pseudo.length > 0) {
       this.addFollow(pseudo);
       this.props.person.query = '';
-      //this.setState({input: ''});
     }
   }
 
@@ -172,44 +147,14 @@ class App extends Component {
     element.style.cursor = "se-resize";
   }
 
-  showOverlay() {
-    this.props.person.toogleOverlay(true);
-    //this.setState({showOverlay:true})
-  }
-  hideOverlay() {
-    this.props.person.toogleOverlay(false);
-    //this.setState({showOverlay:false})
-  }
-
-  handleEdit() {
-    this.setState(prevState => ({
-      isEditMode: !prevState.isEditMode
-    }));
-  }
-
   onDragStart(layout, oldItem, newItem, placeholder, e, element) {
-    //this.showOverlay();
     this.toogleOverlay(true);
     element.style.cursor = "grabbing";
   }
 
   onDragStop(layout, oldItem, newItem, placeholder, e, element) {
-    //this.hideOverlay();
     this.toogleOverlay(false);
     element.style.cursor = "grab";
-  }
-
-  onToogleCollapse() {
-    this.setState(prevState => ({
-      isCollapse: !prevState.isCollapse
-    }));
-    if(this.state.isCollapse && this.state.isAuth) {this.getFollowedStream()}
-  }
-
-  handleWindow() {
-    this.setState(prevState => ({
-      opened: !prevState.opened
-    }));
   }
 
   async getTwitchUser(){
@@ -225,26 +170,14 @@ class App extends Component {
     await axios.post(`https://id.twitch.tv/oauth2/revoke?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&token=${token}`)
   }
 
-  async logout() {
-    const { cookies, person } = this.props;
-    await this.revokeTwitchToken(cookies.get('token'));
-    person.isAuth = false;
-    person.user = {};
-    person.streams = [];
-    //this.setState({isAuth: false, streams: [], user: {}});
-    cookies.remove('token', {domain: process.env.REACT_APP_DOMAIN});
-  }
-
   async handleClosePopup() {
     if(this.props.cookies.get('token')){
       this.props.person.isAuth = this.props.cookies.get('token').length > 0;
       this.props.person.user = (await this.getTwitchUser()).data[0];
       this.props.person.opened = false;
-      //this.setState({opened: false, isAuth: this.props.cookies.get('token').length > 0, user: (await this.getTwitchUser()).data[0]});
       this.getFollowedStream();
     } else {
       this.props.person.opened = false;
-      //this.setState({opened: false})
     }
   }
 
@@ -257,24 +190,23 @@ class App extends Component {
     } ).then(res => {
         const streams = _.orderBy(res.data.streams, 'channel.name');
         this.props.person.streams = streams;
-        //this.setState({ streams });
       })
   }
 
   addFollow(name){
-    const pseudos = this.state.pseudos;
-    if(!_.includes(this.state.pseudos, name)) {
+    const pseudos = this.props.person.pseudos;
+    if(!_.includes(pseudos, name)) {
       window.history.replaceState('','',`${window.location}${window.location.href.slice(-1) === '/' ? '' : '/'}${name}`);
       pseudos.push(name);
       let layout = this.generateLayout(pseudos)
-      this.setState({pseudos, layout});
+      this.props.person.pseudos = pseudos;
+      this.props.person.layout = layout;
       ReactGA.pageview(window.location.pathname);
     }
   }
 
   render() {
-    const { input, pseudos, layout, layouts } = this.state;
-    const { isEditMode, isCollapse, isAuth, user, streams, opened, showOverlay, query} = this.props.person;
+    const { isEditMode, isCollapse, isAuth, user, streams, opened, showOverlay, query, pseudos, layout, layouts} = this.props.person;
     return (
       <>
         { opened &&
@@ -296,7 +228,7 @@ class App extends Component {
             <nav>
               <form onSubmit={this.addPseudo}>
                 <SearchBox placeholder="Search a channel" person={this.props.person}/>
-                <button type="submit" disabled={query.length <= 0 || pseudos.find((v,k) => v === input)}><FontAwesomeIcon icon="plus" /></button>
+                <button type="submit" disabled={query.length <= 0 || pseudos.find((v,k) => v === query)}><FontAwesomeIcon icon="plus" /></button>
               </form>
 
               <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" title="reset layout"/></button>
