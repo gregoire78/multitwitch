@@ -6,6 +6,7 @@ import axios from 'axios';
 import moment from 'moment';
 import 'moment/locale/fr';
 import ReactGA from 'react-ga';
+import ReactTooltip from 'react-tooltip';
 import { withCookies, Cookies } from 'react-cookie';
 import { instanceOf } from 'prop-types';
 import IntervalTimer from 'react-interval-timer';
@@ -190,6 +191,7 @@ class App extends Component {
     } ).then(res => {
         const streams = _.orderBy(res.data.streams, 'channel.name');
         this.props.person.streams = streams;
+        ReactTooltip.rebuild();
       })
   }
 
@@ -242,8 +244,8 @@ class App extends Component {
                 <p style={{textAlign: "center", background: "#b34646", cursor: "default", height: "24px"}}><button onClick={this.logout} title="Logout" style={{position: "absolute",left: 0}}><FontAwesomeIcon icon="sign-out-alt" /></button><span style={{lineHeight: "24px"}}>{user.display_name}</span></p>
                 {_.map(streams, (v,k) => {
                   return (
-                    <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} title={`${v.channel.status} - ${v.game} - ${v.channel.broadcaster_language}${v.channel.mature ? " - 🔞" : ""}`}>
-                      <img alt="logo" height={22} src={v.channel.logo} /> {v.channel.display_name} <FontAwesomeIcon icon="clock" color="lightgrey" title={`live depuis ${moment.utc(moment()-moment(v.created_at)).format("HH[h et ]mm[m]")}`} />{/*v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />*/}
+                    <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} data-for="status" data-tip={JSON.stringify(v)} /*data-tip={`${v.channel.status} - ${v.game} - ${v.channel.broadcaster_language}${v.channel.mature ? " - 🔞" : ""}`}*/ >
+                      <img alt="logo" height={22} src={v.channel.logo} /> {v.channel.display_name} <FontAwesomeIcon icon="clock" color="lightgrey" data-for="live" data-tip={`live depuis ${moment.utc(moment()-moment(v.created_at)).format("HH[h et ]mm[m]")}`} />{/*v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />*/}
                     </p>
                   )
                 })}
@@ -283,6 +285,19 @@ class App extends Component {
         :
           <Welcome isAuth={isAuth} user={user} handleWindow={this.handleWindow} logout={this.logout} />
         }
+        <ReactTooltip id="status" place="right" border={true} className="extraClass" getContent={datumAsText => {
+          if (datumAsText == null) {
+            return;
+          }
+          let v = JSON.parse(datumAsText);
+          console.log(v)
+          return (
+          <>
+            <p>{v.channel.status}</p>
+            <img alt="" src={`https://static-cdn.jtvnw.net/ttv-boxart/${v.game}-40x55.jpg`} />
+          </>
+          );
+        }} />
       </>
     );
   }

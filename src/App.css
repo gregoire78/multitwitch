@@ -283,3 +283,13 @@ li b {
   background: #b34646;
   color: white;
 }
+
+.extraClass {
+  background-color: #6441a4 !important;
+  color: white !important;
+  border-color: white !important;
+  padding: 5px !important;
+}
+.extraClass p {
+  margin: 0;
+}
