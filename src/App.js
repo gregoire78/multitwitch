@@ -245,10 +245,11 @@ class App extends Component {
               <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={!isEditMode ? "lightgrey" : ''} /></button>
             </nav>
 
-            {(!_.isEmpty(streams) && isEditMode) &&
+            {(isAuth && isEditMode) &&
             <nav className="streams">
                 <p style={{textAlign: "center", background: "#b34646", cursor: "default", height: "24px"}}><button onClick={this.logout} title="Logout" style={{position: "absolute",left: 0}}><FontAwesomeIcon icon="sign-out-alt" /></button><span style={{lineHeight: "24px"}}>{user.display_name}</span></p>
-                {_.map(streams, (v,k) => {
+                {!_.isEmpty(streams) &&
+                _.map(streams, (v,k) => {
                   return (
                     <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} data-for="status" data-tip={JSON.stringify(v)} /*data-tip={`${v.channel.status} - ${v.game} - ${v.channel.broadcaster_language}${v.channel.mature ? " - 🔞" : ""}`}*/ >
                       <img alt="" height={22} src={v.channel.logo} /> {v.channel.display_name}{/*v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />*/}
@@ -256,6 +257,7 @@ class App extends Component {
                   )
                 })}
             </nav>}
+
             <IntervalTimer
               timeout={10000}
               callback={this.getFollowedStream.bind(this)}
