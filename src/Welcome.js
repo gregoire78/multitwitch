@@ -4,10 +4,73 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { faTwitch, faGithub } from '@fortawesome/free-brands-svg-icons';
+import tmi from 'tmi.js';
+import axios from 'axios';
+import _ from 'lodash';
 
 library.add(faTwitch, faSignOutAlt, faGithub);
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
+// Generating HASH out of Random String
+function hashCode(str) { 
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+       hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return hash;
+} 
+
+// Creating Hex Color code out of Random String
+function intToRGB(i){
+    var c = (i & 0x00FFFFFF)
+        .toString(16)
+        .toUpperCase();
+
+    return "00000".substring(0, 6 - c.length) + c;
+}
+const client = new tmi.client({
+    channels: [
+        "loeya",
+        "rhobalas_lol",
+        "domingo",
+        "bestmarmotte",
+        "ikatv"
+    ]
+});
+let id = {}
+async function getBadgeLink(channel){
+    const idy = (await axios.get(`https://api.twitch.tv/helix/users?login=${channel}`, {
+      headers: {
+        'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
+      }
+    })).data.data[0].id;
+    const badges = (await axios.get(`https://badges.twitch.tv/v1/badges/channels/${idy}/display?language=fr`)).data;
+    const badgesglobal = (await axios.get(`https://badges.twitch.tv/v1/badges/global/display?language=fr`)).data;
+
+    id[channel] = {id: idy, badges: _.assign(badgesglobal.badge_sets, badges.badge_sets)};
+    console.log(channel, idy, id)
+}
+client.connect();
+client.on("connected", (address, port) => {
+    console.log(address+port);
+    ["loeya","rhobalas_lol","domingo","bestmarmotte","ikatv"
+    ].map(async(chan)=>await getBadgeLink(chan))
+    
+});
+client.on("chat", async (channel, user, message, self) => {
+    let p = [`font-size: 0px;display: none;`, `font-size: 0px;display: none;`]
+    if(user.badges) {
+        p = _.map(user.badges, (v,k)=>{return `font-size: 1px;padding: ${(18 * 0.5)}px;background-size: ${(18 * 0.5)}px;background: url( ${id[channel.slice(1)].badges[k].versions[v].image_url_1x}) no-repeat;`})
+    }
+    //badges = user.badges ? id[channel.slice(1)].badges[user.badges["subscriber"]].image_url_1x : ''
+    console.log(`%c${channel}%c *** %c %c %c${user["display-name"]} %c== ${message}`, `background: #${intToRGB(hashCode(channel))}; color: white;`, ``, p[1] ? p[1] : `font-size: 0px;display: none;`, p[0], `color: ${user.color}`, ``)
+});
+client.on("timeout", (channel, username, reason, duration, userstate) => {
+    console.log("TO", username, channel, reason, duration)
+});
+client.on("ban", (channel, username, reason, userstate) => {
+    console.log("Ban", username, channel, reason)
+});
 export default class Welcome extends Component {
     render() {
         const { isAuth, user } = this.props
@@ -35,6 +98,11 @@ export default class Welcome extends Component {
                         <>Congratulation <span style={{background: "rgb(130, 107, 173)"}}><img src={user.profile_image_url} alt="" style={{height: "21px", verticalAlign: "top", backgroundColor: "black"}}/> {user.display_name} </span>&nbsp;you are connected ! <button onClick={this.props.logout}>logout <FontAwesomeIcon icon="sign-out-alt" /></button></> }
                     </p>
                     <small>Created by Grégoire Joncour - <a href="https://github.com/gregoire78/multitwitch" target="_blank" rel="noopener noreferrer"><FontAwesomeIcon icon={["fab", "github"]} /> view the project on github</a> - &copy; 2019 multitwitch.co</small>
+                </div>
+
+                <div key="chat" className="" data-grid={{ x: 0, y: 1, w: 3, h: 3, minH: 3, minW: 3 }}>
+
+                    
                 </div>
             </ResponsiveReactGridLayout>
             /*<div className="main-welcome">

@@ -32,6 +32,7 @@ export default observer(class SearchBox extends Component {
     async handleSearch(query) {
         if(query.trim().length > 0) {
             const result = await this.searchTwitchChannel(query);
+            console.log(result.channels)
             this.props.person.itemsSearch = result.channels;
             this.props.person.openDropdown = result.channels.length > 0;
         } else {
