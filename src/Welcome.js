@@ -58,12 +58,12 @@ client.on("connected", (address, port) => {
     
 });
 client.on("chat", async (channel, user, message, self) => {
-    let p = [`font-size: 0px;display: none;`, `font-size: 0px;display: none;`]
+    let p = [`font-size: 0px;display: none;`, `font-size: 0px;display: none;`, `font-size: 0px;display: none;`]
     if(user.badges) {
         p = _.map(user.badges, (v,k)=>{return `font-size: 1px;padding: ${(18 * 0.5)}px;background-size: ${(18 * 0.5)}px;background: url( ${id[channel.slice(1)].badges[k].versions[v].image_url_1x}) no-repeat;`})
     }
     //badges = user.badges ? id[channel.slice(1)].badges[user.badges["subscriber"]].image_url_1x : ''
-    console.log(`%c${channel}%c *** %c %c %c${user["display-name"]} %c== ${message}`, `background: #${intToRGB(hashCode(channel))}; color: white;`, ``, p[1] ? p[1] : `font-size: 0px;display: none;`, p[0], `color: ${user.color}`, ``)
+    console.log(`%c${channel}%c *** %c %c %c %c${user["display-name"]} %c== ${message}`, `background: #${intToRGB(hashCode(channel))}; color: white;`, ``, p[0], p[1] ? p[1] : `font-size: 0px;display: none;`, p[2] ? p[2] : `font-size: 0px;display: none;`, `color: ${user.color}`, ``)
 });
 client.on("timeout", (channel, username, reason, duration, userstate) => {
     console.log("TO", username, channel, reason, duration)
