@@ -53,7 +53,7 @@ async function getBadgeLink(channel){
     id[channel] = {id: idy, badges: _.assign(badgesglobal.badge_sets, badges.badge_sets)};
 }
 
-client.connect();
+//client.connect();
 client.on("connected", (address, port) => {
     console.log(address);
     ["loeya","rhobalas_lol","domingo","bestmarmotte","ikatv","warths","aypierre","mistermv"
@@ -101,11 +101,6 @@ export default class Welcome extends Component {
                         <>Congratulation <span style={{background: "rgb(130, 107, 173)"}}><img src={user.profile_image_url} alt="" style={{height: "21px", verticalAlign: "top", backgroundColor: "black"}}/> {user.display_name} </span>&nbsp;you are connected ! <button onClick={this.props.logout}>logout <FontAwesomeIcon icon="sign-out-alt" /></button></> }
                     </p>
                     <small>Created by Grégoire Joncour - <a href="https://github.com/gregoire78/multitwitch" target="_blank" rel="noopener noreferrer"><FontAwesomeIcon icon={["fab", "github"]} /> view the project on github</a> - &copy; 2019 multitwitch.co</small>
-                </div>
-
-                <div key="chat" className="" data-grid={{ x: 0, y: 1, w: 3, h: 3, minH: 3, minW: 3 }}>
-
-                    
                 </div>
             </ResponsiveReactGridLayout>
             /*<div className="main-welcome">

@@ -27,6 +27,7 @@ import './App.css';
 import GridTwitch from './GridTwitch';
 import Welcome from './Welcome';
 import SearchBox from './SearchBox';
+import Chatwitch from './Chatwitch';
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
 library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt, faHandshake, faClock, faGithub, faEye, faUser);
@@ -217,6 +218,7 @@ class App extends Component {
     const { isEditMode, isCollapse, isAuth, user, streams, opened, showOverlay, query, pseudos, layout, layouts} = this.props.person;
     return (
       <>
+        <Chatwitch />
         { opened &&
           <NewWindow
             onUnload={this.handleClosePopup.bind(this)}
@@ -261,7 +263,7 @@ class App extends Component {
             <IntervalTimer
               timeout={10000}
               callback={this.getFollowedStream.bind(this)}
-              enabled={!isCollapse && isEditMode && isAuth}
+              enabled={false}
               repeat={true}
             />
           </header>
