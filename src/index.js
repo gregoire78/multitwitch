@@ -1,11 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import DevTools, { configureDevtool } from "mobx-react-devtools";
+//import DevTools, { configureDevtool } from "mobx-react-devtools";
 import { observable, decorate, action, computed } from "mobx";
 import './index.css';
-import App from './App';
-import { CookiesProvider } from 'react-cookie';
+//import App from './App';
+//import { CookiesProvider } from 'react-cookie';
 import * as serviceWorker from './serviceWorker';
+import Chatwitch from './Chatwitch';
 
 class Person {
     isEditMode = true;
@@ -94,18 +95,21 @@ decorate(Person, {
     queryFormat: computed
 })
 
-configureDevtool({
+/*configureDevtool({
     logFilter: change => change.type === 'reaction' || change.type === 'action',
-})
+})*/
 
-ReactDOM.render(
+/*ReactDOM.render(
     <CookiesProvider>
         {process.env.NODE_ENV !== 'production' && <DevTools />}
         <App person={new Person()} />
     </CookiesProvider>,
     document.getElementById('root')
+);*/
+ReactDOM.render(
+    <Chatwitch />,
+    document.getElementById('root')
 );
-
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: http://bit.ly/CRA-PWA

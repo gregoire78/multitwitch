@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
-import NewWindow from 'react-new-window';
 import tmi from 'tmi.js';
 import axios from 'axios';
 import _ from 'lodash';
 
-export default class Welcome extends Component {
+export default class Chatwitch extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -19,7 +18,9 @@ export default class Welcome extends Component {
                 "aypierre",
                 "mistermv",
                 "peteur_pan",
-                "twitchpresentsfr"
+                "twitchpresentsfr",
+                "edorocky",
+                "nems"
             ],
             channelsDetails : [],
             chatThreads: [],
@@ -36,7 +37,9 @@ export default class Welcome extends Component {
                 "aypierre",
                 "mistermv",
                 "peteur_pan",
-                "twitchpresentsfr"
+                "twitchpresentsfr",
+                "edorocky",
+                "nems"
             ]
         });
     }
@@ -105,7 +108,7 @@ export default class Welcome extends Component {
         this.messagesEnd.current.scrollIntoView({ behavior: 'smooth' })
     }
 
-    parseFormatEmotes(text, emotes, key) {
+    /*parseFormatEmotes(text, emotes, key) {
         var splitText = text.split('');
         for(var i in emotes) {
             var e = emotes[i];
@@ -122,31 +125,29 @@ export default class Welcome extends Component {
             }
         }
         return splitText;
-    }
+    }*/
 
-    altr(message, emotes) {
+    /*altr(message, emotes, key) {
+        console.log(emotes)
         for(var i in emotes) {
             var e = emotes[i];
             for(var j in e) {
                 var mote = e[j];
                 mote = mote.split('-');
-                    mote = [parseInt(mote[0]), parseInt(mote[1])];
-                var length =  mote[1] - mote[0];
-                var re = new RegExp(`(.{${mote[0]}}).{${length+1}}`,"g");
-                message = message.replace(re, "ddsd");
-                console.log(message)
+                mote = [parseInt(mote[0]), parseInt(mote[1])];
+                var length = mote[1] - mote[0];
+                var re = new RegExp(`(.{${mote[0]}}).{${length+1}}`);
+                message = message.replace(re, `http://static-cdn.jtvnw.net/emoticons/v1/${i}/1.0`);
             }
         }
         return message;
-    }
+    }*/
 
     render() {
         return (
-            <NewWindow
-                features={ { left: (window.innerWidth / 2) - (600 / 2), top: (window.innerHeight / 2) - (600 / 2), width: 600, height: 600 } }
-            >
+            <>
                 <p>{this.state.connecting && "connecting to chat irc"}</p>
-                {this.state.chatThreads.map((chatThread,k)=>{
+                <div style={{minHeight: "100%", background: "black", color: "white"}}>{this.state.chatThreads.map((chatThread,k)=>{
                     let thread;
                     if(chatThread.status === "to"){
                         thread = (<>@{chatThread.username} you are timed out for {chatThread.duration} seconds. </>)
@@ -155,12 +156,12 @@ export default class Welcome extends Component {
                         thread = (<>@{chatThread.username} you are BANNED. </>)
                     }
                     if(chatThread.status === "message"){
-                        thread = (<>{chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser.image_url_1x} alt="" title={badgeUser.title} style={{verticalAlign:"text-bottom"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold"}}>{chatThread.user["display-name"]}</span> : {this.altr(chatThread.message, chatThread.user.emotes)} </>)
+                        thread = (<>{chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser.image_url_1x} alt="" title={badgeUser.title} style={{verticalAlign:"text-bottom"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold"}}>{chatThread.user["display-name"]}</span> : <span dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes, k) }} /> </>)
                     }
                     return (<div key={k} style={{minHeight: "28px"}}><span style={{background: "#"+intToRGB(hashCode(chatThread.channel.name)), color: "white"}}>{chatThread.channel.display_name}</span> {thread} </div>);
-                })}
+                })}</div>
                 <div ref={this.messagesEnd} />
-            </NewWindow>
+            </>
         )
     }
 }
@@ -182,7 +183,7 @@ function intToRGB(i){
     return "00000".substring(0, 6 - c.length) + c;
 }
 
-/*function formatEmotes(text, emotes) {
+function formatEmotes(text, emotes) {
     var splitText = text.split('');
     for(var i in emotes) {
         var e = emotes[i];
@@ -194,9 +195,9 @@ function intToRGB(i){
                 var length =  mote[1] - mote[0],
                     empty = Array.apply(null, new Array(length + 1)).map(function() { return '' });
                 splitText = splitText.slice(0, mote[0]).concat(empty).concat(splitText.slice(mote[1] + 1, splitText.length));
-                splitText.splice(mote[0], 1, '<img class="emoticon" title="'+text.slice(mote[0],mote[1]+1)+'" src="http://static-cdn.jtvnw.net/emoticons/v1/' + i + '/1.0">');
+                splitText.splice(mote[0], 1, `<img style="vertical-align: text-top;" class="emoticon" title=${text.slice(mote[0],mote[1]+1)} src="http://static-cdn.jtvnw.net/emoticons/v1/${i}/1.0">`);
             }
         }
     }
     return splitText.join('');
-}*/
+}
