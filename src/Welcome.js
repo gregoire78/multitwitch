@@ -34,7 +34,10 @@ const client = new tmi.client({
         "rhobalas_lol",
         "domingo",
         "bestmarmotte",
-        "ikatv"
+        "ikatv",
+        "warths",
+        "aypierre",
+        "mistermv"
     ]
 });
 let id = {}
@@ -48,12 +51,12 @@ async function getBadgeLink(channel){
     const badgesglobal = (await axios.get(`https://badges.twitch.tv/v1/badges/global/display?language=fr`)).data;
 
     id[channel] = {id: idy, badges: _.assign(badgesglobal.badge_sets, badges.badge_sets)};
-    console.log(channel, idy, id)
 }
+
 client.connect();
 client.on("connected", (address, port) => {
-    console.log(address+port);
-    ["loeya","rhobalas_lol","domingo","bestmarmotte","ikatv"
+    console.log(address);
+    ["loeya","rhobalas_lol","domingo","bestmarmotte","ikatv","warths","aypierre","mistermv"
     ].map(async(chan)=>await getBadgeLink(chan))
     
 });
@@ -63,7 +66,7 @@ client.on("chat", async (channel, user, message, self) => {
         p = _.map(user.badges, (v,k)=>{return `font-size: 1px;padding: ${(18 * 0.5)}px;background-size: ${(18 * 0.5)}px;background: url( ${id[channel.slice(1)].badges[k].versions[v].image_url_1x}) no-repeat;`})
     }
     //badges = user.badges ? id[channel.slice(1)].badges[user.badges["subscriber"]].image_url_1x : ''
-    console.log(`%c${channel}%c *** %c %c %c %c${user["display-name"]} %c== ${message}`, `background: #${intToRGB(hashCode(channel))}; color: white;`, ``, p[0], p[1] ? p[1] : `font-size: 0px;display: none;`, p[2] ? p[2] : `font-size: 0px;display: none;`, `color: ${user.color}`, ``)
+    console.log(`%c${channel}%c %c %c %c %c ${user["display-name"]}%c: ${message}`, `background: #${intToRGB(hashCode(channel))}; color: white;`, '', p[0], p[1] ? p[1] : `font-size: 0px;display: none;`, p[2] ? p[2] : `font-size: 0px;display: none;`, `color: ${user.color};font-weight: bold;`, ``)
 });
 client.on("timeout", (channel, username, reason, duration, userstate) => {
     console.log("TO", username, channel, reason, duration)
