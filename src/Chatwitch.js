@@ -2,8 +2,9 @@ import React, { Component } from 'react';
 import tmi from 'tmi.js';
 import axios from 'axios';
 import _ from 'lodash';
-import { HotKeys } from "react-hotkeys";
+//import { HotKeys } from "react-hotkeys";
 import moment from 'moment';
+import ReactTooltip from 'react-tooltip';
 import 'moment/locale/fr';
 moment.locale('fr');
 export default class Chatwitch extends Component {
@@ -12,7 +13,8 @@ export default class Chatwitch extends Component {
         this.state = {
             connecting: false,
             channels: [
-                "loeya",
+                "mickalow",
+                "mldeg",
                 "rhobalas_lol",
                 "domingo",
                 "bestmarmotte",
@@ -23,16 +25,20 @@ export default class Chatwitch extends Component {
                 "peteur_pan",
                 "twitchpresentsfr",
                 "edorocky",
-                "nems"
+                "nems",
+                "roi_louis"
             ],
             channelsDetails : [],
             chatThreads: [],
-            autoscroll: true
+            autoscroll: true,
+            infoStreams: {}
         }
         this.badgesGlobal = {};
         this.client = new tmi.client({
             channels: [
-                "loeya",
+                "mickalow",
+                "peteur_pan",
+                "mldeg",
                 "rhobalas_lol",
                 "domingo",
                 "bestmarmotte",
@@ -40,10 +46,10 @@ export default class Chatwitch extends Component {
                 "warths",
                 "aypierre",
                 "mistermv",
-                "peteur_pan",
                 "twitchpresentsfr",
                 "edorocky",
-                "nems"
+                "nems",
+                "roi_louis"
             ]
         });
     }
@@ -53,20 +59,21 @@ export default class Chatwitch extends Component {
         this.client.connect();
         this.client.on("connecting", this.toogleConnectingChat.bind(this));
         this.client.on("connected", this.toogleConnectingChat.bind(this));
-        
-
-        this.badgesGlobal = (await axios.get(`https://badges.twitch.tv/v1/badges/global/display?language=fr`)).data
-        let dd = {}
-        this.infoChannels = await this.getInfoChannels();
-        console.table(this.infoChannels)
-        _.map(this.state.channels, async (channel)=> {
-            dd[channel]=await this.getBadgeLink(channel)
-        })
-        this.setState({channelsDetails: dd})
-        console.log(this.state.channelsDetails)
     }
 
-    componentDidMount() {
+    async componentDidMount() {
+        this.badgesGlobal = (await axios.get(`https://badges.twitch.tv/v1/badges/global/display?language=fr`)).data
+        this.infoChannels = await this.getInfoChannels();
+        this.setState({infoStreams: await this.getInfoStreams()})
+        console.table(this.state.infoStreams)
+        console.table(this.infoChannels)
+        this.setState({channelsDetails: await Promise.all(_.map(this.state.channels, async(channel)=>{
+            const infoChannel = _.find(this.infoChannels, user => user.login === channel);
+            const infoStream = _.find(this.state.infoStreams, user => user.user_id === infoChannel.id);
+            return {channel, badges : await this.getBadgeLink(infoChannel), infoChannel, infoStream }
+        }))});
+        console.table(this.state.channelsDetails);
+
         let lastScrollTop = 0
         window.addEventListener('scroll',(e)=>{
             let st = window.pageYOffset || document.documentElement.scrollTop;
@@ -80,10 +87,12 @@ export default class Chatwitch extends Component {
                 this.setState({autoscroll: true});
             }
         }, true);
+
         this.client.on("chat", (channel, user, message, self)=>{
-            let chat = {status: "message", message, channel:{name:channel, display_name: this.state.channelsDetails[channel.slice(1)].display_name}, badgesUser:[], user, ts: moment(user["tmi-sent-ts"], "x").format('LT')};
+            const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
+            let chat = {status: "message", message, channel: channelDetails, badgesUser:[], user, ts: moment(user["tmi-sent-ts"], "x").format('LT')};
             if(user.badges) {
-                chat.badgesUser = _.map(user.badges, (v,k)=>{return this.state.channelsDetails[channel.slice(1)].badges[k].versions[v]})
+                chat.badgesUser = _.map(user.badges, (v,k)=>{return channelDetails.badges[k].versions[v]})
             }
             this.setState(prevState => ({
                 chatThreads: [...prevState.chatThreads, chat]
@@ -92,7 +101,8 @@ export default class Chatwitch extends Component {
         });
 
         this.client.on("timeout", (channel, username, reason, duration, userstate) => {
-            let to = {status: "to", username, channel:{name:channel, display_name: this.state.channelsDetails[channel.slice(1)].display_name}, reason, duration};
+            const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
+            let to = {status: "to", username, channel: channelDetails, reason, duration};
             this.setState(prevState => ({
                 chatThreads: [...prevState.chatThreads, to]
             }))
@@ -100,12 +110,36 @@ export default class Chatwitch extends Component {
         });
 
         this.client.on("ban", (channel, username, reason, userstate) => {
-            let ban = {status: "ban", username, channel:{name:channel, display_name: this.state.channelsDetails[channel.slice(1)].display_name}, reason};
+            const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
+            let ban = {status: "ban", username, channel: channelDetails, reason};
             this.setState(prevState => ({
                 chatThreads: [...prevState.chatThreads, ban]
             }))
             this.scrollToBottom();
         });
+
+        /*this.client.on("raw_message", (messageCloned, message) => {
+        });*/
+
+        this.client.on("notice", (channel, msgid, message) => {
+            console.log(msgid,message)
+        });
+
+        // for /me messages
+        this.client.on("action", (channel, user, message, self) => {
+            const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
+            let chat = {status: "message", message, channel: channelDetails, badgesUser:[], user, ts: moment(user["tmi-sent-ts"], "x").format('LT')};
+            if(user.badges) {
+                chat.badgesUser = _.map(user.badges, (v,k)=>{return channelDetails.badges[k].versions[v]})
+            }
+            this.setState(prevState => ({
+                chatThreads: [...prevState.chatThreads, chat]
+            }))
+            this.scrollToBottom();
+        });
+        setTimeout(() => {
+            ReactTooltip.rebuild();
+        }, 0);
     }
 
     toogleConnectingChat(address, port) {
@@ -121,16 +155,17 @@ export default class Chatwitch extends Component {
         })).data.data;
     }
 
-    async getBadgeLink(channel) {
-        const infoChannel = _.find(this.infoChannels, user => user.login === channel);
-        console.table(infoChannel)
-        const infoStream = (await axios.get(`https://api.twitch.tv/helix/streams?user_login=${channel}`, {
+    async getInfoStreams() {
+        return (await axios.get(`https://api.twitch.tv/helix/streams?user_login=${this.state.channels.join('&user_login=')}`, {
             headers: {
                 'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
             }
-        })).data;
+        })).data.data;
+    }
+
+    async getBadgeLink(infoChannel) {
         const badgesChannel = (await axios.get(`https://badges.twitch.tv/v1/badges/channels/${infoChannel.id}/display?language=fr`)).data;
-        return {id: infoChannel.id, display_name: infoChannel.display_name, badges:{...this.badgesGlobal.badge_sets, ...badgesChannel.badge_sets}, infoChannel: infoChannel, infoStream: infoStream.data[0]}
+        return {...this.badgesGlobal.badge_sets, ...badgesChannel.badge_sets}
     }
 
     scrollToBottom = () => {
@@ -140,13 +175,11 @@ export default class Chatwitch extends Component {
 
     render() {
         return (
-            <HotKeys keyMap={{
-                ALT: { sequence: "alt" }
-              }} handlers={{
-                ALT: event => {this.setState(prevState=>({autoscroll: !prevState.autoscroll}))},
-            }}>
-                <div style={{position: "fixed", right: 0, fontSize: 12}}>{_.map(this.state.channelsDetails, (channelDetails,k)=>{return(<span key={k} style={{background: "#"+intToRGB(hashCode("#"+k)), color: "white"}}>{channelDetails.display_name}</span>)})}</div>
+            <>
                 {this.state.connecting && <p>connecting to chat irc</p>}
+
+                <div style={{position: "fixed", right: 0, top:0, fontSize: 12}}>{_.map(this.state.channelsDetails, (channelDetail,k)=>{return(<span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴"} {channelDetail.infoChannel.display_name}</span>)})}</div>
+                
                 <div>
                 {this.state.chatThreads.map((chatThread,k)=>{
                     let thread;
@@ -157,13 +190,26 @@ export default class Chatwitch extends Component {
                         thread = (<b style={{background: "red"}}>@{chatThread.username} you are BANNED.</b>)
                     }
                     if(chatThread.status === "message"){
-                        thread = (<><small style={{color: "grey"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser.image_url_1x} alt="" title={badgeUser.title} style={{verticalAlign:"text-bottom"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold"}}>{chatThread.user["display-name"]}</span> : <span dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes, k).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,3}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} /> </>)
+                        thread = (<><small style={{color: "grey"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser.image_url_1x} alt="" title={badgeUser.title} style={{verticalAlign:"text-bottom"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold"}}>{chatThread.user["display-name"]}</span> : <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color}:{}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes, k).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} /> </>)
                     }
-                    return (<div key={k} style={{minHeight: "28px"}}><img title={chatThread.channel.display_name} style={{height: 22, verticalAlign: "text-top", border: `3px solid ${"#"+intToRGB(hashCode(chatThread.channel.name))}`, background: "#"+intToRGB(hashCode(chatThread.channel.name))}} src={this.state.channelsDetails[chatThread.channel.name.slice(1)].infoChannel.profile_image_url} alt="" /> {thread} </div>);
+                    const color = "#"+intToRGB(hashCode(chatThread.channel.channel));
+                    return (<div key={k} style={{minHeight: "28px"}}><img title={chatThread.channel.infoChannel.display_name} style={{height: 22, verticalAlign: "text-top", border: `3px solid ${color}`, background: color}} src={chatThread.channel.infoChannel.profile_image_url} alt="" /> {thread} </div>);
                 })}
                 </div>
                 <div ref={this.messagesEnd} />
-            </HotKeys>
+
+                <ReactTooltip id="info" place="bottom" border={true} getContent={datumAsText => {
+                    if (datumAsText == null) {
+                    return;
+                    }
+                    let v = JSON.parse(datumAsText);
+                    return (
+                        <div>
+                            <b>{v.title}</b><br/>
+                        </div>
+                    );
+                }} />
+            </>
         )
     }
 }
