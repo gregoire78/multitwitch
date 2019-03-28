@@ -5,6 +5,7 @@ import _ from 'lodash';
 //import { HotKeys } from "react-hotkeys";
 import moment from 'moment';
 import ReactTooltip from 'react-tooltip';
+import IntervalTimer from 'react-interval-timer';
 import 'moment/locale/fr';
 moment.locale('fr');
 export default class Chatwitch extends Component {
@@ -12,22 +13,7 @@ export default class Chatwitch extends Component {
         super(props);
         this.state = {
             connecting: false,
-            channels: [
-                "mickalow",
-                "mldeg",
-                "rhobalas_lol",
-                "domingo",
-                "bestmarmotte",
-                "ikatv",
-                "warths",
-                "aypierre",
-                "mistermv",
-                "peteur_pan",
-                "twitchpresentsfr",
-                "edorocky",
-                "nems",
-                "roi_louis"
-            ],
+            channels: _.uniqBy(_.compact(window.location.pathname.split("/"))),
             channelsDetails : [],
             chatThreads: [],
             autoscroll: true,
@@ -35,22 +21,7 @@ export default class Chatwitch extends Component {
         }
         this.badgesGlobal = {};
         this.client = new tmi.client({
-            channels: [
-                "mickalow",
-                "peteur_pan",
-                "mldeg",
-                "rhobalas_lol",
-                "domingo",
-                "bestmarmotte",
-                "ikatv",
-                "warths",
-                "aypierre",
-                "mistermv",
-                "twitchpresentsfr",
-                "edorocky",
-                "nems",
-                "roi_louis"
-            ]
+            channels: _.uniqBy(_.compact(window.location.pathname.split("/")))
         });
     }
     messagesEnd = React.createRef()
@@ -170,7 +141,8 @@ export default class Chatwitch extends Component {
 
     scrollToBottom = () => {
         if(this.state.autoscroll)
-            this.messagesEnd.current.scrollIntoView({ behavior: 'smooth' })
+            document.documentElement.scrollTop = document.body.scrollHeight;
+            //this.messagesEnd.current.scrollIntoView({ behavior: 'smooth' });
     }
 
     render() {
@@ -190,13 +162,29 @@ export default class Chatwitch extends Component {
                         thread = (<b style={{background: "red"}}>@{chatThread.username} you are BANNED.</b>)
                     }
                     if(chatThread.status === "message"){
-                        thread = (<><small style={{color: "grey"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser.image_url_1x} alt="" title={badgeUser.title} style={{verticalAlign:"text-bottom"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold"}}>{chatThread.user["display-name"]}</span> : <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color}:{}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes, k).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} /> </>)
+                        thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser.image_url_1x} alt="" title={badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px"}:{verticalAlign: "middle",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes, k).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} /> </>)
                     }
                     const color = "#"+intToRGB(hashCode(chatThread.channel.channel));
-                    return (<div key={k} style={{minHeight: "28px"}}><img title={chatThread.channel.infoChannel.display_name} style={{height: 22, verticalAlign: "text-top", border: `3px solid ${color}`, background: color}} src={chatThread.channel.infoChannel.profile_image_url} alt="" /> {thread} </div>);
+                    return (<div key={k} style={{minHeight: "28px"}}><img title={chatThread.channel.infoChannel.display_name} style={{height: 22, verticalAlign: "middle",lineHeight: "28px", border: `3px solid ${color}`, background: color}} src={chatThread.channel.infoChannel.profile_image_url} alt="" /> {thread} </div>);
                 })}
                 </div>
                 <div ref={this.messagesEnd} />
+
+                <IntervalTimer
+                    timeout={10000}
+                    callback={async()=>{
+                        this.setState({infoStreams: await this.getInfoStreams()});
+                        this.setState(async prevState => ({channelsDetails: await Promise.all(_.map(this.state.channels, async(channel)=>{
+                            const infoChannel = _.find(this.infoChannels, user => user.login === channel);
+                            const infoStream = _.find(this.state.infoStreams, user => user.user_id === infoChannel.id);
+                            return {channel, badges : _.find(prevState.channelsDetails, user => user.channel === channel).badges, infoChannel, infoStream }
+                        }))}));
+                        console.log(this.state.channelsDetails)
+                        ReactTooltip.rebuild();
+                    }}
+                    enabled={true}
+                    repeat={true}
+                />
 
                 <ReactTooltip id="info" place="bottom" border={true} getContent={datumAsText => {
                     if (datumAsText == null) {
@@ -243,7 +231,7 @@ function formatEmotes(text, emotes) {
                 var length =  mote[1] - mote[0],
                     empty = Array.apply(null, new Array(length + 1)).map(function() { return '' });
                 splitText = splitText.slice(0, mote[0]).concat(empty).concat(splitText.slice(mote[1] + 1, splitText.length));
-                splitText.splice(mote[0], 1, `<img style="vertical-align: text-top;" class="emoticon" title=${text.slice(mote[0],mote[1]+1).replace(/[\u00A0-\u9999<>&]/gim, function(i) {
+                splitText.splice(mote[0], 1, `<img style="vertical-align: middle;margin: -100% 0;" class="emoticon" title=${text.slice(mote[0],mote[1]+1).replace(/[\u00A0-\u9999<>&]/gim, function(i) {
                     return '&#'+i.charCodeAt(0)+';';
                  })} src="http://static-cdn.jtvnw.net/emoticons/v1/${i}/1.0">`);
             }
