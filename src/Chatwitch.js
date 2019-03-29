@@ -9,6 +9,8 @@ import IntervalTimer from 'react-interval-timer';
 import 'moment/locale/fr';
 moment.locale('fr');
 export default class Chatwitch extends Component {
+    chatComponent = React.createRef();
+
     constructor(props) {
         super(props);
         this.state = {
@@ -16,7 +18,6 @@ export default class Chatwitch extends Component {
             channels: _.uniqBy(_.compact(window.location.pathname.split("/"))),
             channelsDetails : [],
             chatThreads: [],
-            autoscroll: true,
             infoStreams: {}
         }
         this.badgesGlobal = {};
@@ -24,7 +25,6 @@ export default class Chatwitch extends Component {
             channels: _.uniqBy(_.compact(window.location.pathname.split("/")))
         });
     }
-    messagesEnd = React.createRef()
 
     async componentWillMount() {
         this.client.connect();
@@ -45,55 +45,43 @@ export default class Chatwitch extends Component {
         }))});
         console.table(this.state.channelsDetails);
 
-        let lastScrollTop = 0
-        window.addEventListener('scroll',(e)=>{
-            let st = window.pageYOffset || document.documentElement.scrollTop;
-            if (st > lastScrollTop){
-                // downscroll code
-            } else {
-                this.setState({autoscroll: false});
-            }
-            lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
-            if (window.pageYOffset === document.body.scrollHeight - window.innerHeight && !this.state.autoscroll) {
-                this.setState({autoscroll: true});
-            }
-        }, true);
-
         this.client.on("chat", (channel, user, message, self)=>{
             const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
             let chat = {status: "message", message, channel: channelDetails, badgesUser:[], user, ts: moment(user["tmi-sent-ts"], "x").format('LT')};
             if(user.badges) {
                 chat.badgesUser = _.map(user.badges, (v,k)=>{return channelDetails.badges[k].versions[v]})
             }
-            this.setState(prevState => ({
-                chatThreads: [...prevState.chatThreads, chat]
-            }))
-            this.scrollToBottom();
+            console.log(chat)
+            this.setState(prevState => ( {
+                chatThreads: [...prevState.chatThreads.slice(-49), chat]
+            }));
+            this.chatComponent.current.scrollToBottom();
         });
 
         this.client.on("timeout", (channel, username, reason, duration, userstate) => {
             const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
+            //const chatThreads = _.find(this.state.chatThreads, ['channel', channel.slice(1)]);
             let to = {status: "to", username, channel: channelDetails, reason, duration};
             this.setState(prevState => ({
-                chatThreads: [...prevState.chatThreads, to]
+                chatThreads: [...prevState.chatThreads.slice(-49), to]
             }))
-            this.scrollToBottom();
+            this.chatComponent.current.scrollToBottom();
         });
 
         this.client.on("ban", (channel, username, reason, userstate) => {
             const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
             let ban = {status: "ban", username, channel: channelDetails, reason};
             this.setState(prevState => ({
-                chatThreads: [...prevState.chatThreads, ban]
+                chatThreads: [...prevState.chatThreads.slice(-49), ban]
             }))
-            this.scrollToBottom();
+            this.chatComponent.current.scrollToBottom();
         });
 
         /*this.client.on("raw_message", (messageCloned, message) => {
         });*/
 
         this.client.on("notice", (channel, msgid, message) => {
-            console.log(msgid,message)
+            console.log("notice", msgid,message)
         });
 
         // for /me messages
@@ -104,10 +92,15 @@ export default class Chatwitch extends Component {
                 chat.badgesUser = _.map(user.badges, (v,k)=>{return channelDetails.badges[k].versions[v]})
             }
             this.setState(prevState => ({
-                chatThreads: [...prevState.chatThreads, chat]
+                chatThreads: [...prevState.chatThreads.slice(-49), chat]
             }))
-            this.scrollToBottom();
+            this.chatComponent.current.scrollToBottom();
         });
+
+        this.client.on("messagedeleted", (channel, username, deletedMessage, userstate) => {
+            console.log(channel, username, deletedMessage, userstate)
+        });
+
         setTimeout(() => {
             ReactTooltip.rebuild();
         }, 0);
@@ -139,36 +132,14 @@ export default class Chatwitch extends Component {
         return {...this.badgesGlobal.badge_sets, ...badgesChannel.badge_sets}
     }
 
-    scrollToBottom() {
-        if(this.state.autoscroll)
-            document.documentElement.scrollTop = document.body.scrollHeight;
-            //this.messagesEnd.current.scrollIntoView({ behavior: 'smooth' });
-    }
-
     render() {
         return (
             <>
                 {this.state.connecting && <p>connecting to chat irc</p>}
 
-                <div style={{position: "fixed", right: 0, top:0, fontSize: 12}}>{_.map(this.state.channelsDetails, (channelDetail,k)=>{return(<span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴"} {channelDetail.infoChannel.display_name}</span>)})}</div>
-                
-                <div>
-                {this.state.chatThreads.map((chatThread,k)=>{
-                    let thread;
-                    if(chatThread.status === "to"){
-                        thread = (<b style={{background: "yellow", color: "black"}}>@{chatThread.username} you are timed out for {chatThread.duration} seconds.</b>)
-                    }
-                    if(chatThread.status === "ban"){
-                        thread = (<b style={{background: "red"}}>@{chatThread.username} you are BANNED.</b>)
-                    }
-                    if(chatThread.status === "message"){
-                        thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser.image_url_1x} alt="" title={badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px"}:{verticalAlign: "middle",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes, k).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} /> </>)
-                    }
-                    const color = "#"+intToRGB(hashCode(chatThread.channel.channel));
-                    return (<div key={k} style={{minHeight: "28px"}}><img title={chatThread.channel.infoChannel.display_name} style={{height: 22, verticalAlign: "middle",lineHeight: "28px", border: `3px solid ${color}`, background: color}} src={chatThread.channel.infoChannel.profile_image_url} alt="" /> {thread} </div>);
-                })}
-                </div>
-                <div ref={this.messagesEnd} />
+                <div style={{fontSize: 12}}>{_.map(this.state.channelsDetails, (channelDetail,k)=>{return(<span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴"} {channelDetail.infoChannel.display_name}</span>)})}</div>
+
+                <Chat chatThreads={this.state.chatThreads} ref={this.chatComponent} />
 
                 <IntervalTimer
                     timeout={2000}
@@ -237,4 +208,59 @@ function formatEmotes(text, emotes) {
         }
     }
     return splitText.join('');
+}
+
+class Chat extends Component {
+    messagesEnd = React.createRef();
+    chatelem = React.createRef();
+    constructor(props){
+        super(props);
+        this.state = {
+            autoscroll: true,
+        }
+    }
+
+    componentDidMount() {
+        let lastScrollTop = 0;
+        window.addEventListener('scroll',(e)=>{
+            if (e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight && !this.state.autoscroll) {
+                this.setState({autoscroll: true});
+            }
+            let st = e.target.scrollTop;
+            if (st > lastScrollTop){
+                // downscroll code
+            } else {
+                this.setState({autoscroll: false});
+            }
+            lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
+        }, true);
+    }
+
+    scrollToBottom() {
+        if(this.state.autoscroll)
+            //document.documentElement.scrollTop = document.body.scrollHeight;
+            this.messagesEnd.current.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    render() {
+        return (
+        <div ref={this.chatelem} style={{height: "calc(100% - 16px)", overflow: "auto"}}>
+            {this.props.chatThreads.map((chatThread,k)=>{
+                let thread;
+                if(chatThread.status === "to"){
+                    thread = (<b style={{background: "yellow", color: "black"}}>@{chatThread.username} you are timed out for {chatThread.duration} seconds.</b>)
+                }
+                if(chatThread.status === "ban"){
+                    thread = (<b style={{background: "red"}}>@{chatThread.username} you are BANNED.</b>)
+                }
+                if(chatThread.status === "message"){
+                    thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser.image_url_1x} alt="" title={badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px"}:{verticalAlign: "middle",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes, k).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} /> </>)
+                }
+                const color = "#"+intToRGB(hashCode(chatThread.channel.channel));
+                return (<div key={k} style={{minHeight: "28px", overflowWrap: "break-word"}}><img title={chatThread.channel.infoChannel.display_name} style={{height: 22, verticalAlign: "middle",lineHeight: "28px", border: `3px solid ${color}`, background: color}} src={chatThread.channel.infoChannel.profile_image_url} alt="" /> {thread} </div>);
+            })}
+            <div ref={this.messagesEnd} />
+        </div>
+    );
+  }
 }
