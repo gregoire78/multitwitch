@@ -139,7 +139,7 @@ export default class Chatwitch extends Component {
         return {...this.badgesGlobal.badge_sets, ...badgesChannel.badge_sets}
     }
 
-    scrollToBottom = () => {
+    scrollToBottom() {
         if(this.state.autoscroll)
             document.documentElement.scrollTop = document.body.scrollHeight;
             //this.messagesEnd.current.scrollIntoView({ behavior: 'smooth' });
@@ -171,15 +171,14 @@ export default class Chatwitch extends Component {
                 <div ref={this.messagesEnd} />
 
                 <IntervalTimer
-                    timeout={10000}
+                    timeout={2000}
                     callback={async()=>{
-                        this.setState({infoStreams: await this.getInfoStreams()});
+                        const infoStreams = await this.getInfoStreams();
                         this.setState(async prevState => ({channelsDetails: await Promise.all(_.map(this.state.channels, async(channel)=>{
                             const infoChannel = _.find(this.infoChannels, user => user.login === channel);
-                            const infoStream = _.find(this.state.infoStreams, user => user.user_id === infoChannel.id);
+                            const infoStream = _.find(infoStreams, user => user.user_id === infoChannel.id);
                             return {channel, badges : _.find(prevState.channelsDetails, user => user.channel === channel).badges, infoChannel, infoStream }
-                        }))}));
-                        console.log(this.state.channelsDetails)
+                        }), infoStreams)}));
                         ReactTooltip.rebuild();
                     }}
                     enabled={true}
