@@ -206,9 +206,9 @@ function formatEmotes(text, emotes) {
                 mote = mote.split('-');
                 mote = [parseInt(mote[0]), parseInt(mote[1])];
                 var length =  mote[1] - mote[0],
-                    empty = Array.apply(null, new Array(length + 1)).map(function() { return '' });
-                splitText = splitText.slice(0, mote[0]).concat(empty).concat(splitText.slice(mote[1] + 1, splitText.length));
-                splitText.splice(mote[0], 1, `<img style="vertical-align: middle;margin: -100% 0;" class="emoticon" title=${text.slice(mote[0],mote[1]+1).replace(/[\u00A0-\u9999<>&]/gim, function(i) {
+                    empty = Array.apply(null, new Array(length + 1+1)).map(function() { return '' });
+                splitText = splitText.slice(0, mote[0]).concat(empty).concat(splitText.slice(mote[1] + 1+1, splitText.length));
+                splitText.splice(mote[0], 1, `<img style="vertical-align: middle;margin: -100% 0;display: inline-block;" class="emoticon" title=${text.slice(mote[0],mote[1]+1).replace(/[\u00A0-\u9999<>&]/gim, function(i) {
                     return '&#'+i.charCodeAt(0)+';';
                  })} src="http://static-cdn.jtvnw.net/emoticons/v1/${i}/1.0">`);
             }
@@ -241,8 +241,6 @@ class Chat extends Component {
         let st = this.chatelem.current.scrollTop;
         if (((st <= this.chatelem.current.scrollHeight-this.chatelem.current.clientHeight && this.state.autoscroll) || st < this.chatelem.current.scrollHeight-this.chatelem.current.clientHeight) && e.nativeEvent.wheelDelta > 0 ){
             this.setState({autoscroll: false});
-        } else {
-            this.setState({autoscroll: true});
         }
     }
 
@@ -265,7 +263,7 @@ class Chat extends Component {
                         thread = (<b style={{background: "red"}}>@{chatThread.username} you are BANNED.</b>)
                         break;
                     case "message":
-                    thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px"}:{verticalAlign: "middle",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} /> </>)
+                    thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px"}:{verticalAlign: "middle",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} /></>)
                         break;
                     default:
                         // Something else ?
