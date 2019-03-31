@@ -70,7 +70,7 @@ export default class Chatwitch extends Component {
         this.client.on("ban", (channel, username, reason, userstate) => {
             const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
             let ban = {status: "ban", username, channel: channelDetails, reason, ts_global : moment().valueOf()};
-            console.log("ban",this.state.chatThreads)
+            console.log("ban",channel, username, reason, userstate, this.state.chatThreads)
             this.setState(prevState => ({
                 chatThreads: [...prevState.chatThreads.slice(-99), ban]
             }))
@@ -228,19 +228,22 @@ class Chat extends Component {
     }
 
     componentDidMount() {
-        let lastScrollTop = 0;
         window.addEventListener('scroll',(e)=>{
-            let st = e.target.scrollTop;
-            if (st >= lastScrollTop){
-            } else {
-                this.setState({autoscroll: false});
-            }
-            lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
-
             if (e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight && !this.state.autoscroll) {
                 this.setState({autoscroll: true});
             }
         }, true);
+    }
+
+    onWheel(e) {
+        //e.nativeEvent.wheelDelta > 0//scroolup
+        //console.log(this.chatelem.current.scrollTop,this.chatelem.current.clientHeight,this.chatelem.current.scrollHeight, this.chatelem.current.scrollHeight-this.chatelem.current.clientHeight)
+        let st = this.chatelem.current.scrollTop;
+        if (((st <= this.chatelem.current.scrollHeight-this.chatelem.current.clientHeight && this.state.autoscroll) || st < this.chatelem.current.scrollHeight-this.chatelem.current.clientHeight) && e.nativeEvent.wheelDelta > 0 ){
+            this.setState({autoscroll: false});
+        } else {
+            this.setState({autoscroll: true});
+        }
     }
 
     scrollToBottom() {
@@ -251,7 +254,7 @@ class Chat extends Component {
 
     render() {
         return (
-        <div ref={this.chatelem} style={{height: "calc(100% - 16px)", overflow: "auto"}}>
+        <div ref={this.chatelem} style={{height: "calc(100% - 16px)", overflow: "auto"}} onWheel={this.onWheel.bind(this)}>
             {this.props.chatThreads.map((chatThread)=>{
                 let thread;
                 switch(chatThread.status) {
@@ -269,7 +272,7 @@ class Chat extends Component {
                         break;
                 }
                 const color = "#"+intToRGB(hashCode2(chatThread.channel.channel));
-                return (<div key={chatThread.ts_global+chatThread.channel.channel} style={{minHeight: "28px", overflowWrap: "break-word"}}><img title={chatThread.channel.infoChannel.display_name} style={{height: 22, verticalAlign: "middle",lineHeight: "28px", border: `3px solid ${color}`, background: color}} src={chatThread.channel.infoChannel.profile_image_url} alt="" /> {thread} </div>);
+                return (<div key={chatThread.ts_global+chatThread.channel.channel} style={{minHeight: "28px", overflowWrap: "break-word", background: color+"33"}}><img title={chatThread.channel.infoChannel.display_name} style={{height: 22, verticalAlign: "middle",lineHeight: "28px", border: `3px solid ${color}`, background: color}} src={chatThread.channel.infoChannel.profile_image_url} alt="" /> {thread} </div>);
             })}
             <div ref={this.messagesEnd} />
         </div>
