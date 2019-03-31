@@ -52,7 +52,7 @@ export default class Chatwitch extends Component {
                 chat.badgesUser = _.map(user.badges, (v,k)=>{return channelDetails.badges[k].versions[v]})
             }
             this.setState(prevState => ( {
-                chatThreads: [...prevState.chatThreads.slice(-99), chat]
+                chatThreads: [...prevState.chatThreads.slice(-199), chat]
             }));
             this.chatComponent.current.scrollToBottom();
         });
@@ -62,7 +62,7 @@ export default class Chatwitch extends Component {
             //const chatThreads = _.find(this.state.chatThreads, ['channel', channel.slice(1)]);
             let to = {status: "to", username, channel: channelDetails, reason, duration, ts_global : moment().valueOf()};
             this.setState(prevState => ({
-                chatThreads: [...prevState.chatThreads.slice(-99), to]
+                chatThreads: [...prevState.chatThreads.slice(-199), to]
             }))
             this.chatComponent.current.scrollToBottom();
         });
@@ -70,9 +70,10 @@ export default class Chatwitch extends Component {
         this.client.on("ban", (channel, username, reason, userstate) => {
             const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
             let ban = {status: "ban", username, channel: channelDetails, reason, ts_global : moment().valueOf()};
-            console.log("ban",channel, username, reason, userstate, this.state.chatThreads)
+            //const messages = this.state.chatThreads.filter((r)=>{return r.user.username===username})
+            console.log("ban",channel, username, reason, userstate, this.state.chatThreads);
             this.setState(prevState => ({
-                chatThreads: [...prevState.chatThreads.slice(-99), ban]
+                chatThreads: [...prevState.chatThreads.slice(-199), ban]
             }))
             this.chatComponent.current.scrollToBottom();
         });
@@ -92,13 +93,52 @@ export default class Chatwitch extends Component {
                 chat.badgesUser = _.map(user.badges, (v,k)=>{return channelDetails.badges[k].versions[v]})
             }
             this.setState(prevState => ({
-                chatThreads: [...prevState.chatThreads.slice(-99), chat]
+                chatThreads: [...prevState.chatThreads.slice(-199), chat]
             }))
             this.chatComponent.current.scrollToBottom();
         });
 
         this.client.on("messagedeleted", (channel, username, deletedMessage, userstate) => {
             console.log(channel, username, deletedMessage, userstate)
+        });
+
+        this.client.on("resub", (channel, username, months, message, user, methods) => {
+            const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
+            let cumulativeMonths = ~~user["msg-param-cumulative-months"];
+            const resub = {status: "resub", username, methods, message, cumulativeMonths, channel: channelDetails, badgesUser:[], user, ts: moment(user["tmi-sent-ts"], "x").format('LT'), ts_global : moment().valueOf()};
+            console.log("resub ", channel, username, months, message, user, methods, cumulativeMonths)
+            if(user.badges) {
+                resub.badgesUser = _.map(user.badges, (v,k)=>{return channelDetails.badges[k].versions[v]})
+            }
+            this.setState(prevState => ({
+                chatThreads: [...prevState.chatThreads.slice(-199), resub]
+            }))
+            this.chatComponent.current.scrollToBottom();
+        });
+
+        this.client.on("subscription", (channel, username, method, message, user) => {
+            const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
+            const subscription = {status: "subscription", username, method, channel: channelDetails, badgesUser:[], user, ts: moment(user["tmi-sent-ts"], "x").format('LT'), ts_global : moment().valueOf()};
+            console.log("subscription ",channel, username, method, message, user)
+            if(user.badges) {
+                subscription.badgesUser = _.map(user.badges, (v,k)=>{return channelDetails.badges[k].versions[v]})
+            }
+            this.setState(prevState => ({
+                chatThreads: [...prevState.chatThreads.slice(-199), subscription]
+            }))
+            this.chatComponent.current.scrollToBottom();
+        });
+
+        this.client.on("submysterygift", (channel, username, numbOfSubs, methods, userstate) => {
+            // Do your stuff.
+            let senderCount = ~~userstate["msg-param-sender-count"];
+            console.log("submysterygift", channel, username, numbOfSubs, methods, userstate, senderCount)
+        });
+
+        this.client.on("subgift", (channel, username, streakMonths, recipient, methods, userstate) => {
+            // Do your stuff.
+            let senderCount = ~~userstate["msg-param-sender-count"];
+            console.log("subgift", channel, username, streakMonths, recipient, methods, userstate, senderCount)
         });
 
         setTimeout(() => {
@@ -135,24 +175,24 @@ export default class Chatwitch extends Component {
     render() {
         return (
             <>
-                {this.state.connecting && <p>connecting to chat irc</p>}
+                <div style={{fontSize: 12}}>{this.state.channelsDetails.map((channelDetail,k)=>{return(<span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴 "}{channelDetail.infoChannel.display_name}</span>)})}</div>
 
-                <div style={{fontSize: 12}}>{_.map(this.state.channelsDetails, (channelDetail,k)=>{return(<span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴"} {channelDetail.infoChannel.display_name}</span>)})}</div>
-
-                <Chat chatThreads={this.state.chatThreads} ref={this.chatComponent} />
+                {this.state.connecting ? <p>connecting to chat irc</p> : <Chat chatThreads={this.state.chatThreads} ref={this.chatComponent} />}
 
                 <IntervalTimer
-                    timeout={2000}
+                    timeout={5000}
                     callback={async()=>{
-                        const infoStreams = await this.getInfoStreams();
-                        this.setState(async prevState => ({channelsDetails: await Promise.all(_.map(this.state.channels, async(channel)=>{
+                        this.badgesGlobal = (await axios.get(`https://badges.twitch.tv/v1/badges/global/display?language=fr`)).data
+                        this.infoChannels = await this.getInfoChannels();
+                        this.setState({infoStreams: await this.getInfoStreams()});
+                        this.setState({channelsDetails: await Promise.all(_.map(this.state.channels, async(channel)=>{
                             const infoChannel = _.find(this.infoChannels, user => user.login === channel);
-                            const infoStream = _.find(infoStreams, user => user.user_id === infoChannel.id);
-                            return {channel, badges : _.find(prevState.channelsDetails, user => user.channel === channel).badges, infoChannel, infoStream }
-                        }), infoStreams)}));
+                            const infoStream = _.find(this.state.infoStreams, user => user.user_id === infoChannel.id);
+                            return {channel, badges : await this.getBadgeLink(infoChannel), infoChannel, infoStream }
+                        }))});
                         ReactTooltip.rebuild();
                     }}
-                    enabled={false}
+                    enabled={this.infoChannels && this.infoChannels.length > 0 && this.state.channels.length > 0 }
                     repeat={true}
                 />
 
@@ -263,7 +303,13 @@ class Chat extends Component {
                         thread = (<b style={{background: "red"}}>@{chatThread.username} you are BANNED.</b>)
                         break;
                     case "message":
-                    thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px"}:{verticalAlign: "middle",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} /></>)
+                        thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px"}:{verticalAlign: "middle",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} /></>)
+                        break;
+                    case "subscription":
+                        thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px", fontWeight: "bold"}:{verticalAlign: "middle",lineHeight: "28px", fontWeight: "bold"}}>{"@"+chatThread.user["display-name"]} - {chatThread.method.planName} ({chatThread.method.plan})</span></>)
+                        break;
+                    case "resub":
+                        thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px", fontWeight: "bold"}:{verticalAlign: "middle",lineHeight: "28px", fontWeight: "bold"}}>{chatThread.methods.planName} ({chatThread.methods.plan}) - c'est le {chatThread.cumulativeMonths}{chatThread.cumulativeMonths === 1 ? "er" : "e"} mois d'abonnement de @{chatThread.user["display-name"]} !!!</span> {chatThread.message && <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px"}:{verticalAlign: "middle",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} />}</>)
                         break;
                     default:
                         // Something else ?
