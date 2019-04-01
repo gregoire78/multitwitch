@@ -21,3 +21,21 @@ code {
 div[tabindex="-1"]:focus {
   outline: 0;
 }
+
+.emote-preview {
+  background-color: white !important;
+  color: black !important;
+  padding: 5px !important;
+}
+.emote-preview::after {
+  border-top-color: white !important;
+  border-bottom-color: white !important;
+}
+.emote-preview p {
+  margin: 0 !important;
+  text-align: center;
+}
+
+.emote-preview.show {
+  opacity: 1 !important;
+}

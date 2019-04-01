@@ -6,6 +6,7 @@ import _ from 'lodash';
 import moment from 'moment';
 import ReactTooltip from 'react-tooltip';
 import IntervalTimer from 'react-interval-timer';
+import Notification  from 'react-web-notification';
 import 'moment/locale/fr';
 moment.locale('fr');
 export default class Chatwitch extends Component {
@@ -18,7 +19,10 @@ export default class Chatwitch extends Component {
             channels: _.uniqBy(_.compact(window.location.pathname.split("/"))),
             channelsDetails : [],
             chatThreads: [],
-            infoStreams: {}
+            infoStreams: {},
+            ignoreNotif: true,
+            titleNotif: '',
+            infoGames: []
         }
         this.badgesGlobal = {};
         this.client = new tmi.client({
@@ -36,6 +40,8 @@ export default class Chatwitch extends Component {
         this.badgesGlobal = (await axios.get(`https://badges.twitch.tv/v1/badges/global/display?language=fr`)).data
         this.infoChannels = await this.getInfoChannels();
         this.setState({infoStreams: await this.getInfoStreams()})
+        this.setState({infoGames: await this.getGames(_.map(this.state.infoStreams, (o)=>{return o.game_id}))});
+        console.table(this.state.infoGames)
         console.table(this.state.infoStreams)
         console.table(this.infoChannels)
         this.setState({channelsDetails: await Promise.all(_.map(this.state.channels, async(channel)=>{
@@ -113,6 +119,7 @@ export default class Chatwitch extends Component {
             this.setState(prevState => ({
                 chatThreads: [...prevState.chatThreads.slice(-199), resub]
             }))
+            this.openNotification(`${channel} RESUB`, `${methods.planName} (${methods.plan}) - c'est le ${cumulativeMonths}e mois d'abonnement de @${user["display-name"]} !!! ${message !== null ? message : ''}`, channelDetails.infoChannel.profile_image_url)
             this.chatComponent.current.scrollToBottom();
         });
 
@@ -126,6 +133,7 @@ export default class Chatwitch extends Component {
             this.setState(prevState => ({
                 chatThreads: [...prevState.chatThreads.slice(-199), subscription]
             }))
+            this.openNotification(`${channel} SUBSCRIPTION`, `${method.planName} (${method.plan}) - c'est le 1er mois d'abonnement de @${user["display-name"]} !!!`, channelDetails.infoChannel.profile_image_url)
             this.chatComponent.current.scrollToBottom();
         });
 
@@ -172,6 +180,50 @@ export default class Chatwitch extends Component {
         return {...this.badgesGlobal.badge_sets, ...badgesChannel.badge_sets}
     }
 
+    handlePermissionGranted() {
+        console.log('Permission Granted');
+        this.setState({
+            ignoreNotif: false
+        });
+    }
+    handlePermissionDenied() {
+        console.log('Permission Denied');
+        this.setState({
+            ignoreNotif: true
+        });
+    }
+    handleNotSupported() {
+        console.log('Web Notification not Supported');
+        this.setState({
+            ignoreNotif: true
+        });
+    }
+
+    openNotification(title, body, icon) {
+        if(this.state.ignoreNotif) {
+            return;
+        }
+        const options = {
+            tag: Date.now(),
+            body: body,
+            icon: icon,
+            lang: 'fr',
+            dir: 'ltr'
+        }
+        this.setState({
+            titleNotif: title,
+            optionsNotif: options
+        });
+    }
+
+    async getGames(ids) {
+        return (await axios.get(`https://api.twitch.tv/helix/games?id=${ids.join('&id=')}`, {
+            headers: {
+                'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
+            }
+        })).data.data;
+    }
+
     render() {
         return (
             <>
@@ -185,6 +237,7 @@ export default class Chatwitch extends Component {
                         this.badgesGlobal = (await axios.get(`https://badges.twitch.tv/v1/badges/global/display?language=fr`)).data
                         this.infoChannels = await this.getInfoChannels();
                         this.setState({infoStreams: await this.getInfoStreams()});
+                        this.setState({infoGames: await this.getGames(_.map(this.state.infoStreams, (o)=>{return o.game_id}))});
                         this.setState({channelsDetails: await Promise.all(_.map(this.state.channels, async(channel)=>{
                             const infoChannel = _.find(this.infoChannels, user => user.login === channel);
                             const infoStream = _.find(this.state.infoStreams, user => user.user_id === infoChannel.id);
@@ -203,10 +256,30 @@ export default class Chatwitch extends Component {
                     let v = JSON.parse(datumAsText);
                     return (
                         <div>
-                            <b>{v.title}</b><br/>
+                            <b>{v.title}</b><br/><small>{this.state.infoGames.find(o=>{return v.game_id === o.id}).name}</small>
                         </div>
                     );
                 }} />
+
+                <ReactTooltip id="emote" place="top" border={true} className="emote-preview" getContent={datumAsText => {
+                    if (datumAsText == null) {
+                    return;
+                    }
+                    let v = JSON.parse(datumAsText);
+                    return (
+                        <><img src={v.src} alt=""/><p>{v.title}</p></>
+                    );
+                }} />
+
+                <Notification
+                    ignore={this.state.ignoreNotif && this.state.titleNotif !== ''}
+                    notSupported={this.handleNotSupported.bind(this)}
+                    onPermissionGranted={this.handlePermissionGranted.bind(this)}
+                    onPermissionDenied={this.handlePermissionDenied.bind(this)}
+                    timeout={10000}
+                    title={this.state.titleNotif}
+                    options={this.state.optionsNotif}
+                />
             </>
         )
     }
@@ -248,9 +321,8 @@ function formatEmotes(text, emotes) {
                 var length =  mote[1] - mote[0],
                     empty = Array.apply(null, new Array(length + 1+1)).map(function() { return '' });
                 splitText = splitText.slice(0, mote[0]).concat(empty).concat(splitText.slice(mote[1] + 1+1, splitText.length));
-                splitText.splice(mote[0], 1, `<img style="vertical-align: middle;margin: -100% 0;display: inline-block;" class="emoticon" title=${text.slice(mote[0],mote[1]+1).replace(/[\u00A0-\u9999<>&]/gim, function(i) {
-                    return '&#'+i.charCodeAt(0)+';';
-                 })} src="http://static-cdn.jtvnw.net/emoticons/v1/${i}/1.0">`);
+                var datajson = {src: `http://static-cdn.jtvnw.net/emoticons/v1/${i}/3.0`, title: text.slice(mote[0],mote[1]+1).replace(/[\u00A0-\u9999<>&]/gim, function(i) {return '&#'+i.charCodeAt(0)+';';})}
+                splitText.splice(mote[0], 1, `<img data-for="emote" data-tip=${JSON.stringify(datajson)} style="vertical-align: middle;margin: -0.5% 0;display: inline-block;" class="emoticon" alt="${datajson.title}" src="http://static-cdn.jtvnw.net/emoticons/v1/${i}/1.0">`);
             }
         }
     }
@@ -273,6 +345,10 @@ class Chat extends Component {
                 this.setState({autoscroll: true});
             }
         }, true);
+    }
+
+    componentDidUpdate() {
+        ReactTooltip.rebuild();
     }
 
     onWheel(e) {
@@ -303,13 +379,15 @@ class Chat extends Component {
                         thread = (<b style={{background: "red"}}>@{chatThread.username} you are BANNED.</b>)
                         break;
                     case "message":
-                        thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px"}:{verticalAlign: "middle",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} /></>)
+                        thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "top",lineHeight: "28px"}:{verticalAlign: "top",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank' style='color: black;vertical-align: middle;'>$1</a>") }} /></>)
                         break;
                     case "subscription":
-                        thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px", fontWeight: "bold"}:{verticalAlign: "middle",lineHeight: "28px", fontWeight: "bold"}}>{"@"+chatThread.user["display-name"]} - {chatThread.method.planName} ({chatThread.method.plan})</span></>)
+                        thread = (<>
+                        <small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "top",lineHeight: "28px", fontWeight: "bold"}:{verticalAlign: "top",lineHeight: "28px", fontWeight: "bold"}}>{chatThread.method.planName} ({chatThread.method.plan}) - c'est le 1er mois d'abonnement de {"@"+chatThread.user["display-name"]} !!!</span>
+                        </>)
                         break;
                     case "resub":
-                        thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px", fontWeight: "bold"}:{verticalAlign: "middle",lineHeight: "28px", fontWeight: "bold"}}>{chatThread.methods.planName} ({chatThread.methods.plan}) - c'est le {chatThread.cumulativeMonths}{chatThread.cumulativeMonths === 1 ? "er" : "e"} mois d'abonnement de @{chatThread.user["display-name"]} !!!</span> {chatThread.message && <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "middle",lineHeight: "28px"}:{verticalAlign: "middle",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank'>$1</a>") }} />}</>)
+                        thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "top",lineHeight: "28px", fontWeight: "bold"}:{verticalAlign: "top",lineHeight: "28px", fontWeight: "bold"}}>{chatThread.methods.planName} ({chatThread.methods.plan}) - c'est le {chatThread.cumulativeMonths}e mois d'abonnement de @{chatThread.user["display-name"]} !!!</span> {chatThread.message && <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "top",lineHeight: "28px"}:{verticalAlign: "top",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes).replace(/(?:^|\s)((?:http|https|ftp|ftps):\/\/[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?)/g, " <a href=$1 target='_blank' style='color: black;vertical-align: middle;'>$1</a>") }} />}</>)
                         break;
                     default:
                         // Something else ?

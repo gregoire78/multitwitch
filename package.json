@@ -24,6 +24,7 @@
     "react-tooltip": "^3.10.0",
     "react-transition-group": "^2.5.3",
     "react-twitch-embed-video": "^1.0.1",
+    "react-web-notification": "^0.5.0",
     "tmi.js": "^1.4.2"
   },
   "scripts": {
