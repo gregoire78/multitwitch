@@ -21,7 +21,8 @@ export default class Chatwitch extends Component {
             infoStreams: {},
             ignoreNotif: true,
             titleNotif: '',
-            infoGames: []
+            infoGames: [],
+            message: ''
         }
         this.badgesGlobal = {};
         this.client = new tmi.client({
@@ -261,13 +262,24 @@ export default class Chatwitch extends Component {
         })).data.data;
     }
 
+    sendMessage(event) {
+        event.preventDefault();
+        this.client.say('peteur_pan',this.state.message)
+    }
+    handleChange(event) {
+        this.setState({message: event.target.value})
+    }
     render() {
         return (
             <>
-                <div style={{fontSize: 12, textAlign: 'center'}}>{this.state.channelsDetails.map((channelDetail,k)=>{return(<Fragment key={k}><span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴 "}{channelDetail.infoChannel.display_name}</span>{k===this.state.channelsDetails.length-1 ? '':' - '}</Fragment>)})}</div>
-
-                {this.state.connecting ? <p>connecting to chat irc</p> : <Chat chatThreads={this.state.chatThreads} ref={this.chatComponent} />}
-
+                {this.state.connecting ? <p>connecting to chat irc</p> : <><Chat chatThreads={this.state.chatThreads} ref={this.chatComponent} />
+                <div>
+                    <div style={{fontSize: 12, textAlign: 'center'}}>{this.state.channelsDetails.map((channelDetail,k)=>{return(<Fragment key={k}><span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴 "}{channelDetail.infoChannel.display_name}</span>{k===this.state.channelsDetails.length-1 ? '':' - '}</Fragment>)})}</div>
+                    <form style={{display: "block"}} onSubmit={this.sendMessage.bind(this)}>
+                        <textarea onChange={this.handleChange.bind(this)} style={{minWidth: "100%", maxWidth: "100%", maxHeight: "45px", minHeight: "45px",margin: 0, padding: 0, border: "none", display: "block"}} rows={3} placeholder="envoyer un message"></textarea>
+                        <button style={{display: "block", height:"20px", width: "100%", border: "none", padding: 0, margin: 0}} type="submit">SEND</button>
+                    </form>
+                </div></>}
                 <ReactTooltip id="info" place="bottom" border={true} getContent={datumAsText => {
                     if (datumAsText == null) {
                     return;
@@ -392,7 +404,7 @@ class Chat extends Component {
 
     render() {
         return (
-        <div ref={this.chatelem} style={{height: "calc(100% - 16px)", overflow: "auto"}} onWheel={this.onWheel.bind(this)}>
+        <div ref={this.chatelem} style={{height: "calc(100% - 16px - 45px - 20px)", overflow: "auto"}} onWheel={this.onWheel.bind(this)}>
             {this.props.chatThreads.map((chatThread)=>{
                 let thread;
                 switch(chatThread.status) {
