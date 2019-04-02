@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import tmi from 'tmi.js';
 import axios from 'axios';
 import _ from 'lodash';
@@ -227,7 +227,7 @@ export default class Chatwitch extends Component {
     render() {
         return (
             <>
-                <div style={{fontSize: 12}}>{this.state.channelsDetails.map((channelDetail,k)=>{return(<span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴 "}{channelDetail.infoChannel.display_name}</span>)})}</div>
+                <div style={{fontSize: 12, textAlign: 'center'}}>{this.state.channelsDetails.map((channelDetail,k)=>{return(<Fragment key={k}><span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴 "}{channelDetail.infoChannel.display_name}</span>{k===this.state.channelsDetails.length-1 ? '':' - '}</Fragment>)})}</div>
 
                 {this.state.connecting ? <p>connecting to chat irc</p> : <Chat chatThreads={this.state.chatThreads} ref={this.chatComponent} />}
 
@@ -254,9 +254,14 @@ export default class Chatwitch extends Component {
                     return;
                     }
                     let v = JSON.parse(datumAsText);
+                    const game = this.state.infoGames.find(o=>{return v.game_id === o.id})
                     return (
                         <div>
-                            <b>{v.title}</b><br/><small>{this.state.infoGames.find(o=>{return v.game_id === o.id}).name}</small>
+                            <img alt='' style={{display: "inline-block"}} src={game.box_art_url.replace(/(.*)({width}x{height})(.*)/,'$140x55$3')} />
+                            <div style={{display: "inline-block", verticalAlign: "top", margin: "0 0 0 10px",overflow: "hidden",textOverflow: "ellipsis", whiteSpace: "nowrap",width: "calc(100% - 50px)"}}>
+                                <b>{v.title}</b><br/>
+                                <small>{game.name}</small>
+                            </div>
                         </div>
                     );
                 }} />
