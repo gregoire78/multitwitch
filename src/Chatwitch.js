@@ -23,7 +23,8 @@ export default class Chatwitch extends Component {
             titleNotif: '',
             infoGames: [],
             message: '',
-            channelChat: ''
+            channelChat: '',
+            roomsStates: []
         }
 
         this.handleChange = this.handleChange.bind(this);
@@ -45,18 +46,10 @@ export default class Chatwitch extends Component {
     }
 
     async componentWillMount() {
-        this.client.connect();
-        this.client.on("connecting", this.toogleConnectingChat.bind(this));
-        this.client.on("logon", () => {
-            // Do your stuff.
-            console.log("logged !")
-        });
-        this.client.on("emotesets", (sets, obj) => {
-        });
-        this.client.on("connected", this.toogleConnectingChat.bind(this));
     }
 
     async componentDidMount() {
+        //GET infos streams, games ...
         this.badgesGlobal = (await axios.get(`https://badges.twitch.tv/v1/badges/global/display?language=fr`)).data
         this.infoChannels = await this.getInfoChannels();
         this.setState({infoStreams: await this.getInfoStreams()})
@@ -70,6 +63,30 @@ export default class Chatwitch extends Component {
             return {channel, badges : await this.getBadgeLink(infoChannel), infoChannel, infoStream }
         }))});
         console.table(this.state.channelsDetails);
+
+        this.client.connect();
+
+        this.client.on("connecting", this.toogleConnectingChat.bind(this));
+        this.client.on("connected", this.toogleConnectingChat.bind(this));
+        this.client.on("logon", () => {
+            // Do your stuff.
+            console.log("logged !")
+        });
+
+        this.client.on("roomstate", (channel, state) => {
+            this.setState(prevState => ( {
+                roomsStates: _.values(_.merge(_.keyBy(prevState.roomsStates, 'room-id'), _.keyBy([state], 'room-id')))
+            }))
+            console.log("roomstate",channel, state, this.state.channelChat)
+            if("#"+this.state.channelChat === channel) {
+                this.setState({channelChat: this.state.channelChat})
+            }
+        });
+
+        this.client.on("emotesets", (sets, obj) => {
+        });
+
+        
 
         this.client.on("chat", (channel, user, message, self)=>{
             const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
@@ -108,7 +125,23 @@ export default class Chatwitch extends Component {
         });*/
 
         this.client.on("notice", (channel, msgid, message) => {
+            const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
             console.log("notice", msgid,message)
+            let notice = {status: "notice", channel: channelDetails, msgid, message, ts_global : moment().valueOf()};
+            this.setState(prevState => ({
+                chatThreads: [...prevState.chatThreads.slice(-199), notice]
+            }))
+            this.chatComponent.current.scrollToBottom();
+        });
+
+        this.client.on("slowmode", (channel, enabled, length) => {
+            // Do your stuff.
+            console.log("slowmode",channel, enabled, length)
+        });
+
+        this.client.on("disconnected", (reason) => {
+            // Do your stuff.
+            console.log("disconnected",reason)
         });
 
         // for /me messages
@@ -274,8 +307,9 @@ export default class Chatwitch extends Component {
 
     async sendMessage(event) {
         event.preventDefault();
-        if(this.state.channelChat) {
+        if(this.state.channelChat && this.state.message) {
             await this.client.say(this.state.channelChat ,this.state.message)
+            this.setState({message: ""})
             this.chatComponent.current.scrollToBottom();
         }
     }
@@ -283,32 +317,34 @@ export default class Chatwitch extends Component {
         this.setState({message: event.target.value})
     }
     handleSelect(event) {
-        this.setState({channelChat: event.target.value})
+        const channelSelected = event.target.value;
+        const roomstate = _.find(this.state.roomsStates, ['channel', "#"+channelSelected]);
+        if(roomstate) {
+            this.setState({channelChat: channelSelected})
+        } else {this.setState({channelChat: ''})}
     }
     async onEnterPress(e) {
         if(e.keyCode === 13 && e.shiftKey === false) {
-            e.preventDefault();
-            if(this.state.channelChat){
-                await this.client.say(this.state.channelChat ,this.state.message)
-                //this.client.raw(`PRIVMSG #mistermv :LUL`);
-                this.chatComponent.current.scrollToBottom();
-            }
+            this.sendMessage(e)
         }
     }
     render() {
+        const roomstate = _.find(this.state.roomsStates, ['channel', "#"+this.state.channelChat]);
+        const placeholder = (roomstate && (roomstate['followers-only'] !== '-1' || roomstate['emote-only'])) ? `\nle chat est en mode ${roomstate['followers-only'] !== '-1' ? `followers ${roomstate['followers-only']?`(${roomstate['followers-only']}min) `:''} `:''}${(roomstate['followers-only'] !== '-1' && roomstate['emote-only']) ? 'et ': ""}${roomstate['emote-only'] === true ? 'emotes ':''}` : '';
         return (
             <>
                 {this.state.connecting ? <p>connecting to chat irc</p> : <><Chat chatThreads={this.state.chatThreads} ref={this.chatComponent} />
                 <div>
                     <div style={{fontSize: 12, textAlign: 'center'}}>{this.state.channelsDetails.map((channelDetail,k)=>{return(<Fragment key={k}><span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴 "}{channelDetail.infoChannel.display_name}</span>{k===this.state.channelsDetails.length-1 ? '':' - '}</Fragment>)})}</div>
                     <form ref={el => this.myFormRef = el} style={{display: "block"}} onSubmit={this.sendMessage}>
-                        <textarea onKeyDown={this.onEnterPress.bind(this)} disabled={!this.state.channelChat} onChange={this.handleChange} style={{minWidth: "100%", maxWidth: "100%", maxHeight: "45px", minHeight: "45px",margin: 0, padding: 0, border: "none", display: "block"}} rows={3} placeholder="envoyer un message"></textarea>
+                        <textarea onKeyDown={this.onEnterPress.bind(this)} disabled={!this.state.channelChat} onChange={this.handleChange} style={{minWidth: "100%", maxWidth: "100%", maxHeight: "45px", minHeight: "45px",margin: 0, padding: 0, border: "none", display: "block"}} rows={3} placeholder={"envoyer un message"+placeholder} value={this.state.message} ></textarea>
                         <span style={{display: "flex"}}>
                             <button style={{display: "inline-block", height:"20px", border: "none", padding: 0, margin: 0}} type="submit">SEND</button>
                             <select onChange={this.handleSelect} style={{border: "none", display: "inline-block", verticalAlign: "top", height: "20px"}}>
                                 <option value="">--Please choose a channel--</option>
                                 {this.state.channelsDetails.map(obj=>{return(<option key={obj.channel} value={obj.channel}>{obj.channel}</option>)})}
                             </select>
+                            <small>{((roomstate && roomstate['slow']) && 'Mode lent activé durée : '+roomstate['slow']+'s')}</small>
                         </span>
                     </form>
                 </div></>}
@@ -443,6 +479,9 @@ class Chat extends Component {
                 switch(chatThread.status) {
                     case "to":
                         thread = (<b style={{background: "yellow", color: "black"}}>@{chatThread.username} you are timed out for {chatThread.duration} seconds.</b>)
+                        break;
+                    case "notice":
+                        thread = (<b style={{background: "grey", color: "black"}}>{chatThread.message}</b>)
                         break;
                     case "ban":
                         thread = (<b style={{background: "red"}}>@{chatThread.username} you are BANNED.</b>)
