@@ -81,6 +81,14 @@ export default class Chatwitch extends Component {
             if("#"+this.state.channelChat === channel) {
                 this.setState({channelChat: this.state.channelChat})
             }
+
+            //show in thread
+            const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
+            let roomstate = {status: "roomstate", channel: channelDetails, state, ts_global : moment().valueOf()};
+            this.setState(prevState => ( {
+                chatThreads: [...prevState.chatThreads.slice(-199), roomstate]
+            }));
+            this.chatComponent.current.scrollToBottom();
         });
 
         this.client.on("emotesets", (sets, obj) => {
@@ -482,6 +490,9 @@ class Chat extends Component {
                         break;
                     case "notice":
                         thread = (<b style={{background: "grey", color: "black"}}>{chatThread.message}</b>)
+                        break;
+                    case "roomstate":
+                        thread = (<i style={{color: "black"}}>Room updated {chatThread.state['emote-only']!==undefined && 'emote-only='+chatThread.state['emote-only']} {chatThread.state['followers-only']!==undefined && 'followers-only='+chatThread.state['followers-only']} {chatThread.state['slow']!==undefined && 'slow='+chatThread.state['slow']}</i>)
                         break;
                     case "ban":
                         thread = (<b style={{background: "red"}}>@{chatThread.username} you are BANNED.</b>)
