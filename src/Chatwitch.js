@@ -14,7 +14,7 @@ export default class Chatwitch extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            connecting: false,
+            connecting: true,
             channels: _.uniqBy(_.compact(window.location.pathname.split("/"))),
             channelsDetails : [],
             chatThreads: [],
@@ -66,7 +66,7 @@ export default class Chatwitch extends Component {
 
         this.client.connect();
 
-        this.client.on("connecting", this.toogleConnectingChat.bind(this));
+        this.client.on("connecting", ()=>{this.setState({connecting: true})});
         this.client.on("connected", this.toogleConnectingChat.bind(this));
         this.client.on("logon", () => {
             // Do your stuff.
@@ -486,16 +486,16 @@ class Chat extends Component {
                 let thread;
                 switch(chatThread.status) {
                     case "to":
-                        thread = (<b style={{background: "yellow", color: "black"}}>@{chatThread.username} you are timed out for {chatThread.duration} seconds.</b>)
+                        thread = (<b style={{background: "yellow", color: "black", verticalAlign: "middle"}}>@{chatThread.username} you are timed out for {chatThread.duration} seconds.</b>)
                         break;
                     case "notice":
-                        thread = (<b style={{background: "grey", color: "black"}}>{chatThread.message}</b>)
+                        thread = (<b style={{background: "grey", color: "black", verticalAlign: "middle"}}>{chatThread.message}</b>)
                         break;
                     case "roomstate":
-                        thread = (<i style={{color: "black"}}>Room updated {chatThread.state['emote-only']!==undefined && 'emote-only='+chatThread.state['emote-only']} {chatThread.state['followers-only']!==undefined && 'followers-only='+chatThread.state['followers-only']} {chatThread.state['slow']!==undefined && 'slow='+chatThread.state['slow']}</i>)
+                        thread = (<i style={{color: "black", verticalAlign: "middle"}}>Room updated {chatThread.state['emote-only']!==undefined && 'emote-only='+chatThread.state['emote-only']} {chatThread.state['followers-only']!==undefined && 'followers-only='+chatThread.state['followers-only']} {chatThread.state['slow']!==undefined && 'slow='+chatThread.state['slow']}</i>)
                         break;
                     case "ban":
-                        thread = (<b style={{background: "red"}}>@{chatThread.username} you are BANNED.</b>)
+                        thread = (<b style={{background: "red", verticalAlign: "middle"}}>@{chatThread.username} you are BANNED.</b>)
                         break;
                     case "message":
                         thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "top",lineHeight: "28px"}:{verticalAlign: "top",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes) }} /></>)
