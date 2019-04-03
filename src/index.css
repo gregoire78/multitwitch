@@ -39,3 +39,11 @@ div[tabindex="-1"]:focus {
 .emote-preview.show {
   opacity: 1 !important;
 }
+
+.channels {
+  font-size: 12px;
+  text-align: center;
+  position: absolute;
+  right: 50%;
+  transform: translateX(50%);
+}

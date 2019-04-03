@@ -335,7 +335,7 @@ export default class Chatwitch extends Component {
             <>
                 {this.state.connecting ? <p>connecting to chat irc</p> : <><Chat chatThreads={this.state.chatThreads} ref={this.chatComponent} />
                 <div>
-                    <div style={{fontSize: 12, textAlign: 'center'}}>{this.state.channelsDetails.map((channelDetail,k)=>{return(<Fragment key={k}><span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴 "}{channelDetail.infoChannel.display_name}</span>{k===this.state.channelsDetails.length-1 ? '':' - '}</Fragment>)})}</div>
+                    <div className="channels">{this.state.channelsDetails.map((channelDetail,k)=>{return(<Fragment key={k}><span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴 "}{channelDetail.infoChannel.display_name}</span>{k===this.state.channelsDetails.length-1 ? '':' - '}</Fragment>)})}</div>
                     <form ref={el => this.myFormRef = el} style={{display: "block"}} onSubmit={this.sendMessage}>
                         <textarea onKeyDown={this.onEnterPress.bind(this)} disabled={!this.state.channelChat} onChange={this.handleChange} style={{minWidth: "100%", maxWidth: "100%", maxHeight: "45px", minHeight: "45px",margin: 0, padding: 0, border: "none", display: "block"}} rows={3} placeholder={"envoyer un message"+placeholder} value={this.state.message} ></textarea>
                         <span style={{display: "flex"}}>
@@ -473,7 +473,7 @@ class Chat extends Component {
 
     render() {
         return (
-        <div ref={this.chatelem} style={{height: "calc(100% - 16px - 45px - 20px)", overflow: "auto"}} onWheel={this.onWheel.bind(this)}>
+        <div ref={this.chatelem} style={{height: "calc(100% - 45px - 20px)", overflow: "auto"}} onWheel={this.onWheel.bind(this)}>
             {this.props.chatThreads.map((chatThread)=>{
                 let thread;
                 switch(chatThread.status) {
