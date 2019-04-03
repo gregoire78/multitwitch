@@ -22,8 +22,14 @@ export default class Chatwitch extends Component {
             ignoreNotif: true,
             titleNotif: '',
             infoGames: [],
-            message: ''
+            message: '',
+            channelChat: ''
         }
+
+        this.handleChange = this.handleChange.bind(this);
+        this.sendMessage = this.sendMessage.bind(this);
+        this.handleSelect = this.handleSelect.bind(this);
+
         this.badgesGlobal = {};
         this.client = new tmi.client({
             options: {
@@ -32,8 +38,8 @@ export default class Chatwitch extends Component {
             },
             channels: _.uniqBy(_.compact(window.location.pathname.split("/"))),
             identity: {
-                username: "Peteur_Pan",
-                password: "oauth:p0l0rcb1lyow1tag4t0nxy68z7oucd"
+                username: process.env.REACT_APP_CHANNELID,
+                password: process.env.REACT_APP_CHANNELOAUTH
             }
         });
     }
@@ -133,6 +139,8 @@ export default class Chatwitch extends Component {
             this.setState(prevState => ({
                 chatThreads: [...prevState.chatThreads.slice(-199), resub]
             }))
+            //if(channel === "#roi_louis")
+            //    this.client.say('roi_louis',`GG @${username} aureli4Coucou`);
             this.openNotification(`${channel} RESUB`, `${methods.planName} (${methods.plan}) - c'est le ${cumulativeMonths}e mois d'abonnement de @${user["display-name"]} !!! ${message !== null ? message : ''}`, channelDetails.infoChannel.profile_image_url)
             this.chatComponent.current.scrollToBottom();
         });
@@ -147,6 +155,8 @@ export default class Chatwitch extends Component {
             this.setState(prevState => ({
                 chatThreads: [...prevState.chatThreads.slice(-199), subscription]
             }))
+            //if(channel === "#kawautv")
+            //    this.client.say('kawautv',`GG @${username} aureli4Coucou aypierreBiere`);
             this.openNotification(`${channel} SUBSCRIPTION`, `${method.planName} (${method.plan}) - c'est le 1er mois d'abonnement de @${user["display-name"]} !!!`, channelDetails.infoChannel.profile_image_url)
             this.chatComponent.current.scrollToBottom();
         });
@@ -171,7 +181,7 @@ export default class Chatwitch extends Component {
         setTimeout(() => {
             ReactTooltip.rebuild();
         }, 0);
-        var intervalId = setInterval(this.getupdateinfos.bind(this), 10000);
+        var intervalId = setInterval(this.getupdateinfos.bind(this), 20000);
         this.setState({intervalId: intervalId});
     }
     componentWillUnmount() {
@@ -262,12 +272,28 @@ export default class Chatwitch extends Component {
         })).data.data;
     }
 
-    sendMessage(event) {
+    async sendMessage(event) {
         event.preventDefault();
-        this.client.say('peteur_pan',this.state.message)
+        if(this.state.channelChat) {
+            await this.client.say(this.state.channelChat ,this.state.message)
+            this.chatComponent.current.scrollToBottom();
+        }
     }
     handleChange(event) {
         this.setState({message: event.target.value})
+    }
+    handleSelect(event) {
+        this.setState({channelChat: event.target.value})
+    }
+    async onEnterPress(e) {
+        if(e.keyCode === 13 && e.shiftKey === false) {
+            e.preventDefault();
+            if(this.state.channelChat){
+                await this.client.say(this.state.channelChat ,this.state.message)
+                //this.client.raw(`PRIVMSG #mistermv :LUL`);
+                this.chatComponent.current.scrollToBottom();
+            }
+        }
     }
     render() {
         return (
@@ -275,11 +301,18 @@ export default class Chatwitch extends Component {
                 {this.state.connecting ? <p>connecting to chat irc</p> : <><Chat chatThreads={this.state.chatThreads} ref={this.chatComponent} />
                 <div>
                     <div style={{fontSize: 12, textAlign: 'center'}}>{this.state.channelsDetails.map((channelDetail,k)=>{return(<Fragment key={k}><span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴 "}{channelDetail.infoChannel.display_name}</span>{k===this.state.channelsDetails.length-1 ? '':' - '}</Fragment>)})}</div>
-                    <form style={{display: "block"}} onSubmit={this.sendMessage.bind(this)}>
-                        <textarea onChange={this.handleChange.bind(this)} style={{minWidth: "100%", maxWidth: "100%", maxHeight: "45px", minHeight: "45px",margin: 0, padding: 0, border: "none", display: "block"}} rows={3} placeholder="envoyer un message"></textarea>
-                        <button style={{display: "block", height:"20px", width: "100%", border: "none", padding: 0, margin: 0}} type="submit">SEND</button>
+                    <form ref={el => this.myFormRef = el} style={{display: "block"}} onSubmit={this.sendMessage}>
+                        <textarea onKeyDown={this.onEnterPress.bind(this)} disabled={!this.state.channelChat} onChange={this.handleChange} style={{minWidth: "100%", maxWidth: "100%", maxHeight: "45px", minHeight: "45px",margin: 0, padding: 0, border: "none", display: "block"}} rows={3} placeholder="envoyer un message"></textarea>
+                        <span style={{display: "flex"}}>
+                            <button style={{display: "inline-block", height:"20px", border: "none", padding: 0, margin: 0}} type="submit">SEND</button>
+                            <select onChange={this.handleSelect} style={{border: "none", display: "inline-block", verticalAlign: "top", height: "20px"}}>
+                                <option value="">--Please choose a channel--</option>
+                                {this.state.channelsDetails.map(obj=>{return(<option key={obj.channel} value={obj.channel}>{obj.channel}</option>)})}
+                            </select>
+                        </span>
                     </form>
                 </div></>}
+
                 <ReactTooltip id="info" place="bottom" border={true} getContent={datumAsText => {
                     if (datumAsText == null) {
                     return;
@@ -288,10 +321,10 @@ export default class Chatwitch extends Component {
                     const game = this.state.infoGames.find(o=>{return v.game_id === o.id})
                     return (
                         <div>
-                            <img alt='' style={{display: "inline-block"}} src={game.box_art_url.replace(/(.*)({width}x{height})(.*)/,'$140x55$3')} />
+                            <img alt='' style={{display: "inline-block"}} src={game && game.box_art_url.replace(/(.*)({width}x{height})(.*)/,'$140x55$3')} />
                             <div style={{display: "inline-block", verticalAlign: "top", margin: "0 0 0 10px",overflow: "hidden",textOverflow: "ellipsis", whiteSpace: "nowrap",width: "calc(100% - 50px)"}}>
                                 <b>{v.title}</b><br/>
-                                <small>{game.name}</small>
+                                <small>{game && game.name}</small>
                             </div>
                         </div>
                     );
