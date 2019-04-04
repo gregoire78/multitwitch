@@ -47,3 +47,10 @@ div[tabindex="-1"]:focus {
   right: 50%;
   transform: translateX(50%);
 }
+#info{
+  padding: 0;
+  border-radius: 0;
+}
+#info img {
+  vertical-align: top;
+}

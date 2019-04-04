@@ -6,8 +6,14 @@ import _ from 'lodash';
 import moment from 'moment';
 import ReactTooltip from 'react-tooltip';
 import Notification  from 'react-web-notification';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClock, faUser } from '@fortawesome/free-solid-svg-icons';
 import 'moment/locale/fr';
+
+library.add(faClock, faUser);
 moment.locale('fr');
+
 export default class Chatwitch extends Component {
     chatComponent = React.createRef();
 
@@ -24,7 +30,8 @@ export default class Chatwitch extends Component {
             infoGames: [],
             message: '',
             channelChat: '',
-            roomsStates: []
+            roomsStates: [],
+            countdown: 0
         }
 
         this.handleChange = this.handleChange.bind(this);
@@ -92,9 +99,8 @@ export default class Chatwitch extends Component {
         });
 
         this.client.on("emotesets", (sets, obj) => {
+            console.log(sets, obj)
         });
-
-        
 
         this.client.on("chat", (channel, user, message, self)=>{
             const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
@@ -313,9 +319,25 @@ export default class Chatwitch extends Component {
         })).data.data;
     }
 
-    async sendMessage(event) {
+    countdownChat(timeleft) {
+        let inittimeleft = timeleft;
+        const intcount = setInterval(()=>{
+            //document.getElementById("countdown").innerHTML = timeleft + " seconds remaining";
+            timeleft -= 1;
+            if(timeleft <= 0){
+                this.setState({countdown: inittimeleft})
+                clearInterval(intcount);
+                //document.getElementById("countdown").innerHTML = "Finished"
+            }
+            this.setState({countdown: timeleft})
+        }, 1000);
+    }
+
+    async sendMessage(event, roomstate) {
         event.preventDefault();
-        if(this.state.channelChat && this.state.message) {
+        if(this.state.channelChat && this.state.message && this.state.countdown <= 0) {
+            if(roomstate && roomstate['slow'])
+                this.countdownChat(~~roomstate['slow']);
             await this.client.say(this.state.channelChat ,this.state.message)
             this.setState({message: ""})
             this.chatComponent.current.scrollToBottom();
@@ -324,40 +346,40 @@ export default class Chatwitch extends Component {
     handleChange(event) {
         this.setState({message: event.target.value})
     }
-    handleSelect(event) {
+    handleSelect(event,roomstate) {
         const channelSelected = event.target.value;
-        const roomstate = _.find(this.state.roomsStates, ['channel', "#"+channelSelected]);
-        if(roomstate) {
-            this.setState({channelChat: channelSelected})
-        } else {this.setState({channelChat: ''})}
+        //const roomstate = _.find(this.state.roomsStates, ['channel', "#"+channelSelected]);
+        //if(roomstate) {
+            this.setState({channelChat: channelSelected, countdown:(roomstate && roomstate['slow'])?~~roomstate['slow']:0});
+        //} else {this.setState({channelChat: ''})}
     }
-    async onEnterPress(e) {
+    async onEnterPress(e,roomstate) {
         if(e.keyCode === 13 && e.shiftKey === false) {
-            this.sendMessage(e)
+            this.sendMessage(e,roomstate)
         }
     }
     render() {
         const roomstate = _.find(this.state.roomsStates, ['channel', "#"+this.state.channelChat]);
-        const placeholder = (roomstate && (roomstate['followers-only'] !== '-1' || roomstate['emote-only'])) ? `\nle chat est en mode ${roomstate['followers-only'] !== '-1' ? `followers ${roomstate['followers-only']?`(${roomstate['followers-only']}min) `:''} `:''}${(roomstate['followers-only'] !== '-1' && roomstate['emote-only']) ? 'et ': ""}${roomstate['emote-only'] === true ? 'emotes ':''}` : '';
+        const placeholder = (roomstate && (roomstate['followers-only'] !== '-1' || roomstate['emote-only'] || roomstate['sub-only'])) ? `\nle chat est en mode ${roomstate['followers-only'] !== '-1' ? `followers-only ${roomstate['followers-only']?`(${roomstate['followers-only']}min) `:''}`:''}${roomstate['emote-only'] === true ? 'emotes-only ':''}${roomstate['subs-only'] === true ? 'sub-only':''}` : '';
         return (
             <>
                 {this.state.connecting ? <p>connecting to chat irc</p> : <><Chat chatThreads={this.state.chatThreads} ref={this.chatComponent} />
                 <div>
                     <div className="channels">{this.state.channelsDetails.map((channelDetail,k)=>{return(<Fragment key={k}><span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴 "}{channelDetail.infoChannel.display_name}</span>{k===this.state.channelsDetails.length-1 ? '':' - '}</Fragment>)})}</div>
-                    <form ref={el => this.myFormRef = el} style={{display: "block"}} onSubmit={this.sendMessage}>
-                        <textarea onKeyDown={this.onEnterPress.bind(this)} disabled={!this.state.channelChat} onChange={this.handleChange} style={{minWidth: "100%", maxWidth: "100%", maxHeight: "45px", minHeight: "45px",margin: 0, padding: 0, border: "none", display: "block"}} rows={3} placeholder={"envoyer un message"+placeholder} value={this.state.message} ></textarea>
+                    <form ref={el => this.myFormRef = el} style={{display: "block"}} onSubmit={(e)=>this.sendMessage(e, roomstate)}>
+                        <textarea onKeyDown={(e)=>this.onEnterPress(e, roomstate)} disabled={!roomstate || this.state.countdown > 0} onChange={this.handleChange} style={{minWidth: "100%", maxWidth: "100%", maxHeight: "45px", minHeight: "45px",margin: 0, padding: 0, border: "none", display: "block"}} rows={3} placeholder={"envoyer un message"+placeholder} value={this.state.message} ></textarea>
                         <span style={{display: "flex"}}>
                             <button style={{display: "inline-block", height:"20px", border: "none", padding: 0, margin: 0}} type="submit">SEND</button>
                             <select onChange={this.handleSelect} style={{border: "none", display: "inline-block", verticalAlign: "top", height: "20px"}}>
                                 <option value="">--Please choose a channel--</option>
                                 {this.state.channelsDetails.map(obj=>{return(<option key={obj.channel} value={obj.channel}>{obj.channel}</option>)})}
                             </select>
-                            <small>{((roomstate && roomstate['slow']) && 'Mode lent activé durée : '+roomstate['slow']+'s')}</small>
+                            <small>{((roomstate && roomstate['slow']) && 'Mode lent activé durée : '+(this.state.countdown > 0 ? this.state.countdown : roomstate['slow'])+'s')}</small>
                         </span>
                     </form>
                 </div></>}
 
-                <ReactTooltip id="info" place="bottom" border={true} getContent={datumAsText => {
+                <ReactTooltip effect="solid" id="info" place="bottom" border={true} getContent={datumAsText => {
                     if (datumAsText == null) {
                     return;
                     }
@@ -365,10 +387,11 @@ export default class Chatwitch extends Component {
                     const game = this.state.infoGames.find(o=>{return v.game_id === o.id})
                     return (
                         <div>
-                            <img alt='' style={{display: "inline-block"}} src={game && game.box_art_url.replace(/(.*)({width}x{height})(.*)/,'$140x55$3')} />
-                            <div style={{display: "inline-block", verticalAlign: "top", margin: "0 0 0 10px",overflow: "hidden",textOverflow: "ellipsis", whiteSpace: "nowrap",width: "calc(100% - 50px)"}}>
+                            <img alt='' style={{display: "inline-block"}} src={game && game.box_art_url.replace(/(.*)({width}x{height})(.*)/,'$175x100$3')} />
+                            <div style={{display: "inline-block", verticalAlign: "top", margin: "10px",width: "calc(100% - 95px)"}}>
                                 <b>{v.title}</b><br/>
-                                <small>{game && game.name}</small>
+                                <small>{game && game.name}</small><br/>
+                                <small><FontAwesomeIcon icon="clock" /> {`${moment.utc(moment()-moment(v.started_at)).format("HH[h]mm")}`} - <FontAwesomeIcon icon="user" /> {v.viewer_count.toLocaleString('en-US',{ minimumFractionDigits: 0 })}</small>
                             </div>
                         </div>
                     );
@@ -486,16 +509,16 @@ class Chat extends Component {
                 let thread;
                 switch(chatThread.status) {
                     case "to":
-                        thread = (<b style={{background: "yellow", color: "black", verticalAlign: "middle"}}>@{chatThread.username} you are timed out for {chatThread.duration} seconds.</b>)
+                        thread = (<b style={{background: "#ffff0073", color: "black", verticalAlign: "middle"}}>@{chatThread.username} is banned for {chatThread.duration} seconds.</b>)
                         break;
                     case "notice":
-                        thread = (<b style={{background: "grey", color: "black", verticalAlign: "middle"}}>{chatThread.message}</b>)
+                        thread = (<b style={{background: "#80808082", color: "black", verticalAlign: "middle"}}>{chatThread.message}</b>)
                         break;
                     case "roomstate":
-                        thread = (<i style={{color: "black", verticalAlign: "middle"}}>Room updated {chatThread.state['emote-only']!==undefined && 'emote-only='+chatThread.state['emote-only']} {chatThread.state['followers-only']!==undefined && 'followers-only='+chatThread.state['followers-only']} {chatThread.state['slow']!==undefined && 'slow='+chatThread.state['slow']}</i>)
+                        thread = (<i style={{color: "black", verticalAlign: "middle"}}>Room updated {chatThread.state['emote-only']!==undefined && 'emote-only='+chatThread.state['emote-only']} {chatThread.state['followers-only']!==undefined && 'followers-only='+chatThread.state['followers-only']} {chatThread.state['slow']!==undefined && 'slow='+chatThread.state['slow']} {chatThread.state['subs-only']!==undefined && 'subs-only='+chatThread.state['subs-only']}</i>)
                         break;
                     case "ban":
-                        thread = (<b style={{background: "red", verticalAlign: "middle"}}>@{chatThread.username} you are BANNED.</b>)
+                        thread = (<b style={{background: "red", verticalAlign: "middle"}}>@{chatThread.username} is BANNED.</b>)
                         break;
                     case "message":
                         thread = (<><small style={{color: "grey", verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.ts}</small> {chatThread.badgesUser.map((badgeUser, k)=>{return <img key={k} src={badgeUser && badgeUser.image_url_1x} alt="" title={badgeUser && badgeUser.title} style={{verticalAlign: "middle",lineHeight: "28px"}} />})} <span style={{color: chatThread.user.color, fontWeight: "bold",verticalAlign: "middle",lineHeight: "28px"}}>{chatThread.user["display-name"]}:</span> <span style={chatThread.user["message-type"] === "action" ? {color: chatThread.user.color,verticalAlign: "top",lineHeight: "28px"}:{verticalAlign: "top",lineHeight: "28px"}} dangerouslySetInnerHTML={{ __html: formatEmotes(chatThread.message, chatThread.user.emotes) }} /></>)
