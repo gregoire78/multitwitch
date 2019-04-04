@@ -333,11 +333,9 @@ export default class Chatwitch extends Component {
         }, 1000);
     }
 
-    async sendMessage(event, roomstate) {
+    async sendMessage(event) {
         event.preventDefault();
-        if(this.state.channelChat && this.state.message && this.state.countdown <= 0) {
-            if(roomstate && roomstate['slow'])
-                this.countdownChat(~~roomstate['slow']);
+        if(this.state.channelChat && this.state.message) {
             await this.client.say(this.state.channelChat ,this.state.message)
             this.setState({message: ""})
             this.chatComponent.current.scrollToBottom();
@@ -353,9 +351,9 @@ export default class Chatwitch extends Component {
             this.setState({channelChat: channelSelected, countdown:(roomstate && roomstate['slow'])?~~roomstate['slow']:0});
         //} else {this.setState({channelChat: ''})}
     }
-    async onEnterPress(e,roomstate) {
+    async onEnterPress(e) {
         if(e.keyCode === 13 && e.shiftKey === false) {
-            this.sendMessage(e,roomstate)
+            this.sendMessage(e);
         }
     }
     render() {
@@ -366,8 +364,8 @@ export default class Chatwitch extends Component {
                 {this.state.connecting ? <p>connecting to chat irc</p> : <><Chat chatThreads={this.state.chatThreads} ref={this.chatComponent} />
                 <div>
                     <div className="channels">{this.state.channelsDetails.map((channelDetail,k)=>{return(<Fragment key={k}><span data-for="info" data-tip={JSON.stringify(channelDetail.infoStream)} key={k} style={{background: "#"+intToRGB(hashCode(channelDetail.channel)), color: "white", cursor: "default"}}>{channelDetail.infoStream && "🔴 "}{channelDetail.infoChannel.display_name}</span>{k===this.state.channelsDetails.length-1 ? '':' - '}</Fragment>)})}</div>
-                    <form ref={el => this.myFormRef = el} style={{display: "block"}} onSubmit={(e)=>this.sendMessage(e, roomstate)}>
-                        <textarea onKeyDown={(e)=>this.onEnterPress(e, roomstate)} disabled={!roomstate} onChange={this.handleChange} style={{minWidth: "100%", maxWidth: "100%", maxHeight: "45px", minHeight: "45px",margin: 0, padding: 0, border: "none", display: "block"}} rows={3} placeholder={"envoyer un message"+placeholder} value={this.state.message} ></textarea>
+                    <form ref={el => this.myFormRef = el} style={{display: "block"}} onSubmit={this.sendMessage}>
+                        <textarea onKeyDown={this.onEnterPress.bind(this)} disabled={!roomstate} onChange={this.handleChange} style={{minWidth: "100%", maxWidth: "100%", maxHeight: "45px", minHeight: "45px",margin: 0, padding: 0, border: "none", display: "block"}} rows={3} placeholder={"envoyer un message"+placeholder} value={this.state.message} ></textarea>
                         <span style={{display: "flex"}}>
                             <button style={{display: "inline-block", height:"20px", border: "none", padding: 0, margin: 0}} type="submit">SEND</button>
                             <select onChange={this.handleSelect} style={{border: "none", display: "inline-block", verticalAlign: "top", height: "20px"}}>
