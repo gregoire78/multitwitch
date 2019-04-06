@@ -21,7 +21,7 @@ export default class Chatwitch extends Component {
         super(props);
         this.state = {
             connecting: true,
-            channels: _.uniqBy(_.compact(window.location.pathname.split("/"))),
+            channels: [..._.uniqBy(_.compact(window.location.pathname.toLowerCase().split("/"))), process.env.REACT_APP_CHANNELID.toLowerCase()],
             channelsDetails : [],
             chatThreads: [],
             infoStreams: {},
@@ -44,7 +44,7 @@ export default class Chatwitch extends Component {
                 debug: false,
                 clientId: process.env.REACT_APP_TWITCH_CLIENTID
             },
-            channels: _.uniqBy(_.compact(window.location.pathname.split("/"))),
+            channels: [..._.uniqBy(_.compact(window.location.pathname.toLowerCase().split("/"))), process.env.REACT_APP_CHANNELID.toLowerCase()],
             identity: {
                 username: process.env.REACT_APP_CHANNELID,
                 password: process.env.REACT_APP_CHANNELOAUTH
