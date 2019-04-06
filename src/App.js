@@ -49,7 +49,7 @@ class App extends Component {
     const { cookies } = props;
 
     // get pseudo from url
-    const urlparse = _.uniqBy(_.compact(window.location.pathname.split("/")));
+    const urlparse = _.uniqBy(_.compact(window.location.pathname.toLowerCase().split("/")));
     this.state = {
       layouts: JSON.parse(JSON.stringify(originalLayouts)),
       layout: this.generateLayout(urlparse),
