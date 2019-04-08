@@ -37,8 +37,9 @@ class Person {
         this.opened = !this.opened;
     }
 
-    async logout(revokeTwitchToken, cookies) {
-        await revokeTwitchToken(cookies.get('token'));
+    async logout(cookies, revokeTwitchToken) {
+        if(revokeTwitchToken)
+            await revokeTwitchToken(cookies.get('token'));
         this.isAuth = false;
         this.user = {};
         this.streams = [];

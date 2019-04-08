@@ -66,7 +66,7 @@ class App extends Component {
     this.onToogleCollapse = person.onToogleCollapse.bind(person, this.getFollowedStream.bind(this));
     this.onRemoveItem = this.onRemoveItem.bind(this);
     this.handleWindow = person.handleWindow.bind(person);
-    this.logout = person.logout.bind(person, this.revokeTwitchToken.bind(this), cookies);
+    this.logout = person.logout.bind(person, cookies, this.revokeTwitchToken.bind(this));
     this.toogleOverlay = person.toogleOverlay.bind(person);
   }
 
@@ -76,8 +76,9 @@ class App extends Component {
     });
     ReactGA.pageview(window.location.pathname);
     //this.compononentLoginWindow();
-    if(this.props.person.isAuth) {
-      this.props.person.user = (await this.getTwitchUser()).data[0];
+    const twitchUser = await this.getTwitchUser();
+    if(twitchUser) {
+      this.props.person.user = twitchUser.data[0];
       this.getFollowedStream();
     }
     document.body.style.backgroundImage = "url("+MyIcon+")";
@@ -165,12 +166,17 @@ class App extends Component {
   }
 
   async getTwitchUser(){
-    return (await axios.get(`https://api.twitch.tv/helix/users`, {
-      headers: {
-        'Authorization': `Bearer ${this.props.cookies.get('token')}`,
-        'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
-      }
-    })).data;
+    try{
+      return (await axios.get(`https://api.twitch.tv/helix/users`, {
+        headers: {
+          'Authorization': `Bearer ${this.props.cookies.get('token')}`,
+          'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
+        }
+      })).data;
+    } catch(error) {
+      this.props.person.logout(this.props.cookies);
+      return false;
+    }
   }
 
   async revokeTwitchToken(token) {
