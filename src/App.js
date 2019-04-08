@@ -76,10 +76,12 @@ class App extends Component {
     });
     ReactGA.pageview(window.location.pathname);
     //this.compononentLoginWindow();
-    const twitchUser = await this.getTwitchUser();
-    if(twitchUser) {
-      this.props.person.user = twitchUser.data[0];
-      this.getFollowedStream();
+    if(this.props.person.isAuth){
+      const twitchUser = await this.getTwitchUser();
+      if(twitchUser) {
+        this.props.person.user = twitchUser.data[0];
+        this.getFollowedStream();
+      }
     }
     document.body.style.backgroundImage = "url("+MyIcon+")";
     document.body.style.backgroundPosition = "center";
@@ -174,7 +176,7 @@ class App extends Component {
         }
       })).data;
     } catch(error) {
-      this.props.person.logout(this.props.cookies);
+      await this.props.person.logout(this.props.cookies);
       return false;
     }
   }
