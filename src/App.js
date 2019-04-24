@@ -249,7 +249,7 @@ class App extends Component {
 
               <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" title="reset layout"/></button>
               <button onClick={this.onToogleCollapse} className="collapse-btn"><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
-              {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile" style={{backgroundImage: `url(${user.profile_image_url})`, backgroundSize: '24px 24px'}}></button> : <button onClick={this.handleWindow} title="connect your twitch account"><FontAwesomeIcon icon={["fab","twitch"]} /></button>}
+              {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile"><img src={user.profile_image_url} height={24} alt="" /></button> : <button onClick={this.handleWindow} title="connect your twitch account"><FontAwesomeIcon icon={["fab","twitch"]} /></button>}
               <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={!isEditMode ? "lightgrey" : ''} /></button>
             </nav>
 
