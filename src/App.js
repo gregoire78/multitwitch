@@ -12,7 +12,7 @@ import { instanceOf } from 'prop-types';
 import IntervalTimer from 'react-interval-timer';
 import { WidthProvider, Responsive } from "react-grid-layout";
 //import Twitch from './Twitch';
-import MyIcon from './Combo_Purple_RGB.svg';
+//import MyIcon from './Combo_Purple_RGB.svg';
 
 import { CSSTransition } from 'react-transition-group';
 
@@ -83,24 +83,20 @@ class App extends Component {
         this.getFollowedStream();
       }
     }
-    document.body.style.backgroundImage = "url("+MyIcon+")";
-    document.body.style.backgroundPosition = "center";
-    document.body.style.backgroundRepeat = "no-repeat";
-    document.body.style.backgroundSize = "contain";
-    document.body.style.backgroundAttachment = "fixed";
     this.props.person.mounted = true;
-  }
-
-  toolTipRebuild() {
-    setTimeout(() => {
-      ReactTooltip.rebuild();
-    }, 0);
   }
 
   componentWillMount() {
     const { cookies } = this.props;
+    document.body.style.backgroundImage = "url(/Combo_Purple_RGB.svg)";
+    document.body.style.backgroundPosition = "center";
+    document.body.style.backgroundRepeat = "no-repeat";
+    document.body.style.backgroundSize = "contain";
+    document.body.style.backgroundAttachment = "fixed";
+    
     if(window.location.hash) {
-      document.body.display="none";
+      document.body.innerHTML = "";
+      document.body.style.display = "none";
       let search = window.location.hash.substring(1);
       search = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}');
       if('access_token' in search) {
@@ -109,6 +105,12 @@ class App extends Component {
       }
       window.close();
     }
+  }
+
+  toolTipRebuild() {
+    setTimeout(() => {
+      ReactTooltip.rebuild();
+    }, 0);
   }
 
   generateLayout(pseudos) {
@@ -255,7 +257,7 @@ class App extends Component {
 
             {(isAuth && isEditMode) &&
             <nav className="streams">
-                <p style={{textAlign: "center", background: "#b34646", cursor: "default", height: "24px"}}><button onClick={this.logout} title="Logout" style={{position: "absolute",left: 0}}><FontAwesomeIcon icon="sign-out-alt" /></button><span style={{lineHeight: "24px"}}>{user.display_name}</span></p>
+                <p style={{textAlign: "center", background: "#b34646", cursor: "default", height: "24px"}}><button onClick={()=>{this.logout().then(()=>ReactTooltip.hide()); }} title="Logout" style={{position: "absolute",left: 0}}><FontAwesomeIcon icon="sign-out-alt" /></button><span style={{lineHeight: "24px"}}>{user.display_name}</span></p>
                 {!_.isEmpty(streams) &&
                 _.map(streams, (v,k) => {
                   return (
@@ -302,7 +304,7 @@ class App extends Component {
           <Welcome isAuth={isAuth} user={user} handleWindow={this.handleWindow} logout={this.logout} />
         }
 
-        <ReactTooltip  id="status" place="right" border={true} className="extraClass" getContent={datumAsText => {
+        <ReactTooltip id="status" place="right" border={true} className="extraClass" getContent={datumAsText => {
           if (datumAsText == null) {
             return;
           }
