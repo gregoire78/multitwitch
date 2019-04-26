@@ -184,7 +184,11 @@ class App extends Component {
   }
 
   async revokeTwitchToken(token) {
-    await axios.post(`https://id.twitch.tv/oauth2/revoke?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&token=${token}`)
+    try {
+      await axios.post(`https://id.twitch.tv/oauth2/revoke?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&token=${token}`)
+    } catch(error) {
+      return true;
+    }
   }
 
   async handleClosePopup() {
