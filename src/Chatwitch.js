@@ -14,6 +14,10 @@ import 'moment/locale/fr';
 library.add(faClock, faUser);
 moment.locale('fr');
 
+function randomIntFromInterval(min = 3000,max = 5000) { // min and max included
+    return Math.floor(Math.random()*(max-min+1)+min);
+}
+
 export default class Chatwitch extends Component {
     chatComponent = React.createRef();
 
@@ -53,6 +57,10 @@ export default class Chatwitch extends Component {
     }
 
     async componentWillMount() {
+    }
+
+    async getPhrase() {
+        return await (await axios.post(`http://app.gregoirejoncour.xyz/https://generateur.vuzi.fr/scripts/refresh.php`)).data.match(/[^/]*/)[0];
     }
 
     async componentDidMount() {
@@ -186,6 +194,10 @@ export default class Chatwitch extends Component {
             this.setState(prevState => ({
                 chatThreads: [...prevState.chatThreads.slice(-199), resub]
             }))
+            /*setTimeout(async () => {
+                this.client.say(this.state.channelChat , await this.getPhrase());
+            }, randomIntFromInterval());*/
+            //this.client.say(this.state.channelChat, `aypierreFouet `);
             //if(channel === "#roi_louis")
             //    this.client.say('roi_louis',`GG @${username} aureli4Coucou`);
             this.openNotification(`${channel} RESUB`, `${methods.planName} (${methods.plan}) - c'est le ${cumulativeMonths}e mois d'abonnement de @${user["display-name"]} !!! ${message !== null ? message : ''}`, channelDetails.infoChannel.profile_image_url)
@@ -202,6 +214,10 @@ export default class Chatwitch extends Component {
             this.setState(prevState => ({
                 chatThreads: [...prevState.chatThreads.slice(-199), subscription]
             }))
+            /*setTimeout(async () => {
+                this.client.say(this.state.channelChat , await this.getPhrase());
+            }, randomIntFromInterval());*/
+            //this.client.say(this.state.channelChat, `aypierreFouet `);
             //if(channel === "#kawautv")
             //    this.client.say('kawautv',`GG @${username} aureli4Coucou aypierreBiere`);
             this.openNotification(`${channel} SUBSCRIPTION`, `${method.planName} (${method.plan}) - c'est le 1er mois d'abonnement de @${user["display-name"]} !!!`, channelDetails.infoChannel.profile_image_url)
@@ -217,6 +233,10 @@ export default class Chatwitch extends Component {
         this.client.on("subgift", (channel, username, streakMonths, recipient, methods, userstate) => {
             // Do your stuff.
             let senderCount = ~~userstate["msg-param-sender-count"];
+            /*setTimeout(async () => {
+                this.client.say(this.state.channelChat , await this.getPhrase());
+            }, randomIntFromInterval());*/
+            //this.client.say(this.state.channelChat, `aypierreFouet `);
             console.log("subgift", channel, username, streakMonths, recipient, methods, userstate, senderCount)
         });
 
@@ -354,6 +374,14 @@ export default class Chatwitch extends Component {
     async onEnterPress(e) {
         if(e.keyCode === 13 && e.shiftKey === false) {
             this.sendMessage(e);
+            /*setTimeout(async () => {
+                await this.client.say(this.state.channelChat , await this.getPhrase())
+            }, randomIntFromInterval());*/
+            /*await this.client.say(this.state.channelChat ,`aypierreCasteur1 aypierreCasteur2 `)
+            setTimeout(async() => {
+                return await this.client.say(this.state.channelChat ,`aypierreCasteur3 aypierreCasteur4 `)
+            }, 100);*/
+            this.chatComponent.current.scrollToBottom();
         }
     }
     render() {
