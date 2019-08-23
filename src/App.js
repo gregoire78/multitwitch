@@ -205,6 +205,7 @@ class App extends Component {
   getFollowedStream() {
     axios.get(`https://api.twitch.tv/kraken/streams/followed`, {
       headers: {
+        'Accept': 'application/vnd.twitchtv.v5+json',
         'Authorization': `OAuth ${this.props.cookies.get('token')}`,
         'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
       }
