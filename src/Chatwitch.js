@@ -10,6 +10,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock, faUser } from '@fortawesome/free-solid-svg-icons';
 import 'moment/locale/fr';
+//import textToSpeech from '@google-cloud/text-to-speech';
 
 library.add(faClock, faUser);
 moment.locale('fr');
@@ -35,15 +36,18 @@ export default class Chatwitch extends Component {
             message: '',
             channelChat: '',
             roomsStates: [],
-            countdown: 0
+            countdown: 0,
+            audio: [],
         }
 
+        this.player = new Audio();
         this.handleChange = this.handleChange.bind(this);
         this.sendMessage = this.sendMessage.bind(this);
         this.handleSelect = this.handleSelect.bind(this);
 
         this.badgesGlobal = {};
         this.client = new tmi.client({
+            connection: { reconnect: true, secure: true },
             options: {
                 debug: false,
                 clientId: process.env.REACT_APP_TWITCH_CLIENTID
@@ -54,13 +58,47 @@ export default class Chatwitch extends Component {
                 password: process.env.REACT_APP_CHANNELOAUTH
             }
         });
+        //this.clientTts = new textToSpeech.TextToSpeechClient();
     }
 
     async componentWillMount() {
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        if (this.state.audio.length > 0 && this.state.audio !== prevState.audio && this.player.paused) {
+                this.player.volume = 0.4;
+                this.player.src = this.state.audio[0];
+                this.player.play();
+                this.player.onended = () => {
+                    this.setState((prevState) => {
+                        return {
+                            audio: prevState.audio.filter(function (value, index, arr) {
+                                return value !== prevState.audio[0];
+                            })
+                        }
+                    })
+                }
+        }
+    }
+
     async getPhrase() {
         return await (await axios.post(`http://app.gregoirejoncour.xyz/https://generateur.vuzi.fr/scripts/refresh.php`)).data.match(/[^/]*/)[0];
+    }
+
+    async getTts(text) {
+        return await (await axios.post(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.REACT_APP_TTS}`, {
+            input: {
+                ssml: '<speak>'+text+'</speak>'
+            },
+            voice: {
+                languageCode: "fr-FR",
+                ssmlGender: "MALE"
+            },
+            audioConfig: {
+                audioEncoding:"MP3",
+                speakingRate: "1.5"
+            }
+        })).data
     }
 
     async componentDidMount() {
@@ -108,10 +146,14 @@ export default class Chatwitch extends Component {
 
         this.client.on("emotesets", (sets, obj) => {
             console.log(sets, obj)
-        });
+        }); 
 
-        this.client.on("chat", (channel, user, message, self)=>{
+        this.client.on("chat", async (channel, user, message, self)=>{
             const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
+            if(!["moobot","nightbot", "ayrob0t"].includes(user.username)){
+                const tts = await this.getTts(`${user.username} dit : ${message}`.replace(/_/g, ' '));
+                this.setState({audio : [...this.state.audio, 'data:audio/mpeg;base64,'+tts.audioContent]})
+            }
             let chat = {status: "message", message, channel: channelDetails, badgesUser:[], user, ts: (user["tmi-sent-ts"] ? moment(user["tmi-sent-ts"], "x").format('LT') : moment().format('LT')), ts_global : moment().valueOf()};
             if(user.badges) {
                 chat.badgesUser = _.map(user.badges, (v,k)=>{return channelDetails.badges[k].versions[v]})
