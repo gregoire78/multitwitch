@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import DevTools, { configureDevtool } from "mobx-react-devtools";
 import { observable, decorate, action, computed } from "mobx";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import './index.css';
 import App from './App';
 import { CookiesProvider } from 'react-cookie';
@@ -25,11 +26,11 @@ class Person {
 
     handleEdit(toolTipRebuild) {
         this.isEditMode = !this.isEditMode;
-        if(this.isEditMode && this.isAuth) {toolTipRebuild()}
+        if (this.isEditMode && this.isAuth) { toolTipRebuild() }
     }
 
     onToogleCollapse(getFollowedStream) {
-        if(this.isCollapse && this.isAuth) {getFollowedStream()}
+        if (this.isCollapse && this.isAuth) { getFollowedStream() }
         this.isCollapse = !this.isCollapse;
     }
 
@@ -38,12 +39,12 @@ class Person {
     }
 
     async logout(cookies, revokeTwitchToken) {
-        if(revokeTwitchToken)
+        if (revokeTwitchToken)
             await revokeTwitchToken(cookies.get('token'));
         this.isAuth = false;
         this.user = {};
         this.streams = [];
-        cookies.remove('token', {domain: process.env.REACT_APP_DOMAIN});
+        cookies.remove('token', { domain: process.env.REACT_APP_DOMAIN });
     }
 
     toogleOverlay(bool) {
@@ -55,7 +56,7 @@ class Person {
     }
 
     onMenuVisibilityChange() {
-        this.openDropdown = !this.openDropdown && this.query.length>0;
+        this.openDropdown = !this.openDropdown && this.query.length > 0;
     }
 
     onSelect(item) {
@@ -102,7 +103,12 @@ configureDevtool({
 ReactDOM.render(
     <CookiesProvider>
         {process.env.NODE_ENV !== 'production' && <DevTools />}
-        <App person={new Person()} />
+        <Router>
+            <Switch>
+                <Route path="/" exact render={() => <App person={new Person()} />} />
+                <Route render={(props) => <App person={new Person()} />} />
+            </Switch>
+        </Router>
     </CookiesProvider>,
     document.getElementById('root')
 );
@@ -110,4 +116,4 @@ ReactDOM.render(
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: http://bit.ly/CRA-PWA
-serviceWorker.register();
+serviceWorker.unregister();

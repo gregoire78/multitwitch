@@ -5,11 +5,16 @@
 html {height: 100%;}
 
 body {
-  background: #5a3a93;/*#6441A4;*/
+  background-color: #5a3a93;/*#6441A4;*/
   overflow-y: scroll;
   overflow-x: hidden;
   padding: 0;
   margin: 0;
+  background-image: url("/Combo_Purple_RGB.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-attachment: fixed;
 }
 
 header button {

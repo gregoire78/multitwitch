@@ -88,12 +88,6 @@ class App extends Component {
 
   componentWillMount() {
     const { cookies } = this.props;
-    document.body.style.backgroundImage = "url(/Combo_Purple_RGB.svg)";
-    document.body.style.backgroundPosition = "center";
-    document.body.style.backgroundRepeat = "no-repeat";
-    document.body.style.backgroundSize = "contain";
-    document.body.style.backgroundAttachment = "fixed";
-    
     if(window.location.hash) {
       document.body.innerHTML = "";
       document.body.style.display = "none";
