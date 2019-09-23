@@ -10,7 +10,7 @@ body {
   overflow-x: hidden;
   padding: 0;
   margin: 0;
-  background-image: url("/Combo_Purple_RGB.svg");
+  background-image: url("./img/Combo_Purple_RGB.svg");
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
