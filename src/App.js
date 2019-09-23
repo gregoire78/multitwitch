@@ -52,7 +52,7 @@ class App extends Component {
 
     // get pseudo from url
     const urlparse = _.uniqBy(_.compact(window.location.pathname.split("/")));
-    
+
     person.layouts = JSON.parse(JSON.stringify(originalLayouts));
     person.layout = this.generateLayout(urlparse);
     person.pseudos = urlparse;
