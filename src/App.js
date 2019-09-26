@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {observer} from "mobx-react";
+import { observer } from "mobx-react";
 import _ from 'lodash';
 import NewWindow from 'react-new-window';
 import axios from 'axios';
@@ -76,9 +76,9 @@ class App extends Component {
     });
     ReactGA.pageview(window.location.pathname);
     //this.compononentLoginWindow();
-    if(this.props.person.isAuth){
+    if (this.props.person.isAuth) {
       const twitchUser = await this.getTwitchUser();
-      if(twitchUser) {
+      if (twitchUser) {
         this.props.person.user = twitchUser.data[0];
         this.getFollowedStream();
       }
@@ -88,14 +88,14 @@ class App extends Component {
 
   componentWillMount() {
     const { cookies } = this.props;
-    if(window.location.hash) {
+    if (window.location.hash) {
       document.body.innerHTML = "";
       document.body.style.display = "none";
       let search = window.location.hash.substring(1);
-      search = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}');
-      if('access_token' in search) {
+      search = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}');
+      if ('access_token' in search) {
         //set cookie to save twitch token
-        cookies.set('token', search.access_token, {expires: moment().add(1, 'year').toDate(), domain: process.env.REACT_APP_DOMAIN});
+        cookies.set('token', search.access_token, { expires: moment().add(1, 'year').toDate(), domain: process.env.REACT_APP_DOMAIN });
       }
       window.close();
     }
@@ -113,7 +113,7 @@ class App extends Component {
       const w = 6;
       const h = 14;
       return {
-        x: Math.floor((i * 12/2) % 12),
+        x: Math.floor((i * 12 / 2) % 12),
         y: Infinity,
         w: w,
         h: h,
@@ -125,7 +125,7 @@ class App extends Component {
   }
 
   onLayoutChange(layout, layouts) {
-    if(this.props.person.pseudos.length){
+    if (this.props.person.pseudos.length) {
       saveToLS("layouts", layouts);
       this.props.person.layouts = layouts;
     }
@@ -133,17 +133,17 @@ class App extends Component {
   }
 
   onRemoveItem(l) {
-    let pseudos = _.reject(this.props.person.pseudos, ( value, key ) => {return value === l.channel});
+    let pseudos = _.reject(this.props.person.pseudos, (value, key) => { return value === l.channel });
     this.props.person.layout = _.reject(this.props.person.layout, { i: l.i });
     this.props.person.pseudos = pseudos;
-    window.history.replaceState('','',`${window.origin}/${pseudos.join('/')}`);
+    window.history.replaceState('', '', `${window.origin}/${pseudos.join('/')}`);
     ReactGA.pageview(window.location.pathname);
   }
 
-  addPseudo(event){
+  addPseudo(event) {
     const pseudo = this.props.person.queryFormat;
     event.preventDefault();
-    if(pseudo.length > 0) {
+    if (pseudo.length > 0) {
       this.addFollow(pseudo);
       this.props.person.query = '';
     }
@@ -163,15 +163,15 @@ class App extends Component {
     element.style.cursor = "grab";
   }
 
-  async getTwitchUser(){
-    try{
+  async getTwitchUser() {
+    try {
       return (await axios.get(`https://api.twitch.tv/helix/users`, {
         headers: {
           'Authorization': `Bearer ${this.props.cookies.get('token')}`,
           'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
         }
       })).data;
-    } catch(error) {
+    } catch (error) {
       await this.props.person.logout(this.props.cookies);
       return false;
     }
@@ -180,13 +180,13 @@ class App extends Component {
   async revokeTwitchToken(token) {
     try {
       await axios.post(`https://id.twitch.tv/oauth2/revoke?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&token=${token}`)
-    } catch(error) {
+    } catch (error) {
       return true;
     }
   }
 
   async handleClosePopup() {
-    if(this.props.cookies.get('token')){
+    if (this.props.cookies.get('token')) {
       this.props.person.isAuth = this.props.cookies.get('token').length > 0;
       this.props.person.user = (await this.getTwitchUser()).data[0];
       this.props.person.opened = false;
@@ -210,10 +210,10 @@ class App extends Component {
     })
   }
 
-  addFollow(name){
+  addFollow(name) {
     const pseudos = this.props.person.pseudos;
-    if(!_.includes(pseudos, name)) {
-      window.history.replaceState('','',`${window.location}${window.location.href.slice(-1) === '/' ? '' : '/'}${name}`);
+    if (!_.includes(pseudos, name)) {
+      window.history.replaceState('', '', `${window.location}${window.location.href.slice(-1) === '/' ? '' : '/'}${name}`);
       pseudos.push(name);
       let layout = this.generateLayout(pseudos)
       this.props.person.pseudos = pseudos;
@@ -223,16 +223,16 @@ class App extends Component {
   }
 
   render() {
-    const { isEditMode, isCollapse, isAuth, user, streams, opened, showOverlay, query, pseudos, layout, layouts} = this.props.person;
+    const { isEditMode, isCollapse, isAuth, user, streams, opened, showOverlay, query, pseudos, layout, layouts } = this.props.person;
     return (
       <>
-        { opened &&
+        {opened &&
           <NewWindow
             onUnload={this.handleClosePopup.bind(this)}
             url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&redirect_uri=${process.env.REACT_APP_TWITCH_URI}&response_type=token&scope=user_read`}
-            features={ { left: (window.innerWidth / 2) - (600 / 2), top: (window.innerHeight / 2) - (600 / 2), width: 600, height: 600 } }
+            features={{ left: (window.innerWidth / 2) - (600 / 2), top: (window.innerHeight / 2) - (600 / 2), width: 600, height: 600 }}
           >
-            <h5 style={{color: "white"}}>Connecting to twitch id</h5>
+            <h5 style={{ color: "white" }}>Connecting to twitch id</h5>
           </NewWindow>
         }
 
@@ -244,28 +244,28 @@ class App extends Component {
           <header>
             <nav>
               <form onSubmit={this.addPseudo}>
-                <SearchBox placeholder="Search a channel" person={this.props.person}/>
-                <button type="submit" disabled={query.length <= 0 || pseudos.find((v,k) => v === query)}><FontAwesomeIcon icon="plus" /></button>
+                <SearchBox placeholder="Search a channel" person={this.props.person} />
+                <button type="submit" disabled={query.length <= 0 || pseudos.find((v, k) => v === query)}><FontAwesomeIcon icon="plus" /></button>
               </form>
 
-              <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" title="reset layout"/></button>
+              <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" title="reset layout" /></button>
               <button onClick={this.onToogleCollapse} className="collapse-btn"><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
-              {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile"><img src={user.profile_image_url} height={24} alt="" /></button> : <button onClick={this.handleWindow} title="connect your twitch account"><FontAwesomeIcon icon={["fab","twitch"]} /></button>}
+              {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile"><img src={user.profile_image_url} height={24} alt="" /></button> : <button onClick={this.handleWindow} title="connect your twitch account"><FontAwesomeIcon icon={["fab", "twitch"]} /></button>}
               <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={!isEditMode ? "lightgrey" : ''} /></button>
             </nav>
 
             {(isAuth && isEditMode) &&
-            <nav className="streams">
-                <p style={{textAlign: "center", background: "#b34646", cursor: "default", height: "24px"}}><button onClick={()=>{this.logout().then(()=>ReactTooltip.hide()); }} title="Logout" style={{position: "absolute",left: 0}}><FontAwesomeIcon icon="sign-out-alt" /></button><span style={{lineHeight: "24px"}}>{user.display_name}</span></p>
+              <nav className="streams">
+                <p style={{ textAlign: "center", background: "#b34646", cursor: "default", height: "24px" }}><button onClick={() => { this.logout().then(() => ReactTooltip.hide()); }} title="Logout" style={{ position: "absolute", left: 0 }}><FontAwesomeIcon icon="sign-out-alt" /></button><span style={{ lineHeight: "24px" }}>{user.display_name}</span></p>
                 {!_.isEmpty(streams) &&
-                _.map(streams, (v,k) => {
-                  return (
-                    <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} data-for="status" data-tip={JSON.stringify(v)} /*data-tip={`${v.channel.status} - ${v.game} - ${v.channel.broadcaster_language}${v.channel.mature ? " - 🔞" : ""}`}*/ >
-                      <img alt="" height={22} src={v.channel.logo} /> {v.channel.display_name}{/*v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />*/}
-                    </p>
-                  )
-                })}
-            </nav>}
+                  _.map(streams, (v, k) => {
+                    return (
+                      <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} data-for="status" data-tip={JSON.stringify(v)} /*data-tip={`${v.channel.status} - ${v.game} - ${v.channel.broadcaster_language}${v.channel.mature ? " - 🔞" : ""}`}*/ >
+                        <img alt="" height={22} src={v.channel.logo} /> {v.channel.display_name}{/*v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />*/}
+                      </p>
+                    )
+                  })}
+              </nav>}
 
             <IntervalTimer
               timeout={10000}
@@ -283,8 +283,8 @@ class App extends Component {
             onLayoutChange={this.onLayoutChange}
             onResize={this.onResize}
             layouts={layouts}
-            onResizeStart={()=>this.toogleOverlay(true)}
-            onResizeStop={()=>this.toogleOverlay(false)}
+            onResizeStart={() => this.toogleOverlay(true)}
+            onResizeStop={() => this.toogleOverlay(false)}
             onDragStart={this.onDragStart}
             onDragStop={this.onDragStop}
             measureBeforeMount={true}
@@ -299,7 +299,7 @@ class App extends Component {
             })
             }
           </ResponsiveReactGridLayout>
-        :
+          :
           <Welcome isAuth={isAuth} user={user} handleWindow={this.handleWindow} logout={this.logout} />
         }
 
@@ -310,13 +310,13 @@ class App extends Component {
           let v = JSON.parse(datumAsText);
           return (
             <div>
-              <img style={{display: "inline-block"}} alt="" src={`https://static-cdn.jtvnw.net/ttv-boxart/${v.game}-40x55.jpg`} />
-              <div style={{display: "inline-block", verticalAlign: "top", margin: "0 0 0 10px",overflow: "hidden",textOverflow: "ellipsis", whiteSpace: "nowrap",width: "calc(100% - 50px)"}}>
-                <b>{v.channel.status}</b><br/>
-                {v.game} - {v.channel.broadcaster_language.toUpperCase()}{v.channel.mature ? " - 🔞" : ""}<br/>
-                <small><FontAwesomeIcon icon="clock" /> {`${moment.utc(moment()-moment(v.created_at)).format("HH[h]mm")}`} - <FontAwesomeIcon icon="user" /> {v.viewers.toLocaleString('en-US',{ minimumFractionDigits: 0 })}</small>
-              </div><br/>
-              <img  style={{display: "block"}} alt="" src={v.preview.small} />
+              <img style={{ display: "inline-block" }} alt="" src={`https://static-cdn.jtvnw.net/ttv-boxart/${v.game}-40x55.jpg`} />
+              <div style={{ display: "inline-block", verticalAlign: "top", margin: "0 0 0 10px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "calc(100% - 50px)" }}>
+                <b>{v.channel.status}</b><br />
+                {v.game} - {v.channel.broadcaster_language.toUpperCase()}{v.channel.mature ? " - 🔞" : ""}<br />
+                <small><FontAwesomeIcon icon="clock" /> {`${moment.utc(moment() - moment(v.created_at)).format("HH[h]mm")}`} - <FontAwesomeIcon icon="user" /> {v.viewers.toLocaleString('en-US', { minimumFractionDigits: 0 })}</small>
+              </div><br />
+              <img style={{ display: "block" }} alt="" src={v.preview.small} />
             </div>
           );
         }} />
