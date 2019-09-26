@@ -10,6 +10,7 @@ import * as serviceWorker from './serviceWorker';
 
 class Person {
     isEditMode = true;
+    isResetMode = true;
     isCollapse = false;
     isAuth;
     user = {};
@@ -27,6 +28,11 @@ class Person {
     handleEdit(toolTipRebuild) {
         this.isEditMode = !this.isEditMode;
         if (this.isEditMode && this.isAuth) { toolTipRebuild() }
+    }
+
+    handleReset(saveToLS) {
+        this.isResetMode = !this.isResetMode;
+        saveToLS("isResetMode", this.isResetMode);
     }
 
     onToogleCollapse(getFollowedStream) {
@@ -70,6 +76,7 @@ class Person {
 }
 decorate(Person, {
     isEditMode: observable,
+    isResetMode: observable,
     isCollapse: observable,
     isAuth: observable,
     user: observable,
@@ -85,6 +92,7 @@ decorate(Person, {
     layouts: observable,
 
     handleEdit: action,
+    handleReset: action,
     onToogleCollapse: action,
     handleWindow: action,
     logout: action,

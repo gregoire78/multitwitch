@@ -57,12 +57,14 @@ class App extends Component {
     person.layout = this.generateLayout(urlparse);
     person.pseudos = urlparse;
     person.isAuth = cookies.get('token') && cookies.get('token').length > 0;
+    person.isResetMode = getFromLS('isResetMode');
     this.onLayoutChange = this.onLayoutChange.bind(this);
     this.resetLayout = person.resetLayout.bind(person, saveToLS);
     this.addPseudo = this.addPseudo.bind(this);
     this.onDragStart = this.onDragStart.bind(this);
     this.onDragStop = this.onDragStop.bind(this);
     this.handleEdit = person.handleEdit.bind(person, this.toolTipRebuild.bind(this));
+    this.handleReset = person.handleReset.bind(person, saveToLS);
     this.onToogleCollapse = person.onToogleCollapse.bind(person, this.getFollowedStream.bind(this));
     this.onRemoveItem = this.onRemoveItem.bind(this);
     this.handleWindow = person.handleWindow.bind(person);
@@ -109,24 +111,141 @@ class App extends Component {
 
   generateLayout(pseudos) {
     //const p = this.props;
-    return _.map(pseudos, (item, i) => {
-      const w = 6;
-      const h = 14;
-      return {
-        x: Math.floor((i * 12 / 2) % 12),
-        y: Infinity,
-        w: w,
-        h: h,
-        i: item,
-        channel: item,
-        draggableHandle: ".react-grid-dragHandleExample"
-      };
-    });
+    // reset mode layout
+    if (!this.props.person.isResetMode)
+      return _.map(pseudos, (item, i) => {
+        const w = 6;
+        const h = 14;
+        return {
+          x: Math.floor((i * 12 / 2) % 12),
+          y: Infinity,
+          w: w,
+          h: h,
+          i: item,
+          channel: item,
+          draggableHandle: ".react-grid-dragHandleExample"
+        };
+      });
+    else
+      switch (pseudos.length) {
+        case 1:
+          return _.map(pseudos, (item, i) => {
+            const w = 12;
+            const h = 24;
+            return {
+              x: 12,
+              y: Infinity,
+              w: w,
+              h: h,
+              i: item,
+              channel: item,
+              draggableHandle: ".react-grid-dragHandleExample"
+            };
+          });
+
+        case 2:
+          return _.map(pseudos, (item, i) => {
+            const w = 6;
+            const h = 24;
+            return {
+              x: Math.floor((i * 12 / 2) % 12),
+              y: Infinity,
+              w: w,
+              h: h,
+              i: item,
+              channel: item,
+              draggableHandle: ".react-grid-dragHandleExample"
+            };
+          });
+
+        case 3:
+          return _.map(pseudos, (item, i) => {
+            const w = 4;
+            const h = 24;
+            return {
+              x: Math.floor((i * 12 / 3) % 12),
+              y: Infinity,
+              w: w,
+              h: h,
+              i: item,
+              channel: item,
+              draggableHandle: ".react-grid-dragHandleExample"
+            };
+          });
+
+        case 4:
+          return _.map(pseudos, (item, i) => {
+            const w = 6;
+            const h = 12;
+            return {
+              x: Math.floor((i * 12 / 2) % 12),
+              y: Infinity,
+              w: w,
+              h: h,
+              i: item,
+              channel: item,
+              draggableHandle: ".react-grid-dragHandleExample"
+            };
+          });
+
+        case 5:
+          return _.map(pseudos, (item, i) => {
+            if (i >= 2) {
+              return {
+                x: Math.floor((i * 12 / 3) % 12),
+                y: Infinity,
+                w: 4,
+                h: 12,
+                i: item,
+                channel: item,
+                draggableHandle: ".react-grid-dragHandleExample"
+              };
+            } else {
+              return {
+                x: Math.floor((i * 12 / 2) % 12),
+                y: 0,
+                w: 6,
+                h: 12,
+                i: item,
+                channel: item,
+                draggableHandle: ".react-grid-dragHandleExample"
+              };
+            }
+          });
+
+        case 6:
+          return _.map(pseudos, (item, i) => {
+            return {
+              x: Math.floor((i * 12 / 3) % 12),
+              y: Infinity,
+              w: 4,
+              h: 12,
+              i: item,
+              channel: item,
+              draggableHandle: ".react-grid-dragHandleExample"
+            };
+          });
+
+        default:
+          return _.map(pseudos, (item, i) => {
+            const w = 6;
+            const h = 14;
+            return {
+              x: Math.floor((i * 12 / 2) % 12),
+              y: Infinity,
+              w: w,
+              h: h,
+              i: item,
+              channel: item,
+              draggableHandle: ".react-grid-dragHandleExample"
+            };
+          });
+      }
   }
 
   onLayoutChange(layout, layouts) {
     if (this.props.person.pseudos.length) {
-      saveToLS("layouts", layouts);
+      if(!this.props.person.isResetMode) saveToLS("layouts", layouts);
       this.props.person.layouts = layouts;
     }
     //this.props.onLayoutChange(layout);
@@ -134,8 +253,17 @@ class App extends Component {
 
   onRemoveItem(l) {
     let pseudos = _.reject(this.props.person.pseudos, (value, key) => { return value === l.channel });
-    this.props.person.layout = _.reject(this.props.person.layout, { i: l.i });
     this.props.person.pseudos = pseudos;
+
+    // reset mode layout
+    if (this.props.person.isResetMode) {
+      let layout = this.generateLayout(pseudos);
+      this.resetLayout();
+      this.props.person.layout = layout;
+    } else {
+      this.props.person.layout = _.reject(this.props.person.layout, { i: l.i });
+    }
+
     window.history.replaceState('', '', `${window.origin}/${pseudos.join('/')}`);
     ReactGA.pageview(window.location.pathname);
   }
@@ -215,7 +343,11 @@ class App extends Component {
     if (!_.includes(pseudos, name)) {
       window.history.replaceState('', '', `${window.location}${window.location.href.slice(-1) === '/' ? '' : '/'}${name}`);
       pseudos.push(name);
-      let layout = this.generateLayout(pseudos)
+      let layout = this.generateLayout(pseudos);
+      // reset mode layout
+      if (this.props.person.isResetMode) {
+        this.resetLayout();
+      }
       this.props.person.pseudos = pseudos;
       this.props.person.layout = layout;
       ReactGA.pageview(window.location.pathname);
@@ -223,7 +355,7 @@ class App extends Component {
   }
 
   render() {
-    const { isEditMode, isCollapse, isAuth, user, streams, opened, showOverlay, query, pseudos, layout, layouts } = this.props.person;
+    const { isEditMode, isResetMode, isCollapse, isAuth, user, streams, opened, showOverlay, query, pseudos, layout, layouts } = this.props.person;
     return (
       <>
         {opened &&
@@ -248,7 +380,7 @@ class App extends Component {
                 <button type="submit" disabled={query.length <= 0 || pseudos.find((v, k) => v === query)}><FontAwesomeIcon icon="plus" /></button>
               </form>
 
-              <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" title="reset layout" /></button>
+              <button onClick={this.handleReset}><FontAwesomeIcon icon="layer-group" color={!isResetMode ? "lightgrey" : ''} title="reset layout" /></button>
               <button onClick={this.onToogleCollapse} className="collapse-btn"><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
               {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile"><img src={user.profile_image_url} height={24} alt="" /></button> : <button onClick={this.handleWindow} title="connect your twitch account"><FontAwesomeIcon icon={["fab", "twitch"]} /></button>}
               <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={!isEditMode ? "lightgrey" : ''} /></button>
@@ -329,7 +461,7 @@ function getFromLS(key) {
   let ls = {};
   if (global.localStorage) {
     try {
-      ls = JSON.parse(global.localStorage.getItem("rgl-7")) || {};
+      ls = JSON.parse(global.localStorage.getItem("rgl-7_"+key)) || {};
     } catch (e) {
       /*Ignore*/
     }
@@ -340,7 +472,7 @@ function getFromLS(key) {
 function saveToLS(key, value) {
   if (global.localStorage) {
     global.localStorage.setItem(
-      "rgl-7",
+      "rgl-7_"+key,
       JSON.stringify({
         [key]: value
       })
