@@ -30,11 +30,6 @@ class Person {
         if (this.isEditMode && this.isAuth) { toolTipRebuild() }
     }
 
-    handleReset(saveToLS) {
-        this.isResetMode = !this.isResetMode;
-        saveToLS("isResetMode", this.isResetMode);
-    }
-
     onToogleCollapse(getFollowedStream) {
         if (this.isCollapse && this.isAuth) { getFollowedStream() }
         this.isCollapse = !this.isCollapse;
@@ -92,7 +87,6 @@ decorate(Person, {
     layouts: observable,
 
     handleEdit: action,
-    handleReset: action,
     onToogleCollapse: action,
     handleWindow: action,
     logout: action,

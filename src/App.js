@@ -57,14 +57,13 @@ class App extends Component {
     person.layout = this.generateLayout(urlparse);
     person.pseudos = urlparse;
     person.isAuth = cookies.get('token') && cookies.get('token').length > 0;
-    person.isResetMode = getFromLS('isResetMode') !== undefined ? getFromLS('isResetMode') : false;
     this.onLayoutChange = this.onLayoutChange.bind(this);
     this.resetLayout = person.resetLayout.bind(person, saveToLS);
     this.addPseudo = this.addPseudo.bind(this);
     this.onDragStart = this.onDragStart.bind(this);
     this.onDragStop = this.onDragStop.bind(this);
     this.handleEdit = person.handleEdit.bind(person, this.toolTipRebuild.bind(this));
-    this.handleReset = person.handleReset.bind(person, saveToLS);
+    this.handleReset = this.handleReset.bind(this);
     this.onToogleCollapse = person.onToogleCollapse.bind(person, this.getFollowedStream.bind(this));
     this.onRemoveItem = this.onRemoveItem.bind(this);
     this.handleWindow = person.handleWindow.bind(person);
@@ -85,6 +84,7 @@ class App extends Component {
         this.getFollowedStream();
       }
     }
+    this.props.person.isResetMode = getFromLS('isResetMode') !== undefined ? getFromLS('isResetMode') : false;
     this.props.person.mounted = true;
   }
 
@@ -245,7 +245,7 @@ class App extends Component {
 
   onLayoutChange(layout, layouts) {
     if (this.props.person.pseudos.length) {
-      if(!this.props.person.isResetMode) saveToLS("layouts", layouts);
+      saveToLS("layouts", layouts);
       this.props.person.layouts = layouts;
     }
     //this.props.onLayoutChange(layout);
@@ -352,6 +352,17 @@ class App extends Component {
       this.props.person.layout = layout;
       ReactGA.pageview(window.location.pathname);
     }
+  }
+
+  handleReset() {
+    this.props.person.isResetMode = !this.props.person.isResetMode;
+    if (this.props.person.isResetMode) {
+      const pseudos = this.props.person.pseudos;
+      let layout = this.generateLayout(pseudos);
+      this.resetLayout();
+      this.props.person.layout = layout;
+    }
+    saveToLS("isResetMode", this.props.person.isResetMode);
   }
 
   render() {
@@ -461,7 +472,7 @@ function getFromLS(key) {
   let ls = {};
   if (global.localStorage) {
     try {
-      ls = JSON.parse(global.localStorage.getItem("rgl-7_"+key)) || {};
+      ls = JSON.parse(global.localStorage.getItem("rgl-7_" + key)) || {};
     } catch (e) {
       /*Ignore*/
     }
@@ -472,7 +483,7 @@ function getFromLS(key) {
 function saveToLS(key, value) {
   if (global.localStorage) {
     global.localStorage.setItem(
-      "rgl-7_"+key,
+      "rgl-7_" + key,
       JSON.stringify({
         [key]: value
       })
