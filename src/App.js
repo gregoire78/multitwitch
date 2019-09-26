@@ -57,7 +57,7 @@ class App extends Component {
     person.layout = this.generateLayout(urlparse);
     person.pseudos = urlparse;
     person.isAuth = cookies.get('token') && cookies.get('token').length > 0;
-    person.isResetMode = getFromLS('isResetMode') !== undefined ? getFromLS('isResetMode') : true;
+    person.isResetMode = getFromLS('isResetMode') !== undefined ? getFromLS('isResetMode') : false;
     this.onLayoutChange = this.onLayoutChange.bind(this);
     this.resetLayout = person.resetLayout.bind(person, saveToLS);
     this.addPseudo = this.addPseudo.bind(this);
