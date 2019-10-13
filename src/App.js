@@ -255,6 +255,12 @@ class App extends Component {
     let pseudos = _.reject(this.props.person.pseudos, (value, key) => { return value === l.channel });
     this.props.person.pseudos = pseudos;
 
+    // open menu if all close
+    if (pseudos.length === 0) {
+      this.props.person.isEditMode = true;
+      this.props.person.isCollapse = false;
+    }
+
     // reset mode layout
     if (this.props.person.isResetMode) {
       let layout = this.generateLayout(pseudos);
@@ -443,7 +449,7 @@ class App extends Component {
             }
           </ResponsiveReactGridLayout>
           :
-          <Welcome isAuth={isAuth} user={user} handleWindow={this.handleWindow} logout={this.logout} />
+          <Welcome isAuth={isAuth} streams={streams} user={user} handleWindow={this.handleWindow} logout={this.logout} />
         }
 
         <ReactTooltip id="status" place="right" border={true} className="extraClass" getContent={datumAsText => {
