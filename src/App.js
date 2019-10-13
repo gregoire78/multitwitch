@@ -252,22 +252,24 @@ class App extends Component {
   }
 
   onRemoveItem(l) {
-    let pseudos = _.reject(this.props.person.pseudos, (value, key) => { return value === l.channel });
-    this.props.person.pseudos = pseudos;
+    const { person } = this.props;
+    let pseudos = _.reject(person.pseudos, (value, key) => { return value === l.channel });
+    person.pseudos = pseudos;
 
     // open menu if all close
     if (pseudos.length === 0) {
-      this.props.person.isEditMode = true;
-      this.props.person.isCollapse = false;
+      person.isEditMode = true;
+      person.isCollapse = false;
+      if (person.isAuth) this.getFollowedStream();
     }
 
     // reset mode layout
-    if (this.props.person.isResetMode) {
+    if (person.isResetMode) {
       let layout = this.generateLayout(pseudos);
       this.resetLayout();
-      this.props.person.layout = layout;
+      person.layout = layout;
     } else {
-      this.props.person.layout = _.reject(this.props.person.layout, { i: l.i });
+      person.layout = _.reject(person.layout, { i: l.i });
     }
 
     window.history.replaceState('', '', `${window.origin}/${pseudos.join('/')}`);
