@@ -15,9 +15,9 @@ import 'moment/locale/fr';
 library.add(faClock, faUser);
 moment.locale('fr');
 
-function randomIntFromInterval(min = 3000,max = 5000) { // min and max included
+/*function randomIntFromInterval(min = 3000,max = 5000) { // min and max included
     return Math.floor(Math.random()*(max-min+1)+min);
-}
+}*/
 
 export default class Chatwitch extends Component {
     chatComponent = React.createRef();
@@ -150,10 +150,10 @@ export default class Chatwitch extends Component {
 
         this.client.on("chat", async (channel, user, message, self)=>{
             const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
-            if(!["moobot","nightbot", "ayrob0t"].includes(user.username)){
+            /*if(!["moobot","nightbot", "ayrob0t"].includes(user.username)){
                 const tts = await this.getTts(`${user.username} dit : ${message}`.replace(/_/g, ' '));
                 this.setState({audio : [...this.state.audio, 'data:audio/mpeg;base64,'+tts.audioContent]})
-            }
+            }*/
             let chat = {status: "message", message, channel: channelDetails, badgesUser:[], user, ts: (user["tmi-sent-ts"] ? moment(user["tmi-sent-ts"], "x").format('LT') : moment().format('LT')), ts_global : moment().valueOf()};
             if(user.badges) {
                 chat.badgesUser = _.map(user.badges, (v,k)=>{return channelDetails.badges[k].versions[v]})
