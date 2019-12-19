@@ -170,7 +170,7 @@ export default class Chatwitch extends Component {
             const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
             //const chatThreads = _.find(this.state.chatThreads, ['channel', channel.slice(1)]);
             let to = { status: "to", username, channel: channelDetails, reason, duration, ts_global: moment().valueOf() };
-            console.log("to", channel, username, reason, userstate, this.state.chatThreads.filter((chatThread) => chatThread.user ? username === chatThread.user.username : false), this.state.chatThreads);
+            console.log("%cto", 'background: #222; color: #bada55', channel, username, reason, userstate, this.state.chatThreads.filter((chatThread) => chatThread.user ? username === chatThread.user.username : false), this.state.chatThreads);
             this.setState(prevState => ({
                 chatThreads: [...prevState.chatThreads.slice(-199), to]
             }))
@@ -182,7 +182,7 @@ export default class Chatwitch extends Component {
             const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
             let ban = { status: "ban", username, channel: channelDetails, reason, ts_global: moment().valueOf() };
             //const messages = this.state.chatThreads.filter((r)=>{return r.user.username===username})
-            console.log("ban", channel, username, reason, userstate, this.state.chatThreads.filter((chatThread) => chatThread.user ? username === chatThread.user.username : false), this.state.chatThreads);
+            console.log("%cban", 'background: #222; color: #bada55', channel, username, reason, userstate, this.state.chatThreads.filter((chatThread) => chatThread.user ? username === chatThread.user.username : false), this.state.chatThreads);
             this.setState(prevState => ({
                 chatThreads: [...prevState.chatThreads.slice(-199), ban]
             }))
