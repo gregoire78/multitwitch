@@ -1,22 +1,24 @@
 import React, { Component } from 'react';
+import { observer } from "mobx-react";
 import _ from 'lodash';
 import NewWindow from 'react-new-window';
 import axios from 'axios';
 import moment from 'moment';
 import 'moment/locale/fr';
 import ReactGA from 'react-ga';
+import ReactTooltip from 'react-tooltip';
 import { withCookies, Cookies } from 'react-cookie';
 import { instanceOf } from 'prop-types';
 import IntervalTimer from 'react-interval-timer';
 import { WidthProvider, Responsive } from "react-grid-layout";
 //import Twitch from './Twitch';
-import MyIcon from './Combo_Purple_RGB.svg';
+//import MyIcon from './Combo_Purple_RGB.svg';
 
 import { CSSTransition } from 'react-transition-group';
 
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faSignOutAlt, faHandshake, faClock } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faSignOutAlt, faHandshake, faClock, faEye, faUser } from '@fortawesome/free-solid-svg-icons';
 import { faTwitch, faGithub } from '@fortawesome/free-brands-svg-icons';
 
 import '../node_modules/react-resizable/css/styles.css';
@@ -27,7 +29,7 @@ import Welcome from './Welcome';
 import SearchBox from './SearchBox';
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
-library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt, faHandshake, faClock, faGithub);
+library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt, faHandshake, faClock, faGithub, faEye, faUser);
 moment.locale('fr');
 
 class App extends Component {
@@ -46,38 +48,27 @@ class App extends Component {
 
   constructor(props) {
     super(props);
-    const { cookies } = props;
+    const { cookies, person } = props;
 
     // get pseudo from url
-    const urlparse = _.uniqBy(_.compact(window.location.pathname.toLowerCase().split("/")));
-    this.state = {
-      layouts: JSON.parse(JSON.stringify(originalLayouts)),
-      layout: this.generateLayout(urlparse),
-      pseudos: urlparse,
-      input: '',
-      showOverlay: false,
-      isEditMode: true,
-      mounted: false,
-      isCollapse: false,
-      opened: false,
-      user: {},
-      isAuth: cookies.get('token') && cookies.get('token').length > 0,
-      streams: []
-    };
+    const urlparse = _.uniqBy(_.compact(window.location.pathname.split("/")));
 
+    person.layouts = JSON.parse(JSON.stringify(originalLayouts));
+    person.layout = this.generateLayout(urlparse);
+    person.pseudos = urlparse;
+    person.isAuth = cookies.get('token') && cookies.get('token').length > 0;
     this.onLayoutChange = this.onLayoutChange.bind(this);
-    this.resetLayout = this.resetLayout.bind(this);
-    this.onBreakpointChange = this.onBreakpointChange.bind(this);
+    this.resetLayout = person.resetLayout.bind(person, saveToLS);
     this.addPseudo = this.addPseudo.bind(this);
-    this.showOverlay = this.showOverlay.bind(this);
-    this.hideOverlay = this.hideOverlay.bind(this);
     this.onDragStart = this.onDragStart.bind(this);
     this.onDragStop = this.onDragStop.bind(this);
-    this.handleEdit = this.handleEdit.bind(this);
-    this.onToogleCollapse = this.onToogleCollapse.bind(this);
+    this.handleEdit = person.handleEdit.bind(person, this.toolTipRebuild.bind(this));
+    this.handleReset = this.handleReset.bind(this);
+    this.onToogleCollapse = person.onToogleCollapse.bind(person, this.getFollowedStream.bind(this));
     this.onRemoveItem = this.onRemoveItem.bind(this);
-    this.handleWindow = this.handleWindow.bind(this);
-    this.logout = this.logout.bind(this);
+    this.handleWindow = person.handleWindow.bind(person);
+    this.logout = person.logout.bind(person, cookies, this.revokeTwitchToken.bind(this));
+    this.toogleOverlay = person.toogleOverlay.bind(person);
   }
 
   async componentDidMount() {
@@ -86,272 +77,347 @@ class App extends Component {
     });
     ReactGA.pageview(window.location.pathname);
     //this.compononentLoginWindow();
-    if(this.state.isAuth) {
-      this.setState({user: (await this.getTwitchUser()).data[0]});
-      this.getFollowedStream();
+    if (this.props.person.isAuth) {
+      const twitchUser = await this.getTwitchUser();
+      if (twitchUser) {
+        this.props.person.user = twitchUser.data[0];
+        this.getFollowedStream();
+      }
     }
-    document.body.style.backgroundImage = "url("+MyIcon+")";
-    document.body.style.backgroundPosition = "center";
-    document.body.style.backgroundRepeat = "no-repeat";
-    document.body.style.backgroundSize = "contain";
-    document.body.style.backgroundAttachment = "fixed";
-    this.setState({ mounted: true });
+    this.props.person.isResetMode = getFromLS('isResetMode') !== undefined ? getFromLS('isResetMode') : true;
+    this.props.person.mounted = true;
   }
 
   componentWillMount() {
     const { cookies } = this.props;
-    if(window.location.hash) {
-      document.body.display="none";
+    if (window.location.hash) {
+      document.body.innerHTML = "";
+      document.body.style.display = "none";
       let search = window.location.hash.substring(1);
-      search = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}');
-      if('access_token' in search) {
+      search = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}');
+      if ('access_token' in search) {
         //set cookie to save twitch token
-        cookies.set('token', search.access_token, {expires: moment().add(1, 'year').toDate(), domain: process.env.REACT_APP_DOMAIN});
+        cookies.set('token', search.access_token, { expires: moment().add(1, 'year').toDate(), domain: process.env.REACT_APP_DOMAIN });
       }
       window.close();
     }
   }
 
-  /*generateDOM() {
-    return _.map(this.state.layout, (l,k) => {
-      return (
-        <div key={l.i} data-grid={l} style={this.state.isEditMode?{padding:'5px', outline: '5px dashed #5a3a93', outlineOffset: '-5px', cursor:'grab'}:''}>
-          <div className="header-player" style={{marginTop: this.state.isEditMode?"5px":"0"}}>{this.state.isEditMode?l.channel:''}</div>
-          <Twitch style={{ height: "calc(100%)", width: "calc(100%)"}} channel={l.channel} targetID={`twitch-embed-${l.channel}`} layout="video-with-chat"/>
-          <div className="overlay" style={{width:'100%', height:'100%', position: "absolute", top:0, right:0, display: this.state.showOverlay?"block":"none"}}></div>
-          <button
-            className="remove"
-            style={{
-              position: "absolute",
-              right: 0,
-              top: 0,
-              cursor: "pointer",
-              color: "rgba(255, 255, 255, 0.6)",
-              backgroundColor: this.state.isEditMode?"#5a3a93":"transparent",
-              border: "none",
-              width: "20px",
-              height: "20px",
-              borderRadius: this.state.isEditMode?"0 0 0 8px":"0"
-            }}
-            onClick={this.onRemoveItem.bind(this, l)}
-          >
-            <FontAwesomeIcon icon="times" />
-          </button>
-        </div>
-      );
-    });
-  }*/
+  toolTipRebuild() {
+    setTimeout(() => {
+      ReactTooltip.rebuild();
+    }, 0);
+  }
 
   generateLayout(pseudos) {
     //const p = this.props;
-    return _.map(pseudos, (item, i) => {
-      const w = 6;
-      const h = 14;
-      return {
-        x: Math.floor((i * 12/2) % 12),
-        y: Infinity,
-        w: w,
-        h: h,
-        i: item,
-        channel: item,
-        draggableHandle: ".react-grid-dragHandleExample"
-      };
-    });
-  }
+    // reset mode layout
+    if (!this.props.person.isResetMode)
+      return _.map(pseudos, (item, i) => {
+        const w = 6;
+        const h = 14;
+        return {
+          x: Math.floor((i * 12 / 2) % 12),
+          y: Infinity,
+          w: w,
+          h: h,
+          i: item,
+          channel: item,
+          draggableHandle: ".react-grid-dragHandleExample"
+        };
+      });
+    else
+      switch (pseudos.length) {
+        case 1:
+          return _.map(pseudos, (item, i) => {
+            const w = 12;
+            const h = 24;
+            return {
+              x: 12,
+              y: Infinity,
+              w: w,
+              h: h,
+              i: item,
+              channel: item,
+              draggableHandle: ".react-grid-dragHandleExample"
+            };
+          });
 
-  onBreakpointChange(newBreakpoint, newCols){
-  }
+        case 2:
+          return _.map(pseudos, (item, i) => {
+            const w = 6;
+            const h = 24;
+            return {
+              x: Math.floor((i * 12 / 2) % 12),
+              y: Infinity,
+              w: w,
+              h: h,
+              i: item,
+              channel: item,
+              draggableHandle: ".react-grid-dragHandleExample"
+            };
+          });
 
-  resetLayout() {
-    saveToLS("layouts", {});
-    this.setState({ layouts: {} });
+        case 3:
+          return _.map(pseudos, (item, i) => {
+            const w = 4;
+            const h = 24;
+            return {
+              x: Math.floor((i * 12 / 3) % 12),
+              y: Infinity,
+              w: w,
+              h: h,
+              i: item,
+              channel: item,
+              draggableHandle: ".react-grid-dragHandleExample"
+            };
+          });
+
+        case 4:
+          return _.map(pseudos, (item, i) => {
+            const w = 6;
+            const h = 12;
+            return {
+              x: Math.floor((i * 12 / 2) % 12),
+              y: Infinity,
+              w: w,
+              h: h,
+              i: item,
+              channel: item,
+              draggableHandle: ".react-grid-dragHandleExample"
+            };
+          });
+
+        case 5:
+          return _.map(pseudos, (item, i) => {
+            if (i >= 2) {
+              return {
+                x: Math.floor((i * 12 / 3) % 12),
+                y: Infinity,
+                w: 4,
+                h: 12,
+                i: item,
+                channel: item,
+                draggableHandle: ".react-grid-dragHandleExample"
+              };
+            } else {
+              return {
+                x: Math.floor((i * 12 / 2) % 12),
+                y: 0,
+                w: 6,
+                h: 12,
+                i: item,
+                channel: item,
+                draggableHandle: ".react-grid-dragHandleExample"
+              };
+            }
+          });
+
+        case 6:
+          return _.map(pseudos, (item, i) => {
+            return {
+              x: Math.floor((i * 12 / 3) % 12),
+              y: Infinity,
+              w: 4,
+              h: 12,
+              i: item,
+              channel: item,
+              draggableHandle: ".react-grid-dragHandleExample"
+            };
+          });
+
+        default:
+          return _.map(pseudos, (item, i) => {
+            const w = 6;
+            const h = 14;
+            return {
+              x: Math.floor((i * 12 / 2) % 12),
+              y: Infinity,
+              w: w,
+              h: h,
+              i: item,
+              channel: item,
+              draggableHandle: ".react-grid-dragHandleExample"
+            };
+          });
+      }
   }
 
   onLayoutChange(layout, layouts) {
-    if(this.state.pseudos.length){
+    if (this.props.person.pseudos.length) {
       saveToLS("layouts", layouts);
-      this.setState({ layouts });
+      this.props.person.layouts = layouts;
     }
     //this.props.onLayoutChange(layout);
   }
 
   onRemoveItem(l) {
-    let pseudos = _.reject(this.state.pseudos, ( value, key ) => {return value === l.channel});
-    let layout = _.reject(this.state.layout, { i: l.i });
-    this.setState({ pseudos, layout});
-    window.history.replaceState('','',`${window.origin}/${pseudos.join('/')}`);
+    const { person } = this.props;
+    let pseudos = _.reject(person.pseudos, (value, key) => { return value === l.channel });
+    person.pseudos = pseudos;
+
+    // open menu if all close
+    if (pseudos.length === 0) {
+      person.isEditMode = true;
+      person.isCollapse = false;
+      if (person.isAuth) this.getFollowedStream();
+    }
+
+    // reset mode layout
+    if (person.isResetMode) {
+      let layout = this.generateLayout(pseudos);
+      this.resetLayout();
+      person.layout = layout;
+    } else {
+      person.layout = _.reject(person.layout, { i: l.i });
+    }
+
+    window.history.replaceState('', '', `${window.origin}/${pseudos.join('/')}`);
     ReactGA.pageview(window.location.pathname);
   }
 
-  addPseudo(event){
-    const pseudo = this.state.input.trim().toLowerCase()
+  addPseudo(event) {
+    const pseudo = this.props.person.queryFormat;
     event.preventDefault();
-    if(pseudo.length > 0) {
+    if (pseudo.length > 0) {
       this.addFollow(pseudo);
-      this.setState({input: ''});
+      this.props.person.query = '';
     }
   }
 
   onResize(layout, oldLayoutItem, layoutItem, placeholder, e, element) {
     element.style.cursor = "se-resize";
-    // `oldLayoutItem` contains the state of the item before the resize.
-    // You can modify `layoutItem` to enforce constraints.
-    /*if (layoutItem.h < 3 && layoutItem.w > 2) {
-      layoutItem.w = 2;
-      placeholder.w = 2;
-    }
-
-    if (layoutItem.h >= 3 && layoutItem.w < 2) {
-      layoutItem.w = 2;
-      placeholder.w = 2;
-    }*/
-    //console.log(element.parentElement)
-  }
-
-  showOverlay() {
-    this.setState({showOverlay:true})
-  }
-  hideOverlay() {
-    this.setState({showOverlay:false})
-  }
-
-  handleEdit() {
-    this.setState(prevState => ({
-      isEditMode: !prevState.isEditMode
-    }));
   }
 
   onDragStart(layout, oldItem, newItem, placeholder, e, element) {
-    this.showOverlay();
+    this.toogleOverlay(true);
     element.style.cursor = "grabbing";
   }
 
   onDragStop(layout, oldItem, newItem, placeholder, e, element) {
-    this.hideOverlay();
+    this.toogleOverlay(false);
     element.style.cursor = "grab";
   }
 
-  onToogleCollapse() {
-    this.setState(prevState => ({
-      isCollapse: !prevState.isCollapse
-    }));
-    if(this.state.isCollapse && this.state.isAuth) {this.getFollowedStream()}
-  }
-
-  /*openPopup() {
-    const width = 600, height = 600
-    const left = (window.innerWidth / 2) - (width / 2)
-    const top = (window.innerHeight / 2) - (height / 2)
-    const url = `https://id.twitch.tv/oauth2/authorize?client_id=wkyn43dnz5yumupaqv8vwkz1j4thi1&redirect_uri=http://localhost:3000/&response_type=token&scope=user_read`
-
-    return window.open(url, '',
-      `toolbar=no, location=no, directories=no, status=no, menubar=no,
-      scrollbars=no, resizable=no, copyhistory=no, width=${width},
-      height=${height}, top=${top}, left=${left}`
-    )
-  }*/
-
-  handleWindow() {
-    this.setState(prevState => ({
-      opened: !prevState.opened
-    }));
-  }
-
-  async getTwitchUser(){
-    return (await axios.get(`https://api.twitch.tv/helix/users`, {
-      headers: {
-        'Authorization': `Bearer ${this.props.cookies.get('token')}`,
-        'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
-      }
-    })).data;
+  async getTwitchUser() {
+    try {
+      return (await axios.get(`https://api.twitch.tv/helix/users`, {
+        headers: {
+          'Authorization': `Bearer ${this.props.cookies.get('token')}`,
+          'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
+        }
+      })).data;
+    } catch (error) {
+      await this.props.person.logout(this.props.cookies);
+      return false;
+    }
   }
 
   async revokeTwitchToken(token) {
-    await axios.post(`https://id.twitch.tv/oauth2/revoke?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&token=${token}`)
-  }
-
-  async logout() {
-    const { cookies } = this.props;
-    await this.revokeTwitchToken(cookies.get('token'))
-    this.setState({isAuth: false, streams: [], user: {}});
-    cookies.remove('token', {domain: process.env.REACT_APP_DOMAIN});
+    try {
+      await axios.post(`https://id.twitch.tv/oauth2/revoke?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&token=${token}`)
+    } catch (error) {
+      return true;
+    }
   }
 
   async handleClosePopup() {
-    if(this.props.cookies.get('token')){
-      this.setState({opened: false, isAuth: this.props.cookies.get('token').length > 0, user: (await this.getTwitchUser()).data[0]});
+    if (this.props.cookies.get('token')) {
+      this.props.person.isAuth = this.props.cookies.get('token').length > 0;
+      this.props.person.user = (await this.getTwitchUser()).data[0];
+      this.props.person.opened = false;
       this.getFollowedStream();
     } else {
-      this.setState({opened: false})
+      this.props.person.opened = false;
     }
   }
 
   getFollowedStream() {
     axios.get(`https://api.twitch.tv/kraken/streams/followed`, {
       headers: {
+        'Accept': 'application/vnd.twitchtv.v5+json',
         'Authorization': `OAuth ${this.props.cookies.get('token')}`,
         'Client-ID': process.env.REACT_APP_TWITCH_CLIENTID
       }
-    } ).then(res => {
-        const streams = _.orderBy(res.data.streams, 'channel.name');
-        this.setState({ streams });
-      })
+    }).then(res => {
+      const streams = _.orderBy(res.data.streams, 'channel.name');
+      this.props.person.streams = streams;
+      ReactTooltip.rebuild();
+    })
   }
 
-  addFollow(name){
-    const pseudos = this.state.pseudos;
-    if(!_.includes(this.state.pseudos, name)) {
-      window.history.replaceState('','',`${window.location}${window.location.href.slice(-1) === '/' ? '' : '/'}${name}`);
+  addFollow(name) {
+    const pseudos = this.props.person.pseudos;
+    if (!_.includes(pseudos, name)) {
+      window.history.replaceState('', '', `${window.location}${window.location.href.slice(-1) === '/' ? '' : '/'}${name}`);
       pseudos.push(name);
-      let layout = this.generateLayout(pseudos)
-      this.setState({pseudos, layout});
+      let layout = this.generateLayout(pseudos);
+      // reset mode layout
+      if (this.props.person.isResetMode) {
+        this.resetLayout();
+      }
+      this.props.person.pseudos = pseudos;
+      this.props.person.layout = layout;
       ReactGA.pageview(window.location.pathname);
     }
   }
 
+  handleReset() {
+    this.props.person.isResetMode = !this.props.person.isResetMode;
+    if (this.props.person.isResetMode) {
+      const pseudos = this.props.person.pseudos;
+      let layout = this.generateLayout(pseudos);
+      this.resetLayout();
+      this.props.person.layout = layout;
+    }
+    saveToLS("isResetMode", this.props.person.isResetMode);
+  }
+
   render() {
-    const { opened, isEditMode, input, pseudos, isCollapse, showOverlay, layout, layouts, isAuth, streams, user } = this.state
+    const { isEditMode, isResetMode, isCollapse, isAuth, user, streams, opened, showOverlay, query, pseudos, layout, layouts } = this.props.person;
     return (
       <>
-        { opened &&
+        {opened &&
           <NewWindow
             onUnload={this.handleClosePopup.bind(this)}
             url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&redirect_uri=${process.env.REACT_APP_TWITCH_URI}&response_type=token&scope=user_read`}
-            features={ { left: (window.innerWidth / 2) - (600 / 2), top: (window.innerHeight / 2) - (600 / 2), width: 600, height: 600 } }
+            features={{ left: (window.innerWidth / 2) - (600 / 2), top: (window.innerHeight / 2) - (600 / 2), width: 600, height: 600 }}
           >
-            <h5 style={{color: "white"}}>Connecting to twitch id</h5>
+            <h5 style={{ color: "white" }}>Connecting to twitch id</h5>
           </NewWindow>
         }
 
         <CSSTransition
-          in={this.state.isCollapse}
+          in={isCollapse}
           classNames="header"
           timeout={300}
         >
           <header>
             <nav>
               <form onSubmit={this.addPseudo}>
-                <SearchBox placeholder="Search a channel" queryCallback={(query)=>this.setState({input: query})} input={input}/>
-                <button type="submit" disabled={input.length <= 0 || pseudos.find((v,k) => v === input)}><FontAwesomeIcon icon="plus" /></button>
+                <SearchBox placeholder="Search a channel" person={this.props.person} />
+                <button type="submit" disabled={query.length <= 0 || pseudos.find((v, k) => v === query)}><FontAwesomeIcon icon="plus" /></button>
               </form>
 
-              <button onClick={this.resetLayout}><FontAwesomeIcon icon="layer-group" title="reset layout"/></button>
+              <button onClick={this.handleReset}><FontAwesomeIcon icon="layer-group" color={!isResetMode ? "lightgrey" : ''} title="Enable auto size layout" /></button>
               <button onClick={this.onToogleCollapse} className="collapse-btn"><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
-              {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile" style={{backgroundImage: `url(${user.profile_image_url})`, backgroundSize: '24px 24px'}}></button> : <button onClick={this.handleWindow} title="connect your twitch account"><FontAwesomeIcon icon={["fab","twitch"]} /></button>}
+              {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile"><img src={user.profile_image_url} height={24} alt="" /></button> : <button onClick={this.handleWindow} title="connect your twitch account"><FontAwesomeIcon icon={["fab", "twitch"]} /></button>}
               <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={!isEditMode ? "lightgrey" : ''} /></button>
             </nav>
 
-            {(!_.isEmpty(streams) && isEditMode) &&
-            <nav className="streams">
-                <p style={{textAlign: "center", background: "#b34646", cursor: "default", height: "24px"}}><button onClick={this.logout} title="Logout" style={{position: "absolute",left: 0}}><FontAwesomeIcon icon="sign-out-alt" /></button><span style={{lineHeight: "24px"}}>{user.display_name}</span></p>
-                {_.map(streams, (v,k) => {
-                  return (
-                    <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} title={`${v.channel.status} - ${v.game} - ${v.channel.broadcaster_language}${v.channel.mature ? " - 🔞" : ""}`}>
-                      <img alt="logo" height={22} src={v.channel.logo} /> {v.channel.display_name} <FontAwesomeIcon icon="clock" color="lightgrey" title={`live depuis ${moment.utc(moment()-moment(v.created_at)).format("HH[h et ]mm[m]")}`} />{/*v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />*/}
-                    </p>
-                  )
-                })}
-            </nav>}
+            {(isAuth && isEditMode) &&
+              <nav className="streams">
+                <p style={{ textAlign: "center", background: "#b34646", cursor: "default", height: "24px" }}><button onClick={() => { this.logout().then(() => ReactTooltip.hide()); }} title="Logout" style={{ position: "absolute", left: 0 }}><FontAwesomeIcon icon="sign-out-alt" /></button><span style={{ lineHeight: "24px" }}>{user.display_name}</span></p>
+                {!_.isEmpty(streams) &&
+                  _.map(streams, (v, k) => {
+                    return (
+                      <p key={k} onClick={this.addFollow.bind(this, v.channel.name)} data-for="status" data-tip={JSON.stringify(v)} /*data-tip={`${v.channel.status} - ${v.game} - ${v.channel.broadcaster_language}${v.channel.mature ? " - 🔞" : ""}`}*/ >
+                        <img alt="" height={22} src={v.channel.logo} /> {v.channel.display_name}{/*v.channel.partner && <FontAwesomeIcon icon="handshake" color="#BA55D3" title="partner" size="xs" />*/}
+                      </p>
+                    )
+                  })}
+              </nav>}
+
             <IntervalTimer
               timeout={10000}
               callback={this.getFollowedStream.bind(this)}
@@ -368,9 +434,8 @@ class App extends Component {
             onLayoutChange={this.onLayoutChange}
             onResize={this.onResize}
             layouts={layouts}
-            onBreakpointChange={this.onBreakpointChange}
-            onResizeStart={this.showOverlay}
-            onResizeStop={this.hideOverlay}
+            onResizeStart={() => this.toogleOverlay(true)}
+            onResizeStop={() => this.toogleOverlay(false)}
             onDragStart={this.onDragStart}
             onDragStop={this.onDragStop}
             measureBeforeMount={true}
@@ -385,9 +450,27 @@ class App extends Component {
             })
             }
           </ResponsiveReactGridLayout>
-        :
-          <Welcome isAuth={isAuth} user={user} handleWindow={this.handleWindow} logout={this.logout}/>
+          :
+          <Welcome isAuth={isAuth} streams={streams} user={user} handleWindow={this.handleWindow} logout={this.logout} />
         }
+
+        <ReactTooltip id="status" place="right" border={true} className="extraClass" getContent={datumAsText => {
+          if (datumAsText == null) {
+            return;
+          }
+          let v = JSON.parse(datumAsText);
+          return (
+            <div>
+              <img style={{ display: "inline-block" }} alt="" src={`https://static-cdn.jtvnw.net/ttv-boxart/${v.game}-40x55.jpg`} />
+              <div style={{ display: "inline-block", verticalAlign: "top", margin: "0 0 0 10px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "calc(100% - 50px)" }}>
+                <b>{v.channel.status}</b><br />
+                {v.game} - {v.channel.broadcaster_language.toUpperCase()}{v.channel.mature ? " - 🔞" : ""}<br />
+                <small><FontAwesomeIcon icon="clock" /> {`${moment.utc(moment() - moment(v.created_at)).format("HH[h]mm")}`} - <FontAwesomeIcon icon="user" /> {v.viewers.toLocaleString('en-US', { minimumFractionDigits: 0 })}</small>
+              </div><br />
+              <img style={{ display: "block" }} alt="" src={v.preview.small} />
+            </div>
+          );
+        }} />
       </>
     );
   }
@@ -397,7 +480,7 @@ function getFromLS(key) {
   let ls = {};
   if (global.localStorage) {
     try {
-      ls = JSON.parse(global.localStorage.getItem("rgl-7")) || {};
+      ls = JSON.parse(global.localStorage.getItem("rgl-7_" + key)) || {};
     } catch (e) {
       /*Ignore*/
     }
@@ -408,7 +491,7 @@ function getFromLS(key) {
 function saveToLS(key, value) {
   if (global.localStorage) {
     global.localStorage.setItem(
-      "rgl-7",
+      "rgl-7_" + key,
       JSON.stringify({
         [key]: value
       })
@@ -416,4 +499,4 @@ function saveToLS(key, value) {
   }
 }
 
-export default withCookies(App);
+export default withCookies(observer(App));

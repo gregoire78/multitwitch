@@ -5,11 +5,16 @@
 html {height: 100%;}
 
 body {
-  background: #5a3a93;/*#6441A4;*/
+  background-color: #5a3a93;/*#6441A4;*/
   overflow-y: scroll;
   overflow-x: hidden;
   padding: 0;
   margin: 0;
+  background-image: url("./img/Combo_Purple_RGB.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-attachment: fixed;
 }
 
 header button {
@@ -282,4 +287,17 @@ li b {
 .welcome button:hover {
   background: #b34646;
   color: white;
+}
+
+.extraClass {
+  background-color: #6441a4 !important;
+  color: white !important;
+  border: 2px dashed #b34646 !important;
+  padding: 5px !important;
+  border-radius: 0 !important;
+}
+.place-right:before, .place-right:after,
+.place-bottom:before, .place-bottom:after,
+.place-top:before, .place-top:after{
+  display: none !important;
 }
