@@ -26,7 +26,7 @@ export default class Welcome extends Component {
                     <p>
                         In MultiTwitch.co you can watch a multi streams of <a href="https://twitch.tv/" target="_blank" rel="noopener noreferrer" style={{ fontSize: "1em" }}>twitch.tv</a>.
                     </p>
-                    <p>Simply add the channel ID in <i>"channel twitch"</i> input at the top of the page or in the url. <br /><i>(ex: <a href={`${window.location.origin}/peteur_pan/psykaoz`}>multitwitch.co/peteur_pan/psykaoz/other_channel_id</a>)</i></p>
+                    <p>Simply add the channel ID in <i>"Search a channel"</i> input at the top of the page or in the url. <br /><i>(ex: <a href={`${window.location.origin}/peteur_pan/psykaoz`}>multitwitch.co/peteur_pan/psykaoz/other_channel_id</a>)</i></p>
                     <p style={{ textAlign: "center" }}>or</p>
                     <p>You can also connect your twitch account to watch live of followed channels.</p>
                     <p>
@@ -35,7 +35,7 @@ export default class Welcome extends Component {
                             :
                             <>Congratulation <span style={{ background: "rgb(130, 107, 173)" }}><img src={user.profile_image_url} alt="" style={{ height: "21px", verticalAlign: "top", backgroundColor: "black" }} /> {user.display_name} </span>&nbsp;you are connected ! <button onClick={this.props.logout}>logout <FontAwesomeIcon icon="sign-out-alt" /></button></>}
                     </p>
-                    <small>Created by Grégoire Joncour - <a href="https://github.com/gregoire78/multitwitch" target="_blank" rel="noopener noreferrer"><FontAwesomeIcon icon={["fab", "github"]} /> view the project on github</a> - &copy; 2019 multitwitch.co</small>
+                    <small>Created by Grégoire Joncour - <a href="https://github.com/gregoire78/multitwitch" target="_blank" rel="noopener noreferrer"><FontAwesomeIcon icon={["fab", "github"]} /> view the project on github</a> - &copy; 2019-{new Date().getFullYear()} multitwitch.co</small>
                 </div>
             </ResponsiveReactGridLayout>
             /*<div className="main-welcome">

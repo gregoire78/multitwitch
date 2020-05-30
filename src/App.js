@@ -84,7 +84,7 @@ class App extends Component {
         this.getFollowedStream();
       }
     }
-    this.props.person.isResetMode = getFromLS('isResetMode') !== undefined ? getFromLS('isResetMode') : false;
+    this.props.person.isResetMode = getFromLS('isResetMode') !== undefined ? getFromLS('isResetMode') : true;
     this.props.person.mounted = true;
   }
 
@@ -399,7 +399,7 @@ class App extends Component {
                 <button type="submit" disabled={query.length <= 0 || pseudos.find((v, k) => v === query)}><FontAwesomeIcon icon="plus" /></button>
               </form>
 
-              <button onClick={this.handleReset}><FontAwesomeIcon icon="layer-group" color={!isResetMode ? "lightgrey" : ''} title="reset layout" /></button>
+              <button onClick={this.handleReset}><FontAwesomeIcon icon="layer-group" color={!isResetMode ? "lightgrey" : ''} title="Enable auto size layout" /></button>
               <button onClick={this.onToogleCollapse} className="collapse-btn"><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
               {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile"><img src={user.profile_image_url} height={24} alt="" /></button> : <button onClick={this.handleWindow} title="connect your twitch account"><FontAwesomeIcon icon={["fab", "twitch"]} /></button>}
               <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={!isEditMode ? "lightgrey" : ''} /></button>
