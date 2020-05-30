@@ -66,7 +66,7 @@ export default class Chatwitch extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (this.state.audio.length > 0 && this.state.audio !== prevState.audio && this.player.paused) {
-            this.player.volume = 0.4;
+            this.player.volume = 1;
             this.player.src = this.state.audio[0];
             this.player.play();
             this.player.onended = () => {
@@ -92,11 +92,12 @@ export default class Chatwitch extends Component {
             },
             voice: {
                 languageCode: "fr-FR",
-                ssmlGender: "MALE"
+                name:'fr-FR-Wavenet-A',
+                ssmlGender: "NEUTRAL"
             },
             audioConfig: {
-                audioEncoding: "MP3",
-                speakingRate: "1.5"
+                audioEncoding: "OGG_OPUS",
+                speakingRate: "1"
             }
         })).data
     }
@@ -152,10 +153,10 @@ export default class Chatwitch extends Component {
 
         this.client.on("chat", async (channel, user, message, self) => {
             const channelDetails = _.find(this.state.channelsDetails, ['channel', channel.slice(1)]);
-            /*if(!["moobot","nightbot", "ayrob0t"].includes(user.username)){
-                const tts = await this.getTts(`${user.username} dit : ${message}`.replace(/_/g, ' '));
+            if(!["moobot","nightbot", "ayrob0t"].includes(user.username)){
+                const tts = await this.getTts(`${message}`.replace(/_/g, ' '));
                 this.setState({audio : [...this.state.audio, 'data:audio/mpeg;base64,'+tts.audioContent]})
-            }*/
+            }
             let chat = { status: "message", message, channel: channelDetails, badgesUser: [], user, ts: (user["tmi-sent-ts"] ? moment(user["tmi-sent-ts"], "x").format('LT') : moment().format('LT')), ts_global: moment().valueOf() };
             if (user.badges) {
                 chat.badgesUser = _.map(user.badges, (v, k) => { return channelDetails.badges[k].versions[v] })
@@ -247,7 +248,7 @@ export default class Chatwitch extends Component {
             //this.client.say(this.state.channelChat, `aypierreFouet `);
             //if(channel === "#roi_louis")
             //    this.client.say('roi_louis',`GG @${username} aureli4Coucou`);
-            //this.openNotification(`${channel} RESUB`, `${methods.planName} (${methods.plan}) - c'est le ${cumulativeMonths}e mois d'abonnement de @${user["display-name"]} !!! ${message !== null ? message : ''}`, channelDetails.infoChannel.profile_image_url)
+            this.openNotification(`${channel} RESUB`, `${methods.planName} (${methods.plan}) - c'est le ${cumulativeMonths}e mois d'abonnement de @${user["display-name"]} !!! ${message !== null ? message : ''}`, channelDetails.infoChannel.profile_image_url)
             this.chatComponent.current.scrollToBottom();
         });
 
@@ -267,7 +268,7 @@ export default class Chatwitch extends Component {
             //this.client.say(this.state.channelChat, `aypierreFouet `);
             //if(channel === "#kawautv")
             //    this.client.say('kawautv',`GG @${username} aureli4Coucou aypierreBiere`);
-            //this.openNotification(`${channel} SUBSCRIPTION`, `${method.planName} (${method.plan}) - c'est le 1er mois d'abonnement de @${user["display-name"]} !!!`, channelDetails.infoChannel.profile_image_url)
+            this.openNotification(`${channel} SUBSCRIPTION`, `${method.planName} (${method.plan}) - c'est le 1er mois d'abonnement de @${user["display-name"]} !!!`, channelDetails.infoChannel.profile_image_url)
             this.chatComponent.current.scrollToBottom();
         });
 
