@@ -11,6 +11,8 @@ import { withCookies, Cookies } from 'react-cookie';
 import { instanceOf } from 'prop-types';
 import IntervalTimer from 'react-interval-timer';
 import { WidthProvider, Responsive } from "react-grid-layout";
+import { Helmet } from "react-helmet";
+import { withTranslation } from 'react-i18next';
 //import Twitch from './Twitch';
 //import MyIcon from './Combo_Purple_RGB.svg';
 
@@ -27,6 +29,7 @@ import './App.css';
 import GridTwitch from './GridTwitch';
 import Welcome from './Welcome';
 import SearchBox from './SearchBox';
+
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
 library.add(faTimes, faEdit, faLayerGroup, faPlus, faAngleDoubleRight, faAngleDoubleLeft, faTwitch, faSignOutAlt, faHandshake, faClock, faGithub, faEye, faUser);
@@ -374,9 +377,11 @@ class App extends Component {
   }
 
   render() {
+    const { i18n, t } = this.props;
     const { isEditMode, isResetMode, isCollapse, isAuth, user, streams, opened, showOverlay, query, pseudos, layout, layouts } = this.props.person;
     return (
       <>
+        <Helmet htmlAttributes={{ lang: i18n.language }} />
         {opened &&
           <NewWindow
             onUnload={this.handleClosePopup.bind(this)}
@@ -395,19 +400,19 @@ class App extends Component {
           <header>
             <nav>
               <form onSubmit={this.addPseudo}>
-                <SearchBox placeholder="Search a channel" person={this.props.person} />
+                <SearchBox placeholder={t("input-search.placeholder")} person={this.props.person} />
                 <button type="submit" disabled={query.length <= 0 || pseudos.find((v, k) => v === query)}><FontAwesomeIcon icon="plus" /></button>
               </form>
 
               <button onClick={this.handleReset}><FontAwesomeIcon icon="layer-group" color={!isResetMode ? "lightgrey" : ''} title="Enable auto size layout" /></button>
               <button onClick={this.onToogleCollapse} className="collapse-btn"><FontAwesomeIcon icon={isCollapse ? "angle-double-right" : "angle-double-left"} /></button>
-              {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile"><img src={user.profile_image_url} height={24} alt="" /></button> : <button onClick={this.handleWindow} title="connect your twitch account"><FontAwesomeIcon icon={["fab", "twitch"]} /></button>}
+              {isAuth ? <button onClick={this.onToogleCollapse} className="img-profile"><img src={user.profile_image_url} height={24} alt="" /></button> : <button onClick={this.handleWindow} title={t("connect-button.text")}><FontAwesomeIcon icon={["fab", "twitch"]} /></button>}
               <button onClick={this.handleEdit}><FontAwesomeIcon icon="edit" color={!isEditMode ? "lightgrey" : ''} /></button>
             </nav>
 
             {(isAuth && isEditMode) &&
               <nav className="streams">
-                <p style={{ textAlign: "center", background: "#b34646", cursor: "default", height: "24px" }}><button onClick={() => { this.logout().then(() => ReactTooltip.hide()); }} title="Logout" style={{ position: "absolute", left: 0 }}><FontAwesomeIcon icon="sign-out-alt" /></button><span style={{ lineHeight: "24px" }}>{user.display_name}</span></p>
+                <p style={{ textAlign: "center", background: "#b34646", cursor: "default", height: "24px" }}><button onClick={() => { this.logout().then(() => ReactTooltip.hide()); }} title={t("logout-button.text")} style={{ position: "absolute", left: 0 }}><FontAwesomeIcon icon="sign-out-alt" /></button><span style={{ lineHeight: "24px" }}>{user.display_name}</span></p>
                 {!_.isEmpty(streams) &&
                   _.map(streams, (v, k) => {
                     return (
@@ -451,7 +456,7 @@ class App extends Component {
             }
           </ResponsiveReactGridLayout>
           :
-          <Welcome isAuth={isAuth} streams={streams} user={user} handleWindow={this.handleWindow} logout={this.logout} />
+          <Welcome isAuth={isAuth} user={user} handleWindow={this.handleWindow} logout={this.logout} />
         }
 
         <ReactTooltip id="status" place="right" border={true} className="extraClass" getContent={datumAsText => {
@@ -498,5 +503,4 @@ function saveToLS(key, value) {
     );
   }
 }
-
-export default withCookies(observer(App));
+export default withTranslation()(withCookies(observer(App)));

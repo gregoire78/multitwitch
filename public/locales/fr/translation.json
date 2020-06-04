@@ -1,0 +1,21 @@
+{
+    "title": "Bienvenue sur MultiTwitch.co",
+    "description": {
+        "part1": "Dans MultiTwitch.co vous pouvez regarder plusieurs streams de <0>twitch.tv</0>.",
+        "part2": "Entrez simplement l'ID twitch de la chaine dans le champ <i>\"Rechercher une chaine\"</i> en haut ou ajouter l'ID dans l'URL. <br /><i>(ex: <0>multitwitch.co/peteur_pan/psykaoz/other_channel_id</0>)</i>",
+        "part3": "ou",
+        "part4": "Vous pouvez aussi connecter votre compte twitch pour voir les chaines en direct que vous suivez",
+        "part5": "Félicitation",
+        "part6": "vous êtes connecté !"
+    },
+    "connect-button": {
+        "title": "Ajoutez votre compte twitch",
+        "text": "Connectez votre compte twitch"
+    },
+    "logout-button": {
+        "text": "Déconnexion"
+    },
+    "input-search": {
+        "placeholder": "Rechercher une chaine"
+    }
+}

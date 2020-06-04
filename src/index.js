@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import DevTools, { configureDevtool } from "mobx-react-devtools";
 import { observable, decorate, action, computed } from "mobx";
@@ -7,6 +7,7 @@ import './index.css';
 import App from './App';
 import { CookiesProvider } from 'react-cookie';
 import * as serviceWorker from './serviceWorker';
+import './i18n';
 
 class Person {
     isEditMode = true;
@@ -105,12 +106,13 @@ configureDevtool({
 ReactDOM.render(
     <CookiesProvider>
         {process.env.NODE_ENV !== 'production' && <DevTools />}
-        <Router>
-            <Switch>
-                <Route path="/" exact render={() => <App person={new Person()} />} />
-                <Route render={(props) => <App person={new Person()} />} />
-            </Switch>
-        </Router>
+        <Suspense fallback="">
+            <Router>
+                <Switch>
+                    <Route path="/" render={() => <App person={new Person()} />} />
+                </Switch>
+            </Router>
+        </Suspense>
     </CookiesProvider>,
     document.getElementById('root')
 );
