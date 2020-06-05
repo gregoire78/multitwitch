@@ -40,7 +40,11 @@ export default function Welcome({ isAuth, user, logout, handleWindow }) {
                         :
                         <>{t("description.part5")} <span style={{ background: "rgb(130, 107, 173)" }}><img src={user.profile_image_url} alt="" style={{ height: "21px", verticalAlign: "top", backgroundColor: "black" }} /> {user.display_name} </span>&nbsp;{t("description.part6")} <button onClick={logout}>{t("logout-button.text")} <FontAwesomeIcon icon="sign-out-alt" /></button></>}
                 </p>
-                <small>Created by Grégoire Joncour - <a href="https://github.com/gregoire78/multitwitch" target="_blank" rel="noopener noreferrer"><FontAwesomeIcon icon={["fab", "github"]} /> view the project on github</a> - &copy; 2019-{new Date().getFullYear()} multitwitch.co - {i18n.language}</small>
+                <small>
+                    <Trans i18nKey="footer.part1" />
+                    <a href="https://github.com/gregoire78/multitwitch" target="_blank" rel="noopener noreferrer"><Trans i18nKey="footer.part2" components={[<FontAwesomeIcon icon={["fab", "github"]} />]} /></a>
+                    <Trans i18nKey='footer.part3' values={{ year: new Date().getFullYear(), lng: i18n.language }} />
+                </small>
             </div>
         </ResponsiveReactGridLayout>
     )

@@ -17,5 +17,10 @@
     },
     "input-search": {
         "placeholder": "Search a channel"
+    },
+    "footer": {
+        "part1": "Created by Grégoire Joncour - ",
+        "part2": "<0></0> view the project on github",
+        "part3": " - 2019/{{year}} multitwitch.co - {{lng}}"
     }
 }

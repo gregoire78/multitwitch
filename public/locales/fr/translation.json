@@ -17,5 +17,10 @@
     },
     "input-search": {
         "placeholder": "Rechercher une chaine"
+    },
+    "footer": {
+        "part1": "Créé par Grégoire Joncour - ",
+        "part2": "<0></0> voir le projet sur github",
+        "part3": " - 2019/{{year}} multitwitch.co - {{lng}}"
     }
 }
