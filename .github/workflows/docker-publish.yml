@@ -50,14 +50,11 @@ jobs:
         run: docker build . --file Dockerfile --tag $IMAGE_NAME --build-arg DOMAIN=${{ secrets.DOMAIN }} --build-arg TWITCH_CLIENTID=${{ secrets.TWITCH_CLIENTID }} --build-arg GTAG_ID=${{ secrets.GTAG_ID }}
 
       - name: Log into registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.REGISTRY_TOKEN }}" | docker login registry.joncour.xyz -u ${{ secrets.REGISTRY_USER }} --password-stdin
 
       - name: Push image
         run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
-          
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          IMAGE_ID=registry.joncour.xyz/$IMAGE_NAME
 
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
