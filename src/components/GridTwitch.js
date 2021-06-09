@@ -1,4 +1,5 @@
 import React, { useState, Fragment } from "react";
+import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faComment, faCommentSlash } from "@fortawesome/free-solid-svg-icons";
@@ -72,5 +73,12 @@ function GridTwitch({ isEditMode, layout, showOverlay, onRemoveItem }) {
     </Fragment>
   );
 }
+
+GridTwitch.propTypes = {
+  isEditMode: PropTypes.bool,
+  layout: PropTypes.any,
+  showOverlay: PropTypes.bool,
+  onRemoveItem: PropTypes.func,
+};
 
 export default GridTwitch;

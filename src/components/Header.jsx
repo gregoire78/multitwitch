@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
+import PropTypes from "prop-types";
 import { CSSTransition } from "react-transition-group";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -18,9 +19,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faTwitch, faGithub } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useTranslation, Trans } from "react-i18next";
-import isEmpty from "lodash.isempty";
-import map from "lodash.map";
+import { useTranslation } from "react-i18next";
 import SearchBox from "./SearchBox";
 
 library.add(
@@ -52,7 +51,7 @@ function Header({
   onAddChannel,
   setIsCollapse,
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   return (
     <CSSTransition in={isCollapse} classNames="header" timeout={300}>
@@ -133,5 +132,17 @@ function Header({
     </CSSTransition>
   );
 }
+
+Header.propTypes = {
+  isEditMode: PropTypes.bool,
+  isCollapse: PropTypes.bool,
+  isAutoSize: PropTypes.bool,
+  setIsEditMode: PropTypes.func,
+  handleSave: PropTypes.func,
+  handleReset: PropTypes.func,
+  handleAutoSize: PropTypes.func,
+  onAddChannel: PropTypes.func,
+  setIsCollapse: PropTypes.func,
+};
 
 export default Header;

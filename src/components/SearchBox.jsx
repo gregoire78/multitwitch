@@ -1,13 +1,15 @@
-import React, { useCallback } from "react";
+import React from "react";
+import PropTypes from "prop-types";
 import debounce from "lodash.debounce";
 import axios from "axios";
 import process from "process";
+import { components } from "react-select";
 import AsyncSelect from "react-select/async";
-import { useTranslation, Trans } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import "./SearchBox.css";
 
 function SearchBox({ onAddChannel }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const searchTwitchChannel = async (query) => {
     const channels = (
       await axios.get(
@@ -24,6 +26,7 @@ function SearchBox({ onAddChannel }) {
     return channels.map((channel) => ({
       value: channel.name,
       label: channel.display_name,
+      logo: channel.logo,
     }));
   };
 
@@ -41,39 +44,66 @@ function SearchBox({ onAddChannel }) {
       components={{
         IndicatorSeparator: null,
         IndicatorsContainer: () => null,
+        Option: (props) => {
+          return (
+            <components.Option {...props}>
+              <div className="option">
+                {/* eslint-disable-next-line react/prop-types */}
+                <img src={props.data.logo} height="20" alt="" />{" "}
+                {/* eslint-disable-next-line react/prop-types */}
+                <span>{props.label}</span>
+              </div>
+            </components.Option>
+          );
+        },
       }}
+      noOptionsMessage={() => t("input-search.no-options")}
       styles={{
-        container: (provided, state) => ({
+        container: () => ({
           display: "inline-block",
           width: "204px",
           background: "white",
         }),
-        control: (provided, state) => ({
+        control: () => ({
           borderRadius: 0,
           padding: "0 5px",
         }),
-        input: (provided, state) => ({
-          width: state.selectProps.width,
-          color: state.selectProps.menuColor,
+        input: () => ({
+          height: 24,
         }),
-        valueContainer: (provided, state) => ({
+        valueContainer: (provided) => ({
           ...provided,
           padding: 0,
         }),
-        multiValue: (provided, state) => ({
+        multiValue: (provided) => ({
           ...provided,
           margin: 0,
         }),
-        menu: (provided, state) => ({
+        menu: (provided) => ({
           ...provided,
           marginTop: 0,
           marginBottom: 0,
           borderRadius: 0,
           boxShadow: "none",
         }),
+        menuList: (provided) => ({
+          ...provided,
+          paddingTop: 0,
+          paddingBottom: 0,
+        }),
+        option: (provided, state) => ({
+          ...provided,
+          background: state.isFocused && "#6441a4",
+          color: state.isFocused && "white",
+          padding: "5px 12px",
+        }),
       }}
     />
   );
 }
+
+SearchBox.propTypes = {
+  onAddChannel: PropTypes.func,
+};
 
 export default SearchBox;

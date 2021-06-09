@@ -3,7 +3,7 @@ import map from "lodash.map";
 const generateLayout = (channels) => {
   switch (channels.length) {
     case 1:
-      return map(channels, (item, i) => {
+      return map(channels, (item) => {
         const w = 12;
         const h = 65;
         return {

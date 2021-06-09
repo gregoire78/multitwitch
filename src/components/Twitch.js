@@ -80,7 +80,7 @@ class TwitchEmbedVideo extends PureComponent {
     }
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate() {
     if (
       (this.props.layout === "video" ||
         this.props.layout === "video-with-chat") &&
@@ -125,6 +125,7 @@ class TwitchEmbedVideo extends PureComponent {
   }
 
   render() {
+    // eslint-disable-next-line react/prop-types
     return <div style={this.props.style} id={this.props.targetID}></div>;
   }
 }

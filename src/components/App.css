@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Acme');
+@import url('https://fonts.googleapis.com/css?family=Ubuntu');
 
 *{  outline: none;}
 
@@ -17,6 +17,7 @@ body {
   background-attachment: fixed;
   width: 100wh;
   height: 100vh;
+  font-family: 'Ubuntu';
 }
 
 header button {
@@ -81,7 +82,7 @@ header:hover .streams{
   opacity: 1;
 }
 .streams p {
-  font-family: 'Acme', cursive;
+  font-family: 'Ubuntu';
   padding: 0;
   margin: 0;
   cursor: pointer;
@@ -229,7 +230,7 @@ li b {
 }
 
 .header-player {
-  font-family: 'Acme', cursive;
+  font-family: 'Ubuntu';
   width: 100%;
   position: absolute;
   top:0;

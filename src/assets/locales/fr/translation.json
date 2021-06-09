@@ -28,7 +28,8 @@
         "text": "Déconnexion"
     },
     "input-search": {
-        "placeholder": "Rechercher une chaine"
+        "placeholder": "Rechercher une chaine",
+        "no-options": "Pas de chaines"
     },
     "footer": {
         "part1": "Créé par Grégoire Joncour - ",

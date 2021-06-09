@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import PropTypes from "prop-types";
 import { WidthProvider, Responsive } from "react-grid-layout";
 import { useTranslation, Trans } from "react-i18next";
 import { library } from "@fortawesome/fontawesome-svg-core";
@@ -8,6 +9,13 @@ import { faTwitch, faGithub } from "@fortawesome/free-brands-svg-icons";
 
 library.add(faTwitch, faSignOutAlt, faGithub);
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
+
+Welcome.propTypes = {
+  isAuth: PropTypes.bool,
+  user: PropTypes.any,
+  logout: PropTypes.any,
+  handleWindow: PropTypes.func,
+};
 
 export default function Welcome({ isAuth, user, logout, handleWindow }) {
   const { t, i18n } = useTranslation();

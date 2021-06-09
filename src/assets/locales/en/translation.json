@@ -28,7 +28,8 @@
         "text": "Logout"
     },
     "input-search": {
-        "placeholder": "Search a channel"
+        "placeholder": "Search a channel",
+        "no-options": "No channels"
     },
     "footer": {
         "part1": "Created by Grégoire Joncour - ",
