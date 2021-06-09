@@ -10,11 +10,13 @@ body {
   overflow-x: hidden;
   padding: 0;
   margin: 0;
-  background-image: url("./img/Combo_Purple_RGB.svg");
+  background-image: url("../img/Combo_Purple_RGB.svg");
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
   background-attachment: fixed;
+  width: 100wh;
+  height: 100vh;
 }
 
 header button {
@@ -145,9 +147,9 @@ header:hover .streams{
 }
 .react-grid-dragHandleExample {
   cursor: move; /* fallback if grab cursor is unsupported */
-  cursor: grab;
+  /*cursor: grab;
   cursor: -moz-grab;
-  cursor: -webkit-grab;
+  cursor: -webkit-grab;*/
 }
 li b {
   font-size: 19px;
@@ -236,18 +238,18 @@ li b {
   display: block;
    color: white;
   text-align: center;
-  cursor: grab
+  cursor: move
 }
 
 .header-enter, .header-exit-done {
   transform: translateX(0);
 }
 .header-enter-active {
-  transform: translateX(-228px);
+  transform: translateX(-276px);
   transition: all 300ms ease-out;
 }
 .header-exit, .header-enter-done {
-  transform: translateX(-228px);
+  transform: translateX(-276px);
 }
 .header-exit-active {
   transform: translateX(0);

@@ -12,6 +12,18 @@
         "title": "Ajoutez votre compte twitch",
         "text": "Connectez votre compte twitch"
     },
+    "edit-button": {
+        "title": "Editer la disposition"
+    },
+    "reset-button": {
+        "title": "Réinitialiser la disposition"
+    },
+    "auto_size-button": {
+        "title": "Taille automatique da la disposition"
+    },
+    "save-button": {
+        "title": "Sauvegarder la disposition"
+    },
     "logout-button": {
         "text": "Déconnexion"
     },

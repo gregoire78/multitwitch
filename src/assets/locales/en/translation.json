@@ -12,6 +12,18 @@
         "title": "Login to your twitch account",
         "text": "Connect your Twitch account"
     },
+    "edit-button": {
+        "title": "Edit layout"
+    },
+    "reset-button": {
+        "title": "Reset layout"
+    },
+    "auto_size-button": {
+        "title": "Auto size layout"
+    },
+    "save-button": {
+        "title": "Save layout"
+    },
     "logout-button": {
         "text": "Logout"
     },
