@@ -32,7 +32,8 @@
   ],
   "globals": {
     "Atomics": "readonly",
-    "SharedArrayBuffer": "readonly"
+    "SharedArrayBuffer": "readonly",
+    "__COMMIT_HASH__": true
   },
   "plugins": [
     "prettier",

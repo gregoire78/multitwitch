@@ -12,7 +12,6 @@ import "/node_modules/react-resizable/css/styles.css";
 import "/node_modules/react-grid-layout/css/styles.css";
 import "./App.css";
 import Header from "./Header";
-import process from "process";
 import GridTwitch from "./GridTwitch";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -28,9 +27,9 @@ function App() {
   const [layouts, setLayouts] = useState();
 
   useEffect(() => {
-    if (getFromLS("version") !== process.env.npm_package_version) {
+    if (getFromLS("version") !== __COMMIT_HASH__) {
       localStorage.clear();
-      saveToLS("version", process.env.npm_package_version);
+      saveToLS("version", __COMMIT_HASH__);
     }
 
     const urlparse = uniqBy(compact(window.location.pathname.split("/")));

@@ -10,7 +10,7 @@ const CompressionPlugin = require("compression-webpack-plugin");
 
 let commitHash = require("child_process")
   .execSync("git rev-parse --short HEAD")
-  .toString();
+  .toString().trim();
 
 const config = (env, argv) => ({
   devtool: argv.mode === "production" ? false : "source-map",

@@ -10,7 +10,11 @@ i18n
   .use(initReactI18next)
   .init({
     backend: {
-      loadPath: "/assets/locales/{{lng}}/{{ns}}.json",
+      loadPath:
+        //"https://rawcdn.githack.com/gregoire78/multitwitch/a80f9e44f17cc0e46b1b5e01eafe22a37e453482/src/assets/locales/fr/translation.json",
+        //"https://raw.githack.com/gregoire78/multitwitch/2.0.0/src/assets/locales/{{lng}}/{{ns}}.json",
+        //"https://raw.githubusercontent.com/gregoire78/multitwitch/2.0.0/src/assets/locales/{{lng}}/{{ns}}.json",
+        "/assets/locales/{{lng}}/{{ns}}.json",
     },
     whitelist: ["en", "fr"],
     fallbackLng: "en",

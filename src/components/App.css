@@ -290,6 +290,12 @@ li b {
   background: #b34646;
   color: white;
 }
+.welcome .lang-select {
+  background: #6441a4;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
 
 .extraClass {
   background-color: #6441a4 !important;

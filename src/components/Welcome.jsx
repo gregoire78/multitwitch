@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { WidthProvider, Responsive } from "react-grid-layout";
 import { useTranslation, Trans } from "react-i18next";
 import { library } from "@fortawesome/fontawesome-svg-core";
@@ -122,8 +122,31 @@ export default function Welcome({ isAuth, user, logout, handleWindow }) {
           </a>
           <Trans
             i18nKey="footer.part3"
-            values={{ year: new Date().getFullYear(), lng: i18n.language }}
+            values={{
+              year: new Date().getFullYear(),
+              lng: i18n.language,
+              version: __COMMIT_HASH__,
+            }}
           />
+          <select
+            onMouseDown={(e) => {
+              e.stopPropagation();
+            }}
+            onChange={(e) => i18n.changeLanguage(e.target.value)}
+            className="lang-select"
+            defaultValue={i18n.language}
+          >
+            {
+              /*Object.keys(i18n.services.resourceStore.data)*/ [
+                "en",
+                "fr",
+              ].map((lang) => (
+                <option key={lang} value={lang} className="lang-option">
+                  {lang.toUpperCase()}
+                </option>
+              ))
+            }
+          </select>
         </small>
       </div>
     </ResponsiveReactGridLayout>
