@@ -36,46 +36,21 @@ function App({ cookies }) {
   const [user, setUser] = useState();
 
   useEffect(() => {
-    // newWindow twitch connect
-    if (window.location.hash) {
-      document.body.innerHTML = "";
-      document.body.style.display = "none";
-      let search = window.location.hash.substring(1);
-      search = JSON.parse(
-        '{"' +
-          decodeURI(search)
-            .replace(/"/g, '\\"')
-            .replace(/&/g, '","')
-            .replace(/=/g, '":"') +
-          '"}'
-      );
-      if ("access_token" in search) {
-        //set cookie to save twitch token
-        cookies.set("token", search.access_token, {
-          expires: dayjs()
-            .add(dayjs.duration({ months: 1 }))
-            .toDate(),
-          domain: window.location.hostname,
-        });
-      }
-      window.close();
-    } else {
-      if (getFromLS("version") !== __COMMIT_HASH__) {
-        localStorage.clear();
-        saveToLS("version", __COMMIT_HASH__);
-      }
+    if (getFromLS("version") !== __COMMIT_HASH__) {
+      localStorage.clear();
+      saveToLS("version", __COMMIT_HASH__);
+    }
 
-      getTwitchUser();
-      const urlparse = uniqBy(compact(window.location.pathname.split("/")));
-      const url = JSON.parse(JSON.stringify(getFromLS("channels") || []));
-      setLayouts(JSON.parse(JSON.stringify(getFromLS("layouts") || {})));
-      if (urlparse.length !== 0) {
-        setChannels(urlparse);
-        setLayout(generateLayout(urlparse));
-      } else {
-        setChannels(url);
-        setLayout(generateLayout(url));
-      }
+    getTwitchUser();
+    const urlparse = uniqBy(compact(window.location.pathname.split("/")));
+    const url = JSON.parse(JSON.stringify(getFromLS("channels") || []));
+    setLayouts(JSON.parse(JSON.stringify(getFromLS("layouts") || {})));
+    if (urlparse.length !== 0) {
+      setChannels(urlparse);
+      setLayout(generateLayout(urlparse));
+    } else {
+      setChannels(url);
+      setLayout(generateLayout(url));
     }
   }, [cookies, getTwitchUser]);
 
@@ -177,10 +152,10 @@ function App({ cookies }) {
       {isOpened && (
         <NewWindow
           onUnload={() => {
-            setIsOpened(false);
             getTwitchUser();
+            setIsOpened(false);
           }}
-          url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&redirect_uri=${window.location.origin}&response_type=token&scope=user_read`}
+          url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&redirect_uri=${window.location.origin}/redirect&response_type=token&scope=user_read`}
           features={{
             left: window.innerWidth / 2 - 600 / 2,
             top: window.innerHeight / 2 - 600 / 2,
