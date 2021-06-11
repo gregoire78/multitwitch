@@ -41,6 +41,8 @@ library.add(
 );
 
 function Header({
+  isAuth,
+  user,
   isEditMode,
   isCollapse,
   isAutoSize,
@@ -50,6 +52,7 @@ function Header({
   handleAutoSize,
   onAddChannel,
   setIsCollapse,
+  setIsOpened,
 }) {
   const { t } = useTranslation();
 
@@ -78,11 +81,21 @@ function Header({
               icon={isCollapse ? "angle-double-right" : "angle-double-left"}
             />
           </button>
-          {
-            <button title={t("connect-button.text")}>
+          {isAuth ? (
+            <button
+              onClick={() => setIsCollapse((c) => !c)}
+              className="img-profile"
+            >
+              <img src={user?.profile_image_url} height={24} alt="" />
+            </button>
+          ) : (
+            <button
+              title={t("connect-button.text")}
+              onClick={() => setIsOpened(true)}
+            >
               <FontAwesomeIcon icon={["fab", "twitch"]} />
             </button>
-          }
+          )}
           <button
             onClick={() => setIsEditMode((e) => !e)}
             title={t("edit-button.title")}
@@ -134,6 +147,8 @@ function Header({
 }
 
 Header.propTypes = {
+  isAuth: PropTypes.bool,
+  user: PropTypes.any,
   isEditMode: PropTypes.bool,
   isCollapse: PropTypes.bool,
   isAutoSize: PropTypes.bool,
@@ -143,6 +158,7 @@ Header.propTypes = {
   handleAutoSize: PropTypes.func,
   onAddChannel: PropTypes.func,
   setIsCollapse: PropTypes.func,
+  setIsOpened: PropTypes.func,
 };
 
 export default Header;

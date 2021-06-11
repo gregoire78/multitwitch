@@ -77,43 +77,49 @@ export default function Welcome({ isAuth, user, logout, handleWindow }) {
         </p>
         <p style={{ textAlign: "center" }}>{t("description.part3")}</p>
         <p>{t("description.part4")}</p>
-        <p>
-          {!isAuth ? (
-            <button
-              /*onClick={handleWindow}*/ title={t("connect-button.title")}
+
+        {!isAuth ? (
+          <button
+            style={{
+              display: "block",
+            }}
+            onClick={handleWindow}
+            title={t("connect-button.title")}
+          >
+            <FontAwesomeIcon
+              icon={["fab", "twitch"]}
+              style={{ verticalAlign: "middle" }}
+            />
+            <span> {t("connect-button.text")}</span>
+          </button>
+        ) : (
+          <div className="profile">
+            <span>{t("description.part5")} </span>
+            <span
+              style={{
+                background: "rgb(130, 107, 173)",
+                display: "inline-flex",
+                alignItems: "center",
+              }}
             >
-              <FontAwesomeIcon
-                icon={["fab", "twitch"]}
-                style={{ verticalAlign: "middle", width: 15, height: 15 }}
+              <img
+                src={user?.profile_image_url}
+                alt=""
+                style={{
+                  height: "21px",
+                  verticalAlign: "top",
+                  backgroundColor: "black",
+                }}
               />
-              <span style={{ verticalAlign: "middle", lineHeight: "22px" }}>
-                {" "}
-                {t("connect-button.text")}
-              </span>
+              <span> {user?.display_name} </span>
+            </span>
+            <span> {t("description.part6")} </span>
+            <button onClick={logout}>
+              <span>{t("logout-button.text")} </span>
+              <FontAwesomeIcon icon="sign-out-alt" />
             </button>
-          ) : (
-            <>
-              {t("description.part5")}{" "}
-              <span style={{ background: "rgb(130, 107, 173)" }}>
-                <img
-                  src={user.profile_image_url}
-                  alt=""
-                  style={{
-                    height: "21px",
-                    verticalAlign: "top",
-                    backgroundColor: "black",
-                  }}
-                />{" "}
-                {user.display_name}{" "}
-              </span>
-              &nbsp;{t("description.part6")}{" "}
-              <button /*onClick={logout}*/>
-                {t("logout-button.text")}{" "}
-                <FontAwesomeIcon icon="sign-out-alt" />
-              </button>
-            </>
-          )}
-        </p>
+          </div>
+        )}
         <small>
           <Trans i18nKey="footer.part1" />
           <a

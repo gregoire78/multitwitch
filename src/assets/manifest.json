@@ -2,16 +2,16 @@
   "name": "MultiTwitch",
   "short_name": "MultiTwitch",
   "icons": [
-      {
-          "src": "android-chrome-192x192.png",
-          "sizes": "192x192 144x144",
-          "type": "image/png"
-      },
-      {
-          "src": "android-chrome-512x512.png",
-          "sizes": "512x512",
-          "type": "image/png"
-      }
+    {
+      "src": "android-chrome-192x192.png",
+      "sizes": "192x192 144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ],
   "theme_color": "#8763c5",
   "background_color": "#8763c5",

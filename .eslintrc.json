@@ -10,11 +10,13 @@
   },
   "ignorePatterns": [
     "webpack.config.js",
-    "dist/*"
+    "dist/*",
+    "packages/*"
   ],
   "env": {
     "es6": true,
-    "browser": true
+    "browser": true,
+    "webextensions": true
   },
   "parser": "@babel/eslint-parser",
   "parserOptions": {

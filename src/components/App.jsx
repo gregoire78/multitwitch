@@ -1,12 +1,18 @@
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import uniqBy from "lodash.uniqby";
 import compact from "lodash.compact";
 import reject from "lodash.reject";
 import map from "lodash.map";
-import { useCookies } from "react-cookie";
+import { withCookies } from "react-cookie";
 import { WidthProvider, Responsive } from "react-grid-layout";
 import Welcome from "./Welcome";
 import generateLayout from "./gridLayout";
+import NewWindow from "react-new-window";
+import process from "process";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
+import axios from "axios";
 
 import "/node_modules/react-resizable/css/styles.css";
 import "/node_modules/react-grid-layout/css/styles.css";
@@ -15,9 +21,9 @@ import Header from "./Header";
 import GridTwitch from "./GridTwitch";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
+dayjs.extend(duration);
 
-function App() {
-  const [cookies, setCookie, removeCookie] = useCookies(["token"]);
+function App({ cookies }) {
   const [channels, setChannels] = useState();
   const [layout, setLayout] = useState();
   const [showOverlay, setShowOverlay] = useState();
@@ -25,24 +31,53 @@ function App() {
   const [isCollapse, setIsCollapse] = useState();
   const [isEditMode, setIsEditMode] = useState(true);
   const [layouts, setLayouts] = useState();
+  const [isOpened, setIsOpened] = useState(false);
+  const [isAuth, setIsAuth] = useState(!!cookies.get("token"));
+  const [user, setUser] = useState();
 
   useEffect(() => {
-    if (getFromLS("version") !== __COMMIT_HASH__) {
-      localStorage.clear();
-      saveToLS("version", __COMMIT_HASH__);
-    }
-
-    const urlparse = uniqBy(compact(window.location.pathname.split("/")));
-    const url = JSON.parse(JSON.stringify(getFromLS("channels") || []));
-    setLayouts(JSON.parse(JSON.stringify(getFromLS("layouts") || {})));
-    if (urlparse.length !== 0) {
-      setChannels(urlparse);
-      setLayout(generateLayout(urlparse));
+    // newWindow twitch connect
+    if (window.location.hash) {
+      document.body.innerHTML = "";
+      document.body.style.display = "none";
+      let search = window.location.hash.substring(1);
+      search = JSON.parse(
+        '{"' +
+          decodeURI(search)
+            .replace(/"/g, '\\"')
+            .replace(/&/g, '","')
+            .replace(/=/g, '":"') +
+          '"}'
+      );
+      if ("access_token" in search) {
+        //set cookie to save twitch token
+        cookies.set("token", search.access_token, {
+          expires: dayjs()
+            .add(dayjs.duration({ months: 1 }))
+            .toDate(),
+          domain: window.location.hostname,
+        });
+      }
+      window.close();
     } else {
-      setChannels(url);
-      setLayout(generateLayout(url));
+      if (getFromLS("version") !== __COMMIT_HASH__) {
+        localStorage.clear();
+        saveToLS("version", __COMMIT_HASH__);
+      }
+
+      getTwitchUser();
+      const urlparse = uniqBy(compact(window.location.pathname.split("/")));
+      const url = JSON.parse(JSON.stringify(getFromLS("channels") || []));
+      setLayouts(JSON.parse(JSON.stringify(getFromLS("layouts") || {})));
+      if (urlparse.length !== 0) {
+        setChannels(urlparse);
+        setLayout(generateLayout(urlparse));
+      } else {
+        setChannels(url);
+        setLayout(generateLayout(url));
+      }
     }
-  }, []);
+  }, [cookies, getTwitchUser]);
 
   useEffect(() => {
     saveToLS("auto_size", isAutoSize);
@@ -60,6 +95,41 @@ function App() {
 
   const onLayoutChange = (layout, layouts) => {
     setLayouts(layouts);
+  };
+
+  const getTwitchUser = useCallback(async () => {
+    const _token = cookies.get("token");
+    if (_token) {
+      try {
+        const twitchUser = (
+          await axios.get(`https://api.twitch.tv/helix/users`, {
+            headers: {
+              Authorization: `Bearer ${_token}`,
+              "Client-ID": process.env.REACT_APP_TWITCH_CLIENTID,
+            },
+          })
+        ).data;
+        if (twitchUser) {
+          setIsAuth(true);
+          setUser(twitchUser.data[0]);
+        }
+      } catch (error) {
+        setUser();
+        setIsAuth(false);
+        cookies.remove("token", { domain: window.location.hostname });
+      }
+    }
+  }, [cookies]);
+
+  const logout = async () => {
+    await axios.post(
+      `https://id.twitch.tv/oauth2/revoke?client_id=${
+        process.env.REACT_APP_TWITCH_CLIENTID
+      }&token=${cookies.get("token")}`
+    );
+    setIsAuth(false);
+    setUser();
+    cookies.remove("token", { domain: window.location.hostname });
   };
 
   const onResize = (
@@ -104,12 +174,32 @@ function App() {
 
   return (
     <>
+      {isOpened && (
+        <NewWindow
+          onUnload={() => {
+            setIsOpened(false);
+            getTwitchUser();
+          }}
+          url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&redirect_uri=${window.location.origin}&response_type=token&scope=user_read`}
+          features={{
+            left: window.innerWidth / 2 - 600 / 2,
+            top: window.innerHeight / 2 - 600 / 2,
+            width: 600,
+            height: 600,
+          }}
+        >
+          <h5 style={{ color: "white" }}>Connecting to twitch id</h5>
+        </NewWindow>
+      )}
       <Suspense fallback="">
         <Header
+          isAuth={isAuth}
+          user={user}
           isEditMode={isEditMode}
           isCollapse={isCollapse}
           isAutoSize={isAutoSize}
           setIsEditMode={setIsEditMode}
+          setIsOpened={setIsOpened}
           setIsCollapse={setIsCollapse}
           handleSave={() => {
             saveToLS("layouts", layouts);
@@ -180,12 +270,21 @@ function App() {
         </ResponsiveGridLayout>
       ) : (
         <Suspense fallback="">
-          <Welcome isAuth={false} />
+          <Welcome
+            isAuth={isAuth}
+            user={user}
+            logout={logout}
+            handleWindow={() => setIsOpened(true)}
+          />
         </Suspense>
       )}
     </>
   );
 }
+
+App.propTypes = {
+  cookies: PropTypes.any,
+};
 
 function getFromLS(key) {
   let ls = {};
@@ -201,4 +300,4 @@ function saveToLS(key, value) {
   }
 }
 
-export default App;
+export default withCookies(App);
