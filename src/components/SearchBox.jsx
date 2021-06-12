@@ -81,6 +81,7 @@ function SearchBox({ onAddChannel }) {
         }),
         menu: (provided) => ({
           ...provided,
+          top: "auto",
           marginTop: 0,
           marginBottom: 0,
           borderRadius: 0,

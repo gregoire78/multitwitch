@@ -23,7 +23,7 @@ function Redirect({ cookies }) {
         //set cookie to save twitch token
         cookies.set("token", search.access_token, {
           expires: dayjs()
-            .add(dayjs.duration({ months: 1 }))
+            .add(dayjs.duration({ years: 1 }))
             .toDate(),
           domain: window.location.hostname,
         });

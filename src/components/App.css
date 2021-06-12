@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css?family=Ubuntu");
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
 
 * {
   outline: none;
@@ -75,7 +75,7 @@ header {
 
 .streams {
   background: #6441a4;
-  max-width: 228px;
+  max-width: 276px;
   border: 5px dashed #b34646;
   border-top: none;
   border-left: none;
@@ -91,8 +91,11 @@ header:hover .streams {
   margin: 0;
   cursor: pointer;
 }
+.streams p .stream-name {
+  vertical-align: middle;
+}
 .streams img {
-  vertical-align: bottom;
+  vertical-align: middle;
   height: 22px;
   background: rgba(0, 0, 0, 0.9);
 }
@@ -314,7 +317,8 @@ li b {
 .welcome .profile {
   line-height: 21px;
 }
-.welcome .profile > span, .welcome .profile > button {
+.welcome .profile > span,
+.welcome .profile > button {
   display: inline-block;
   white-space: break-spaces;
   vertical-align: middle;

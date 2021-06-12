@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import PropTypes from "prop-types";
 import { CSSTransition } from "react-transition-group";
 import { library } from "@fortawesome/fontawesome-svg-core";
@@ -21,6 +21,16 @@ import { faTwitch, faGithub } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTranslation } from "react-i18next";
 import SearchBox from "./SearchBox";
+import ReactTooltip from "react-tooltip";
+import isEmpty from "lodash.isempty";
+import map from "lodash.map";
+import orderBy from "lodash.orderby";
+import axios from "axios";
+import process from "process";
+import { withCookies } from "react-cookie";
+import { useEffect } from "react";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 
 library.add(
   faTimes,
@@ -39,6 +49,7 @@ library.add(
   faSyncAlt,
   faMagic
 );
+dayjs.extend(utc);
 
 function Header({
   isAuth,
@@ -53,8 +64,37 @@ function Header({
   onAddChannel,
   setIsCollapse,
   setIsOpened,
+  cookies,
+  logout,
 }) {
   const { t } = useTranslation();
+  const [streams, setStreams] = useState();
+
+  useEffect(() => {
+    if (isAuth) {
+      getFollowedStream();
+    }
+  }, [getFollowedStream, isAuth]);
+
+  useEffect(() => {
+    if (isEditMode) ReactTooltip.rebuild();
+  }, [isEditMode]);
+
+  const getFollowedStream = useCallback(() => {
+    axios
+      .get(`https://api.twitch.tv/kraken/streams/followed`, {
+        headers: {
+          Accept: "application/vnd.twitchtv.v5+json",
+          Authorization: `OAuth ${cookies.get("token")}`,
+          "Client-ID": process.env.REACT_APP_TWITCH_CLIENTID,
+        },
+      })
+      .then((res) => {
+        const _streams = orderBy(res.data.streams, "channel.name");
+        setStreams(_streams);
+        ReactTooltip.rebuild();
+      });
+  }, [cookies]);
 
   return (
     <CSSTransition in={isCollapse} classNames="header" timeout={300}>
@@ -104,7 +144,7 @@ function Header({
           </button>
         </nav>
 
-        {/*isAuth && isEditMode && (
+        {isAuth && isEditMode && (
           <nav className="streams">
             <p
               style={{
@@ -116,31 +156,90 @@ function Header({
             >
               <button
                 onClick={() => {
-                  this.logout().then(() => ReactTooltip.hide());
+                  logout().then(() => ReactTooltip.hide());
                 }}
                 title={t("logout-button.text")}
                 style={{ position: "absolute", left: 0 }}
               >
                 <FontAwesomeIcon icon="sign-out-alt" />
               </button>
-              <span style={{ lineHeight: "24px" }}>{user.display_name}</span>
+              <span style={{ lineHeight: "24px" }}>{user?.display_name}</span>
             </p>
             {!isEmpty(streams) &&
               map(streams, (v, k) => {
                 return (
                   <p
                     key={k}
-                    onClick={this.addFollow.bind(this, v.channel.name)}
+                    //onClick={addFollow.bind(this, v.channel.name)}
                     data-for="status"
                     data-tip={JSON.stringify(v)}
                   >
                     <img alt="" height={22} src={v.channel.logo} />{" "}
-                    {v.channel.display_name}
+                    <span className="stream-name">
+                      {v.channel.display_name}
+                    </span>
                   </p>
                 );
               })}
           </nav>
-            )*/}
+        )}
+        <ReactTooltip
+          id="status"
+          place="right"
+          border={true}
+          className="extraClass"
+          getContent={(datumAsText) => {
+            if (datumAsText == null) {
+              return;
+            }
+            let v = JSON.parse(datumAsText);
+            return (
+              <div>
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "start",
+                  }}
+                >
+                  <img
+                    style={{ display: "inline-block" }}
+                    alt=""
+                    src={`https://static-cdn.jtvnw.net/ttv-boxart/${v.game}-40x55.jpg`}
+                  />
+                  <div
+                    style={{
+                      lineHeight: "16px",
+                      margin: "0 0 0 5px",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <b style={{ display: "block" }}>{v.channel.status}</b>
+                    {v.game} - {v.channel.broadcaster_language.toUpperCase()}
+                    {v.channel.mature ? " - 🔞" : ""}
+                    <br />
+                    <small>
+                      <FontAwesomeIcon icon="clock" />{" "}
+                      {`${dayjs
+                        .utc(dayjs() - dayjs(v.created_at))
+                        .format("HH[h]mm")}`}{" "}
+                      - <FontAwesomeIcon icon="user" />{" "}
+                      {v.viewers.toLocaleString("en-US", {
+                        minimumFractionDigits: 0,
+                      })}
+                    </small>
+                  </div>
+                </div>
+                <img
+                  style={{ display: "block" }}
+                  alt=""
+                  src={v.preview.small}
+                />
+              </div>
+            );
+          }}
+        />
       </header>
     </CSSTransition>
   );
@@ -159,6 +258,8 @@ Header.propTypes = {
   onAddChannel: PropTypes.func,
   setIsCollapse: PropTypes.func,
   setIsOpened: PropTypes.func,
+  cookies: PropTypes.any,
+  logout: PropTypes.func,
 };
 
-export default Header;
+export default withCookies(Header);

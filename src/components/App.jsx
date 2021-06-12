@@ -136,6 +136,7 @@ function App({ cookies }) {
     // open menu if all close
     if (pseudos.length === 0) {
       setIsCollapse(false);
+      setIsEditMode(true);
     }
 
     // reset mode layout
@@ -197,6 +198,7 @@ function App({ cookies }) {
             setLayout(generateLayout(uniqBy([...channels, channel])));
             setChannels((c) => uniqBy([...c, channel]));
           }}
+          logout={logout}
         />
       </Suspense>
 
