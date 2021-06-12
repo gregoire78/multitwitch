@@ -31,6 +31,7 @@ import { withCookies } from "react-cookie";
 import { useEffect } from "react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import useInterval from "use-interval";
 
 library.add(
   faTimes,
@@ -71,14 +72,20 @@ function Header({
   const [streams, setStreams] = useState();
 
   useEffect(() => {
-    if (isAuth) {
+    if (!isCollapse && isEditMode && isAuth) {
       getFollowedStream();
     }
-  }, [getFollowedStream, isAuth]);
+  }, [isAuth, isEditMode, isCollapse, getFollowedStream]);
 
   useEffect(() => {
     if (isEditMode) ReactTooltip.rebuild();
   }, [isEditMode]);
+
+  useInterval(
+    () => getFollowedStream(),
+    !isCollapse && isEditMode && isAuth ? 10000 : null,
+    false
+  );
 
   const getFollowedStream = useCallback(() => {
     axios
@@ -95,6 +102,8 @@ function Header({
         ReactTooltip.rebuild();
       });
   }, [cookies]);
+
+  const handleCollapse = () => setIsCollapse((c) => !c);
 
   return (
     <CSSTransition in={isCollapse} classNames="header" timeout={300}>
@@ -113,19 +122,13 @@ function Header({
               color={!isAutoSize ? "#cc8686" : ""}
             />
           </button>
-          <button
-            onClick={() => setIsCollapse((c) => !c)}
-            className="collapse-btn"
-          >
+          <button onClick={handleCollapse} className="collapse-btn">
             <FontAwesomeIcon
               icon={isCollapse ? "angle-double-right" : "angle-double-left"}
             />
           </button>
           {isAuth ? (
-            <button
-              onClick={() => setIsCollapse((c) => !c)}
-              className="img-profile"
-            >
+            <button onClick={handleCollapse} className="img-profile">
               <img src={user?.profile_image_url} height={24} alt="" />
             </button>
           ) : (
@@ -170,7 +173,7 @@ function Header({
                 return (
                   <p
                     key={k}
-                    //onClick={addFollow.bind(this, v.channel.name)}
+                    onClick={() => onAddChannel(v.channel.name)}
                     data-for="status"
                     data-tip={JSON.stringify(v)}
                   >
