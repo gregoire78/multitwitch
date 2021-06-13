@@ -19,54 +19,55 @@ env:
 jobs:
   # Run tests.
   # See also https://docs.docker.com/docker-hub/builds/automated-testing/
-  #  test:
-  #    runs-on: ubuntu-latest
-  #
-  #    steps:
-  #      - uses: actions/checkout@v2
-  #
-  #      - name: Run tests
-  #        run: |
-  #          if [ -f docker-compose.test.yml ]; then
-  #            docker-compose --file docker-compose.test.yml build
-  #            docker-compose --file docker-compose.test.yml run sut
-  #          else
-  #            docker build . --file Dockerfile
-  #          fi
-
-  # Push image to GitHub Packages.
-  # See also https://docs.docker.com/docker-hub/builds/
-  push:
-    # Ensure test job passes before pushing image.
-    # needs: test
-
+  test:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build image
-        run: docker build . --file Dockerfile --tag $IMAGE_NAME --build-arg TWITCH_CLIENTID=${{ secrets.TWITCH_CLIENTID }} --build-arg GTAG_ID=${{ secrets.GTAG_ID }}
-
-      - name: Log into registry
-        run: echo "${{ secrets.REGISTRY_TOKEN }}" | docker login registry.joncour.xyz -u ${{ secrets.REGISTRY_USER }} --password-stdin
-
-      - name: Push image
+      - name: Run tests
         run: |
-          IMAGE_ID=registry.joncour.xyz/$IMAGE_NAME
+          if [ -f docker-compose.test.yml ]; then
+            docker-compose --file docker-compose.test.yml build
+            docker-compose --file docker-compose.test.yml run sut
+          else
+            docker build . --file Dockerfile
+          fi
 
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+  # Push image to GitHub Packages.
+  # See also https://docs.docker.com/docker-hub/builds/
 
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
-
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
+#  push:
+#    # Ensure test job passes before pushing image.
+#    # needs: test
+#
+#    runs-on: ubuntu-latest
+#    if: github.event_name == 'push'
+#
+#    steps:
+#      - uses: actions/checkout@v2
+#
+#      - name: Build image
+#        run: docker build . --file Dockerfile --tag $IMAGE_NAME --build-arg TWITCH_CLIENTID=${{ secrets.TWITCH_CLIENTID }} --build-arg GTAG_ID=${{ secrets.GTAG_ID }}
+#
+#      - name: Log into registry
+#        run: echo "${{ secrets.REGISTRY_TOKEN }}" | docker login registry.joncour.xyz -u ${{ secrets.REGISTRY_USER }} --password-stdin
+#
+#      - name: Push image
+#        run: |
+#          IMAGE_ID=registry.joncour.xyz/$IMAGE_NAME
+#
+#          # Strip git ref prefix from version
+#          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+#
+#          # Strip "v" prefix from tag name
+#          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+#
+#          # Use Docker `latest` tag convention
+#          [ "$VERSION" == "master" ] && VERSION=latest
+#
+#          echo IMAGE_ID=$IMAGE_ID
+#          echo VERSION=$VERSION
+#
+#          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+#          docker push $IMAGE_ID:$VERSION
