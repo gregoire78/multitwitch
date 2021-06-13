@@ -18,7 +18,7 @@ function SearchBox({ onAddChannel }) {
           headers: {
             Accept: "application/vnd.twitchtv.v5+json",
             "Content-Type": "application/json",
-            "Client-ID": process.env.REACT_APP_TWITCH_CLIENTID,
+            "Client-ID": process.env.TWITCH_CLIENTID,
           },
         }
       )

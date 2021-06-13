@@ -80,7 +80,7 @@ function App({ cookies }) {
           await axios.get(`https://api.twitch.tv/helix/users`, {
             headers: {
               Authorization: `Bearer ${_token}`,
-              "Client-ID": process.env.REACT_APP_TWITCH_CLIENTID,
+              "Client-ID": process.env.TWITCH_CLIENTID,
             },
           })
         ).data;
@@ -99,7 +99,7 @@ function App({ cookies }) {
   const logout = async () => {
     await axios.post(
       `https://id.twitch.tv/oauth2/revoke?client_id=${
-        process.env.REACT_APP_TWITCH_CLIENTID
+        process.env.TWITCH_CLIENTID
       }&token=${cookies.get("token")}`
     );
     setIsAuth(false);
@@ -156,7 +156,7 @@ function App({ cookies }) {
             getTwitchUser();
             setIsOpened(false);
           }}
-          url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.REACT_APP_TWITCH_CLIENTID}&redirect_uri=${window.location.origin}/redirect&response_type=token&scope=user_read`}
+          url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.TWITCH_CLIENTID}&redirect_uri=${window.location.origin}/redirect&response_type=token&scope=user_read`}
           features={{
             left: window.innerWidth / 2 - 600 / 2,
             top: window.innerHeight / 2 - 600 / 2,

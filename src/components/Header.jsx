@@ -68,7 +68,7 @@ function Header({
   cookies,
   logout,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [streams, setStreams] = useState();
 
   useEffect(() => {
@@ -93,7 +93,7 @@ function Header({
         headers: {
           Accept: "application/vnd.twitchtv.v5+json",
           Authorization: `OAuth ${cookies.get("token")}`,
-          "Client-ID": process.env.REACT_APP_TWITCH_CLIENTID,
+          "Client-ID": process.env.TWITCH_CLIENTID,
         },
       })
       .then((res) => {
@@ -228,7 +228,7 @@ function Header({
                         .utc(dayjs() - dayjs(v.created_at))
                         .format("HH[h]mm")}`}{" "}
                       - <FontAwesomeIcon icon="user" />{" "}
-                      {v.viewers.toLocaleString("en-US", {
+                      {v.viewers.toLocaleString(i18n.language, {
                         minimumFractionDigits: 0,
                       })}
                     </small>
