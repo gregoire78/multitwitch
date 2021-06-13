@@ -12,15 +12,28 @@
         "title": "Ajoutez votre compte twitch",
         "text": "Connectez votre compte twitch"
     },
+    "edit-button": {
+        "title": "Editer la disposition"
+    },
+    "reset-button": {
+        "title": "Réinitialiser la disposition"
+    },
+    "auto_size-button": {
+        "title": "Taille automatique da la disposition"
+    },
+    "save-button": {
+        "title": "Sauvegarder la disposition"
+    },
     "logout-button": {
         "text": "Déconnexion"
     },
     "input-search": {
-        "placeholder": "Rechercher une chaine"
+        "placeholder": "Rechercher une chaine",
+        "no-options": "Pas de chaines"
     },
     "footer": {
         "part1": "Créé par Grégoire Joncour - ",
         "part2": "<0></0> voir le projet sur github",
-        "part3": " - 2019/{{year}} multitwitch.co - {{lng}}"
+        "part3": " - 2019/{{year}} multitwitch.co:{{version}} - "
     }
 }

@@ -1,20 +1,27 @@
-@import url('https://fonts.googleapis.com/css?family=Acme');
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
 
-*{  outline: none;}
+* {
+  outline: none;
+}
 
-html {height: 100%;}
+html {
+  height: 100%;
+}
 
 body {
-  background-color: #5a3a93;/*#6441A4;*/
+  background-color: #5a3a93; /*#6441A4;*/
   overflow-y: scroll;
   overflow-x: hidden;
   padding: 0;
   margin: 0;
-  background-image: url("./img/Combo_Purple_RGB.svg");
+  background-image: url("../img/Combo_Purple_RGB.svg");
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
   background-attachment: fixed;
+  width: 100wh;
+  height: 100vh;
+  font-family: "Ubuntu";
 }
 
 header button {
@@ -67,25 +74,28 @@ header {
 }*/
 
 .streams {
-  background: #6441A4;
-  max-width: 228px;
+  background: #6441a4;
+  max-width: 276px;
   border: 5px dashed #b34646;
   border-top: none;
   border-left: none;
   color: white;
   opacity: 1;
 }
-header:hover .streams{
+header:hover .streams {
   opacity: 1;
 }
 .streams p {
-  font-family: 'Acme', cursive;
+  font-family: "Ubuntu";
   padding: 0;
   margin: 0;
   cursor: pointer;
 }
+.streams p .stream-name {
+  vertical-align: middle;
+}
 .streams img {
-  vertical-align: bottom;
+  vertical-align: middle;
   height: 22px;
   background: rgba(0, 0, 0, 0.9);
 }
@@ -97,7 +107,7 @@ header:hover .streams{
 }
 .img-profile {
   padding: 0;
-  margin: 0
+  margin: 0;
 }
 
 #content {
@@ -117,7 +127,7 @@ header:hover .streams{
   box-sizing: border-box;
 }
 .react-grid-item:not(.react-grid-placeholder) {
-  background: #6441A4 ;
+  background: #6441a4;
   /*border: 1px solid white;*/
 }
 .react-grid-item.resizing {
@@ -145,9 +155,9 @@ header:hover .streams{
 }
 .react-grid-dragHandleExample {
   cursor: move; /* fallback if grab cursor is unsupported */
-  cursor: grab;
+  /*cursor: grab;
   cursor: -moz-grab;
-  cursor: -webkit-grab;
+  cursor: -webkit-grab;*/
 }
 li b {
   font-size: 19px;
@@ -202,7 +212,7 @@ li b {
   background-origin: content-box;
   box-sizing: border-box;
   cursor: se-resize;
-  background-color: /*#6441A4*/transparent ;
+  background-color: /*#6441A4*/ transparent;
 }
 .react-grid-item > .react-resizable-handle::after {
   content: "";
@@ -217,44 +227,46 @@ li b {
 
 .inner-border {
   box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    width: 100px;
-    height: 100px;
-    border: 20px solid #f00;
-    background: #00f;
-    margin: 10px;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  width: 100px;
+  height: 100px;
+  border: 20px solid #f00;
+  background: #00f;
+  margin: 10px;
 }
 
 .header-player {
-  font-family: 'Acme', cursive;
+  font-family: "Ubuntu";
   width: 100%;
   position: absolute;
-  top:0;
+  top: 0;
   background: transparent;
   height: 24px;
   display: block;
-   color: white;
+  color: white;
   text-align: center;
-  cursor: grab
+  cursor: move;
 }
 
-.header-enter, .header-exit-done {
+.header-enter,
+.header-exit-done {
   transform: translateX(0);
 }
 .header-enter-active {
-  transform: translateX(-228px);
+  transform: translateX(-276px);
   transition: all 300ms ease-out;
 }
-.header-exit, .header-enter-done {
-  transform: translateX(-228px);
+.header-exit,
+.header-enter-done {
+  transform: translateX(-276px);
 }
 .header-exit-active {
   transform: translateX(0);
   transition: all 300ms ease-out;
 }
 
-.main-welcome{
+.main-welcome {
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -272,21 +284,44 @@ li b {
   font-size: 1.5em;
   text-align: center;
 }
-.welcome small {position: absolute; bottom: 20px; text-align: center;width: calc(100% - 40px);}
-.welcome a {color: white;font-size: 0.8em;}
-.welcome a:hover {background-color: #b34646;}
-.welcome button {
+.welcome small {
+  position: absolute;
+  bottom: 20px;
   text-align: center;
-  height: 24px;
-  vertical-align: top;
+  width: calc(100% - 40px);
+}
+.welcome a {
+  color: white;
+  font-size: 0.8em;
+}
+.welcome a:hover {
+  background-color: #b34646;
+}
+.welcome button {
   border: none;
   cursor: pointer;
   background: rgb(130, 107, 173);
   color: white;
+  padding: 5px;
 }
 .welcome button:hover {
   background: #b34646;
   color: white;
+}
+.welcome .lang-select {
+  background: #6441a4;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+.welcome .profile {
+  line-height: 21px;
+}
+.welcome .profile > span,
+.welcome .profile > button {
+  display: inline-block;
+  white-space: break-spaces;
+  vertical-align: middle;
 }
 
 .extraClass {
@@ -296,8 +331,11 @@ li b {
   padding: 5px !important;
   border-radius: 0 !important;
 }
-.place-right:before, .place-right:after,
-.place-bottom:before, .place-bottom:after,
-.place-top:before, .place-top:after{
+.place-right:before,
+.place-right:after,
+.place-bottom:before,
+.place-bottom:after,
+.place-top:before,
+.place-top:after {
   display: none !important;
 }

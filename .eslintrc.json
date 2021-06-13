@@ -1,0 +1,49 @@
+{
+  "rules": {
+    "no-console": "warn",
+    "react/prop-types": [
+      1
+    ],
+    "no-unused-vars": "warn",
+    "react/display-name": [0],
+    "prettier/prettier": "error"
+  },
+  "ignorePatterns": [
+    "webpack.config.js",
+    "dist/*",
+    "packages/*"
+  ],
+  "env": {
+    "es6": true,
+    "browser": true,
+    "webextensions": true
+  },
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:prettier/recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended"
+  ],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly",
+    "__COMMIT_HASH__": true
+  },
+  "plugins": [
+    "prettier",
+    "react"
+  ],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}

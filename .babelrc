@@ -1,0 +1,18 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "useBuiltIns": "usage", // need core-js
+        "corejs": 3,
+        "targets": {
+          "esmodules": true
+        }
+      }
+    ],
+    "@babel/preset-react"
+  ],
+  "plugins": [
+    "syntax-dynamic-import"
+  ]
+}

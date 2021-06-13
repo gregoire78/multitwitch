@@ -12,15 +12,28 @@
         "title": "Login to your twitch account",
         "text": "Connect your Twitch account"
     },
+    "edit-button": {
+        "title": "Edit layout"
+    },
+    "reset-button": {
+        "title": "Reset layout"
+    },
+    "auto_size-button": {
+        "title": "Auto size layout"
+    },
+    "save-button": {
+        "title": "Save layout"
+    },
     "logout-button": {
         "text": "Logout"
     },
     "input-search": {
-        "placeholder": "Search a channel"
+        "placeholder": "Search a channel",
+        "no-options": "No channels"
     },
     "footer": {
         "part1": "Created by Grégoire Joncour - ",
         "part2": "<0></0> view the project on github",
-        "part3": " - 2019/{{year}} multitwitch.co - {{lng}}"
+        "part3": " - 2019/{{year}} multitwitch.co:{{version}} - "
     }
 }

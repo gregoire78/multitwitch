@@ -1,28 +1,29 @@
 # Stage 1 - the build process
 FROM node:lts-alpine as build-deps
-LABEL maintainer="gregoire@joncour.tech"
+LABEL maintainer="gregoire@joncour.dev"
 
 WORKDIR /usr/src/app
-ENV NODE_ENV=production
+RUN apk add --no-cache git
 
-ARG DOMAIN
 ARG TWITCH_CLIENTID
 ARG GTAG_ID
-ENV REACT_APP_DOMAIN=${DOMAIN}
-ENV REACT_APP_TWITCH_URI="https://${DOMAIN}/"
-ENV REACT_APP_TWITCH_CLIENTID=${TWITCH_CLIENTID}
-ENV REACT_APP_GTAG_ID=${GTAG_ID}
+ARG MATOMO_URL
+ARG MATOMO_ID
+ENV TWITCH_CLIENTID=${TWITCH_CLIENTID}
+ENV GTAG_ID=${GTAG_ID}
+ENV MATOMO_URL=${MATOMO_URL}
+ENV MATOMO_ID=${MATOMO_ID}
 
 COPY package*.json ./
 RUN npm install --silent
 COPY . .
-RUN npm run build
+RUN npm run build-prod
 
 # Stage 2 - the production environment
 FROM nginx:alpine
-LABEL maintainer="gregoire@joncour.tech"
+LABEL maintainer="gregoire@joncour.dev"
 
-COPY --from=build-deps /usr/src/app/build /usr/share/nginx/html
+COPY --from=build-deps /usr/src/app/dist /usr/share/nginx/html
 RUN echo 'server_tokens off;' > /etc/nginx/conf.d/server_tokens.conf
 RUN echo $'server {\n\
     listen 80;\n\

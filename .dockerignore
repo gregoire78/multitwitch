@@ -1,5 +1,4 @@
+*Dockerfile*
+*docker-compose*
 node_modules
-build
-.dockerignore
-Dockerfile
-.env*
+dist

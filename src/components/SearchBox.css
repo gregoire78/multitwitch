@@ -1,0 +1,10 @@
+.option {
+    display: flex;
+    align-items: center;
+}
+
+.option img {
+    margin-right: 5px;
+    border-radius: 7px;
+    background-color: black;
+}
