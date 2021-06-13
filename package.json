@@ -13,6 +13,7 @@
     "prettier:check": "npx prettier --check src/**/*.{js,jsx}"
   },
   "dependencies": {
+    "@datapunt/matomo-tracker-react": "^0.4.0",
     "@fortawesome/fontawesome-svg-core": "^1.2.35",
     "@fortawesome/free-brands-svg-icons": "^5.15.3",
     "@fortawesome/free-solid-svg-icons": "^5.15.3",
@@ -31,19 +32,17 @@
     "lodash.reject": "^4.6.0",
     "lodash.throttle": "^4.1.1",
     "lodash.uniqby": "^4.7.0",
-    "mobx": "^6.3.2",
-    "mobx-react-lite": "^3.2.0",
     "prop-types": "^15.7.2",
     "react": "^17.0.2",
     "react-cookie": "^4.0.3",
     "react-dom": "^17.0.2",
+    "react-ga": "^3.3.0",
     "react-grid-layout": "^1.2.5",
     "react-helmet": "^6.1.0",
     "react-i18next": "^11.10.0",
     "react-new-window": "file:packages/react-new-window",
     "react-router-dom": "^5.2.0",
     "react-select": "^4.3.1",
-    "react-sizeme": "^3.0.1",
     "react-tooltip": "^4.2.21",
     "react-transition-group": "^4.4.2",
     "use-interval": "^1.3.0"

@@ -6,19 +6,20 @@ import reject from "lodash.reject";
 import map from "lodash.map";
 import { withCookies } from "react-cookie";
 import { WidthProvider, Responsive } from "react-grid-layout";
-import Welcome from "./Welcome";
-import generateLayout from "./gridLayout";
 import NewWindow from "react-new-window";
 import process from "process";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import axios from "axios";
-
+import ReactGA from "react-ga";
+import { useMatomo } from "@datapunt/matomo-tracker-react";
+import Header from "./Header";
+import GridTwitch from "./GridTwitch";
+import Welcome from "./Welcome";
+import generateLayout from "./gridLayout";
 import "/node_modules/react-resizable/css/styles.css";
 import "/node_modules/react-grid-layout/css/styles.css";
 import "./App.css";
-import Header from "./Header";
-import GridTwitch from "./GridTwitch";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 dayjs.extend(duration);
@@ -34,8 +35,12 @@ function App({ cookies }) {
   const [isOpened, setIsOpened] = useState(false);
   const [isAuth, setIsAuth] = useState(!!cookies.get("token"));
   const [user, setUser] = useState();
+  const { trackPageView } = useMatomo();
 
   useEffect(() => {
+    ReactGA.initialize(process.env.GTAG_ID, {
+      debug: process.env.NODE_ENV !== "production",
+    });
     if (getFromLS("version") !== __COMMIT_HASH__) {
       localStorage.clear();
       saveToLS("version", __COMMIT_HASH__);
@@ -65,8 +70,10 @@ function App({ cookies }) {
         "",
         `${window.origin}/${channels.join("/")}`
       );
+      ReactGA.pageview(window.location.pathname);
+      trackPageView();
     }
-  }, [channels]);
+  }, [channels, trackPageView]);
 
   const onLayoutChange = (layout, layouts) => {
     setLayouts(layouts);
