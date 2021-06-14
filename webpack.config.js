@@ -23,6 +23,7 @@ const config = (env, argv) => ({
     filename: "[name].[contenthash].bundle.js",
     chunkFilename: "[id].[chunkhash].js",
     clean: true,
+    publicPath: '/'
   },
   module: {
     rules: [

@@ -71,6 +71,9 @@ export default function Welcome({ isAuth, user, logout, handleWindow }) {
               <a
                 key={0}
                 href={`${window.location.origin}/peteur_pan/psykaoz`}
+                onTouchStartCapture={(e) => {
+                  e.stopPropagation();
+                }}
               ></a>,
             ]}
           />
@@ -84,6 +87,10 @@ export default function Welcome({ isAuth, user, logout, handleWindow }) {
               display: "block",
             }}
             onClick={handleWindow}
+            onTouchStart={(e) => {
+              e.stopPropagation();
+              handleWindow();
+            }}
             title={t("connect-button.title")}
           >
             <FontAwesomeIcon
@@ -114,7 +121,13 @@ export default function Welcome({ isAuth, user, logout, handleWindow }) {
               <span> {user?.display_name} </span>
             </span>
             <span> {t("description.part6")} </span>
-            <button onClick={logout}>
+            <button
+              onClick={logout}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                logout();
+              }}
+            >
               <span>{t("logout-button.text")} </span>
               <FontAwesomeIcon icon="sign-out-alt" />
             </button>
@@ -126,6 +139,9 @@ export default function Welcome({ isAuth, user, logout, handleWindow }) {
             href="https://github.com/gregoire78/multitwitch"
             target="_blank"
             rel="noopener noreferrer"
+            onTouchStartCapture={(e) => {
+              e.stopPropagation();
+            }}
           >
             <Trans
               i18nKey="footer.part2"
@@ -144,6 +160,9 @@ export default function Welcome({ isAuth, user, logout, handleWindow }) {
           />
           <select
             onMouseDown={(e) => {
+              e.stopPropagation();
+            }}
+            onTouchStartCapture={(e) => {
               e.stopPropagation();
             }}
             onChange={(e) => i18n.changeLanguage(e.target.value)}

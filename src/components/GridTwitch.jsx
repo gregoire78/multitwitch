@@ -47,6 +47,9 @@ function GridTwitch({ isEditMode, layout, showOverlay, onRemoveItem }) {
           height: "20px",
         }}
         onClick={() => onRemoveItem(layout)}
+        onTouchStartCapture={(e) => {
+          e.stopPropagation();
+        }}
       >
         <FontAwesomeIcon icon="times" />
       </button>
@@ -66,6 +69,9 @@ function GridTwitch({ isEditMode, layout, showOverlay, onRemoveItem }) {
             padding: 0,
           }}
           onClick={() => setIsVideoWChat((v) => !v)}
+          onTouchStartCapture={(e) => {
+            e.stopPropagation();
+          }}
         >
           <FontAwesomeIcon icon={isVideoWChat ? "comment-slash" : "comment"} />
         </button>
