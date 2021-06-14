@@ -8,6 +8,7 @@ import "./index.css";
 import "./i18n";
 import App from "./components/App";
 import RedirPage from "./components/Redirect";
+import * as serviceWorker from "./serviceWorker";
 
 const instance = createInstance({
   urlBase: process.env.MATOMO_URL,
@@ -28,3 +29,5 @@ ReactDOM.render(
   </CookiesProvider>,
   document.getElementById("root")
 );
+
+serviceWorker.register();

@@ -7,10 +7,12 @@ const ESLintPlugin = require("eslint-webpack-plugin");
 const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin");
 //const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const CompressionPlugin = require("compression-webpack-plugin");
+const WorkboxPlugin = require("workbox-webpack-plugin");
 
 let commitHash = require("child_process")
   .execSync("git rev-parse --short HEAD")
-  .toString().trim();
+  .toString()
+  .trim();
 
 const config = (env, argv) => ({
   devtool: argv.mode === "production" ? false : "source-map",
@@ -80,6 +82,13 @@ const config = (env, argv) => ({
     }),
     new ESLintPlugin({
       extensions: ["js", "jsx"],
+    }),
+    new WorkboxPlugin.GenerateSW({
+      // these options encourage the ServiceWorkers to get in there fast
+      // and not allow any straggling "old" SWs to hang around
+      clientsClaim: true,
+      skipWaiting: true,
+      maximumFileSizeToCacheInBytes: 5000000
     }),
     new CopyPlugin({
       patterns: [
