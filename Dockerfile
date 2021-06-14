@@ -27,9 +27,14 @@ COPY --from=build-deps /usr/src/app/dist /usr/share/nginx/html
 RUN echo 'server_tokens off;' > /etc/nginx/conf.d/server_tokens.conf
 RUN echo $'server {\n\
     listen 80;\n\
-    location / { \n\
     root /usr/share/nginx/html;\n\
     index index.html index.htm;\n\
+    location ~* \.(?:css|js|png|json)$ { \n\
+    try_files $uri =404;\n\
+    expires 2d;\n\
+    add_header Cache-Control "public"; \n\
+    }\n\
+    location / { \n\
     try_files $uri $uri/ /index.html; \n\
     }\n\
     }'\
