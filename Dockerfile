@@ -26,12 +26,13 @@ LABEL maintainer="gregoire@joncour.dev"
 COPY --from=build-deps /usr/src/app/dist /usr/share/nginx/html
 RUN echo 'server_tokens off;' > /etc/nginx/conf.d/server_tokens.conf
 RUN echo $'server {\n\
+    gzip on; \n\
+    gzip_static on; \n\
     listen 80;\n\
     root /usr/share/nginx/html;\n\
     index index.html index.htm;\n\
-    location ~* \.(?:css|js|png|json)$ { \n\
-    try_files $uri =404;\n\
-    expires 2d;\n\
+    location ~* \.(?:css|js|png|json|svg)$ { \n\
+    expires 1y;\n\
     add_header Cache-Control "public"; \n\
     }\n\
     location / { \n\

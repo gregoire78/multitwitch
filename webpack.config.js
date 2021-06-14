@@ -8,6 +8,7 @@ const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin"
 //const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const CompressionPlugin = require("compression-webpack-plugin");
 const WorkboxPlugin = require("workbox-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 let commitHash = require("child_process")
   .execSync("git rev-parse --short HEAD")
@@ -19,7 +20,7 @@ const config = (env, argv) => ({
   entry: ["./src/index.js"],
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "[name].bundle.js",
+    filename: "[name].[contenthash].bundle.js",
     chunkFilename: "[id].[chunkhash].js",
     clean: true,
   },
@@ -88,15 +89,16 @@ const config = (env, argv) => ({
       // and not allow any straggling "old" SWs to hang around
       clientsClaim: true,
       skipWaiting: true,
-      maximumFileSizeToCacheInBytes: 5000000
+      maximumFileSizeToCacheInBytes: 5000000,
     }),
     new CopyPlugin({
       patterns: [
-        { from: "src/index.html" },
+        //{ from: "src/index.html" },
         {
           from: path.resolve(__dirname, "./src/assets"),
           to: "./assets",
         },
+        { from: path.resolve(__dirname, "./src/robots.txt"), to: "robots.txt" },
       ],
     }),
     new webpack.ProvidePlugin({
@@ -110,6 +112,10 @@ const config = (env, argv) => ({
     new CompressionPlugin(),
     new webpack.HotModuleReplacementPlugin(),
     new ReactRefreshWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      inject: "body",
+      template: "src/index.html",
+    }),
     //new BundleAnalyzerPlugin()
   ],
   devServer: {
