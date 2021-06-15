@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import uniqBy from "lodash.uniqby";
 import compact from "lodash.compact";
 import reject from "lodash.reject";
-import map from "lodash.map";
 import { withCookies } from "react-cookie";
 import { WidthProvider, Responsive } from "react-grid-layout";
 import NewWindow from "react-new-window";
@@ -35,19 +34,24 @@ function App({ cookies }) {
   const [isOpened, setIsOpened] = useState(false);
   const [isAuth, setIsAuth] = useState(!!cookies.get("token"));
   const [user, setUser] = useState();
-  const { trackPageView } = useMatomo();
+  const { trackPageView, trackEvent } = useMatomo();
 
   useEffect(() => {
     ReactGA.initialize(process.env.GTAG_ID, {
       debug: process.env.NODE_ENV !== "production",
     });
-    if (getFromLS("version") !== __COMMIT_HASH__) {
-      localStorage.clear();
+    const version = getFromLS("version");
+    if (version !== __COMMIT_HASH__) {
+      if (version !== "44a68ce") {
+        localStorage.clear();
+      }
       saveToLS("version", __COMMIT_HASH__);
     }
 
     getTwitchUser();
-    const urlparse = uniqBy(compact(window.location.pathname.split("/")));
+    const urlparse = uniqBy(
+      compact(window.location.pathname.split("/").map((v) => v.toLowerCase()))
+    );
     const url = JSON.parse(JSON.stringify(getFromLS("channels") || []));
     setLayouts(JSON.parse(JSON.stringify(getFromLS("layouts") || {})));
     if (urlparse.length !== 0) {
@@ -112,6 +116,11 @@ function App({ cookies }) {
     setIsAuth(false);
     setUser();
     cookies.remove("token", { domain: window.location.hostname });
+    trackEvent({
+      category: "user",
+      action: "click-logout-twitch",
+      name: "logout-twitch",
+    });
   };
 
   const onResize = (
@@ -181,29 +190,68 @@ function App({ cookies }) {
           isEditMode={isEditMode}
           isCollapse={isCollapse}
           isAutoSize={isAutoSize}
-          setIsEditMode={setIsEditMode}
-          setIsOpened={setIsOpened}
+          handleEditMode={() => {
+            setIsEditMode((e) => {
+              trackEvent({
+                category: "menu",
+                action: !e
+                  ? "enable-edit_mode-layout"
+                  : "disable-edit_mode-layout",
+                name: "edit_mode-layout",
+              });
+              return !e;
+            });
+          }}
+          handleWindow={() => {
+            trackEvent({
+              category: "menu",
+              action: "click-login-twitch",
+              name: "login-twitch",
+            });
+            setIsOpened(true);
+          }}
           setIsCollapse={setIsCollapse}
           handleSave={() => {
+            trackEvent({
+              category: "menu",
+              action: "click-save-layout",
+              name: "save-layout",
+            });
             saveToLS("layouts", layouts);
             saveToLS("channels", channels);
           }}
           handleReset={() => {
+            trackEvent({
+              category: "menu",
+              action: "click-reset-layout",
+              name: "reset-layout",
+            });
             setLayouts({});
             setLayout(generateLayout(channels));
           }}
           handleAutoSize={() => {
             setIsAutoSize((r) => {
               saveToLS("auto_size", !r);
+              trackEvent({
+                category: "menu",
+                action: !r ? "enable-reset-layout" : "disable-reset-layout",
+                name: "auto_size-layout",
+              });
               return !r;
             });
           }}
           onAddChannel={(channel) => {
-            if (isAutoSize) {
-              setLayouts({});
+            const _channel = channel.toLowerCase();
+            if (!channels.includes(_channel)) {
+              if (isAutoSize) {
+                setLayouts({});
+              }
+              setChannels((c) => {
+                const _channels = uniqBy([...c, _channel]);
+                setLayout(generateLayout(_channels));
+                return _channels;
+              });
             }
-            setLayout(generateLayout(uniqBy([...channels, channel])));
-            setChannels((c) => uniqBy([...c, channel]));
           }}
           logout={logout}
         />
@@ -230,7 +278,7 @@ function App({ cookies }) {
           compactType={"vertical"}
           measureBeforeMount={true}
         >
-          {map(layout, (l) => (
+          {layout.map((l) => (
             <div
               key={l.i}
               data-grid={l}
@@ -258,7 +306,14 @@ function App({ cookies }) {
             isAuth={isAuth}
             user={user}
             logout={logout}
-            handleWindow={() => setIsOpened(true)}
+            handleWindow={() => {
+              trackEvent({
+                category: "welcome",
+                action: "click-login-twitch",
+                name: "login-twitch",
+              });
+              setIsOpened(true);
+            }}
           />
         </Suspense>
       )}

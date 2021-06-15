@@ -58,13 +58,13 @@ function Header({
   isEditMode,
   isCollapse,
   isAutoSize,
-  setIsEditMode,
+  handleEditMode,
   handleSave,
   handleReset,
   handleAutoSize,
   onAddChannel,
   setIsCollapse,
-  setIsOpened,
+  handleWindow,
   cookies,
   logout,
 }) {
@@ -100,7 +100,8 @@ function Header({
         const _streams = orderBy(res.data.streams, "channel.name");
         setStreams(_streams);
         ReactTooltip.rebuild();
-      });
+      })
+      .catch(() => setStreams());
   }, [cookies]);
 
   const handleCollapse = () => setIsCollapse((c) => !c);
@@ -132,17 +133,11 @@ function Header({
               <img src={user?.profile_image_url} height={24} alt="" />
             </button>
           ) : (
-            <button
-              title={t("connect-button.text")}
-              onClick={() => setIsOpened(true)}
-            >
+            <button title={t("connect-button.text")} onClick={handleWindow}>
               <FontAwesomeIcon icon={["fab", "twitch"]} />
             </button>
           )}
-          <button
-            onClick={() => setIsEditMode((e) => !e)}
-            title={t("edit-button.title")}
-          >
+          <button onClick={handleEditMode} title={t("edit-button.title")}>
             <FontAwesomeIcon icon="edit" color={!isEditMode ? "#cc8686" : ""} />
           </button>
         </nav>
@@ -169,10 +164,10 @@ function Header({
               <span style={{ lineHeight: "24px" }}>{user?.display_name}</span>
             </p>
             {!isEmpty(streams) &&
-              map(streams, (v, k) => {
+              map(streams, (v) => {
                 return (
                   <p
-                    key={k}
+                    key={v.channel.name}
                     onClick={() => onAddChannel(v.channel.name)}
                     data-for="status"
                     data-tip={JSON.stringify(v)}
@@ -254,13 +249,13 @@ Header.propTypes = {
   isEditMode: PropTypes.bool,
   isCollapse: PropTypes.bool,
   isAutoSize: PropTypes.bool,
-  setIsEditMode: PropTypes.func,
+  handleEditMode: PropTypes.func,
   handleSave: PropTypes.func,
   handleReset: PropTypes.func,
   handleAutoSize: PropTypes.func,
   onAddChannel: PropTypes.func,
   setIsCollapse: PropTypes.func,
-  setIsOpened: PropTypes.func,
+  handleWindow: PropTypes.func,
   cookies: PropTypes.any,
   logout: PropTypes.func,
 };
