@@ -5,7 +5,7 @@
     "[module-name]": false
   },
   "scripts": {
-    "clean": "rm dist/bundle.js",
+    "clean": "rm -R dist/*",
     "build-dev": "webpack --mode development",
     "build-prod": "webpack --mode production",
     "start": "webpack serve --hot --history-api-fallback --mode development",
@@ -27,10 +27,14 @@
     "lodash.compact": "^3.0.1",
     "lodash.debounce": "^4.0.8",
     "lodash.isempty": "^4.4.0",
+    "lodash.isequal": "^4.5.0",
     "lodash.map": "^4.6.0",
+    "lodash.merge": "^4.6.2",
+    "lodash.omit": "^4.5.0",
     "lodash.orderby": "^4.6.0",
     "lodash.reject": "^4.6.0",
     "lodash.throttle": "^4.1.1",
+    "lodash.transform": "^4.6.0",
     "lodash.uniqby": "^4.7.0",
     "prop-types": "^15.7.2",
     "react": "^17.0.2",

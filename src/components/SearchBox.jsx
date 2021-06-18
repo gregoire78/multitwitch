@@ -40,6 +40,8 @@ function SearchBox({ onAddChannel }) {
       onChange={(value, action) => {
         if (action.action === "select-option") onAddChannel(value.value);
       }}
+      openMenuOnClick={false}
+      openMenuOnFocus={false}
       value=""
       components={{
         IndicatorSeparator: null,
@@ -61,7 +63,7 @@ function SearchBox({ onAddChannel }) {
       styles={{
         container: () => ({
           display: "inline-block",
-          width: "204px",
+          width: "180px",
           background: "white",
         }),
         control: () => ({
@@ -97,6 +99,10 @@ function SearchBox({ onAddChannel }) {
           background: state.isFocused && "#6441a4",
           color: state.isFocused && "white",
           padding: "5px 12px",
+        }),
+        placeholder: (provided) => ({
+          ...provided,
+          fontSize: 15,
         }),
       }}
     />

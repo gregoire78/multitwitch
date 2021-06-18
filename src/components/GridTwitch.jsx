@@ -1,13 +1,19 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, lazy } from "react";
 import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faComment, faCommentSlash } from "@fortawesome/free-solid-svg-icons";
-import Twitch from "./Twitch";
+const Twitch = lazy(() => import("./Twitch"));
 library.add(faComment, faCommentSlash);
 
-function GridTwitch({ isEditMode, layout, showOverlay, onRemoveItem }) {
-  const [isVideoWChat, setIsVideoWChat] = useState(true);
+function GridTwitch({
+  isEditMode,
+  layout,
+  showOverlay,
+  onRemoveItem,
+  showChat,
+}) {
+  const [isVideoWChat, setIsVideoWChat] = useState(showChat);
   return (
     <Fragment>
       <div
@@ -21,6 +27,9 @@ function GridTwitch({ isEditMode, layout, showOverlay, onRemoveItem }) {
         channel={layout.channel}
         targetID={`twitch-embed-${layout.channel}`}
         layout={isVideoWChat ? "video-with-chat" : "video"}
+        onPlayerReady={(player) => {
+          player.setVolume(0.5);
+        }}
       />
       <div
         className="overlay"
@@ -68,7 +77,7 @@ function GridTwitch({ isEditMode, layout, showOverlay, onRemoveItem }) {
             height: "20px",
             padding: 0,
           }}
-          onClick={() => setIsVideoWChat((v) => !v)}
+          onClick={() => setIsVideoWChat(!isVideoWChat)}
           onTouchStartCapture={(e) => {
             e.stopPropagation();
           }}
@@ -85,6 +94,7 @@ GridTwitch.propTypes = {
   layout: PropTypes.any,
   showOverlay: PropTypes.bool,
   onRemoveItem: PropTypes.func,
+  showChat: PropTypes.bool,
 };
 
 export default GridTwitch;

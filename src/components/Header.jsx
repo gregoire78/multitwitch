@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, lazy } from "react";
 import PropTypes from "prop-types";
 import { CSSTransition } from "react-transition-group";
 import { library } from "@fortawesome/fontawesome-svg-core";
@@ -16,11 +16,13 @@ import {
   faUser,
   faSyncAlt,
   faMagic,
+  faDownload,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { faTwitch, faGithub } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTranslation } from "react-i18next";
-import SearchBox from "./SearchBox";
+const SearchBox = lazy(() => import("./SearchBox"));
 import ReactTooltip from "react-tooltip";
 import isEmpty from "lodash.isempty";
 import map from "lodash.map";
@@ -48,18 +50,23 @@ library.add(
   faEye,
   faUser,
   faSyncAlt,
-  faMagic
+  faMagic,
+  faDownload,
+  faTrash
 );
 dayjs.extend(utc);
 
 function Header({
   isAuth,
   user,
+  saves,
   isEditMode,
   isCollapse,
   isAutoSize,
   handleEditMode,
   handleSave,
+  handleLoadSave,
+  handleDeleteSave,
   handleReset,
   handleAutoSize,
   onAddChannel,
@@ -80,6 +87,10 @@ function Header({
   useEffect(() => {
     if (isEditMode) ReactTooltip.rebuild();
   }, [isEditMode]);
+
+  useEffect(() => {
+    if (saves?.channels?.length > 0) ReactTooltip.rebuild();
+  }, [saves]);
 
   useInterval(
     () => getFollowedStream(),
@@ -141,9 +152,42 @@ function Header({
             <FontAwesomeIcon icon="edit" color={!isEditMode ? "#cc8686" : ""} />
           </button>
         </nav>
+        {saves?.channels?.length > 0 && (
+          <nav
+            className="saves"
+            style={{ display: isEditMode ? "block" : "none" }}
+          >
+            <div className="items-saves">
+              <span
+                className="text"
+                data-for="saves"
+                data-tip={JSON.stringify(saves.channels)}
+              >
+                {saves.channels.length} {t("menu.save")}
+              </span>
+              <div className="buttons">
+                <button
+                  onClick={handleLoadSave}
+                  title={t("load_save-button.title")}
+                >
+                  <FontAwesomeIcon icon="download" />
+                </button>
+                <button
+                  onClick={handleDeleteSave}
+                  title={t("delete_save-button.title")}
+                >
+                  <FontAwesomeIcon icon="trash" />
+                </button>
+              </div>
+            </div>
+          </nav>
+        )}
 
-        {isAuth && isEditMode && (
-          <nav className="streams">
+        {isAuth && (
+          <nav
+            className="streams"
+            style={{ display: isEditMode ? "block" : "none" }}
+          >
             <p
               style={{
                 textAlign: "center",
@@ -161,26 +205,50 @@ function Header({
               >
                 <FontAwesomeIcon icon="sign-out-alt" />
               </button>
-              <span style={{ lineHeight: "24px" }}>{user?.display_name}</span>
+              <span className="twitch-pseudo">{user?.display_name}</span>
             </p>
-            {!isEmpty(streams) &&
-              map(streams, (v) => {
-                return (
-                  <p
-                    key={v.channel.name}
-                    onClick={() => onAddChannel(v.channel.name)}
-                    data-for="status"
-                    data-tip={JSON.stringify(v)}
-                  >
-                    <img alt="" height={22} src={v.channel.logo} />{" "}
-                    <span className="stream-name">
-                      {v.channel.display_name}
-                    </span>
-                  </p>
-                );
-              })}
+            {!isEmpty(streams) && (
+              <div className="stream-list">
+                {map(streams, (v) => {
+                  return (
+                    <p
+                      key={v.channel.name}
+                      onClick={() => onAddChannel(v.channel.name)}
+                      data-for="status"
+                      data-tip={JSON.stringify(v)}
+                    >
+                      <img alt="" height={22} width={22} src={v.channel.logo} />
+                      <span className="stream-name">
+                        {v.channel.display_name}
+                      </span>
+                    </p>
+                  );
+                })}
+              </div>
+            )}
           </nav>
         )}
+        <ReactTooltip
+          id="saves"
+          place="bottom"
+          border={true}
+          className="extraClass"
+          getContent={(channels) => {
+            if (channels == null) {
+              return;
+            }
+            let v = JSON.parse(channels);
+            return (
+              <div>
+                {v.map((channel) => (
+                  <p style={{ margin: 0, fontSize: "15px" }} key={channel}>
+                    {channel}
+                  </p>
+                ))}
+              </div>
+            );
+          }}
+        />
         <ReactTooltip
           id="status"
           place="right"
@@ -246,11 +314,14 @@ function Header({
 Header.propTypes = {
   isAuth: PropTypes.bool,
   user: PropTypes.any,
+  saves: PropTypes.any,
   isEditMode: PropTypes.bool,
   isCollapse: PropTypes.bool,
   isAutoSize: PropTypes.bool,
   handleEditMode: PropTypes.func,
   handleSave: PropTypes.func,
+  handleLoadSave: PropTypes.func,
+  handleDeleteSave: PropTypes.func,
   handleReset: PropTypes.func,
   handleAutoSize: PropTypes.func,
   onAddChannel: PropTypes.func,

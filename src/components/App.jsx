@@ -1,8 +1,12 @@
-import React, { Suspense, useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState, lazy } from "react";
 import PropTypes from "prop-types";
 import uniqBy from "lodash.uniqby";
 import compact from "lodash.compact";
 import reject from "lodash.reject";
+import transform from "lodash.transform";
+import omit from "lodash.omit";
+import merge from "lodash.merge";
+import isEqual from "lodash.isequal";
 import { withCookies } from "react-cookie";
 import { WidthProvider, Responsive } from "react-grid-layout";
 import NewWindow from "react-new-window";
@@ -12,10 +16,7 @@ import duration from "dayjs/plugin/duration";
 import axios from "axios";
 import ReactGA from "react-ga";
 import { useMatomo } from "@datapunt/matomo-tracker-react";
-import Header from "./Header";
-import GridTwitch from "./GridTwitch";
-import Welcome from "./Welcome";
-import generateLayout from "./gridLayout";
+const Header = lazy(() => import("./Header"));
 import "/node_modules/react-resizable/css/styles.css";
 import "/node_modules/react-grid-layout/css/styles.css";
 import "./App.css";
@@ -34,7 +35,11 @@ function App({ cookies }) {
   const [isOpened, setIsOpened] = useState(false);
   const [isAuth, setIsAuth] = useState(!!cookies.get("token"));
   const [user, setUser] = useState();
+  const [saves, setSaves] = useState();
+  const [generateLayout, setGenerateLayout] = useState();
   const { trackPageView, trackEvent } = useMatomo();
+  const [DynamicWelcome, setDynamicWelcome] = useState();
+  const [DynamicGridTwitch, setDynamicGridTwitch] = useState();
 
   useEffect(() => {
     ReactGA.initialize(process.env.GTAG_ID, {
@@ -42,7 +47,7 @@ function App({ cookies }) {
     });
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
-      if (version !== "44a68ce") {
+      if (!["44a68ce"].includes(version)) {
         localStorage.clear();
       }
       saveToLS("version", __COMMIT_HASH__);
@@ -52,15 +57,18 @@ function App({ cookies }) {
     const urlparse = uniqBy(
       compact(window.location.pathname.split("/").map((v) => v.toLowerCase()))
     );
-    const url = JSON.parse(JSON.stringify(getFromLS("channels") || []));
-    setLayouts(JSON.parse(JSON.stringify(getFromLS("layouts") || {})));
-    if (urlparse.length !== 0) {
-      setChannels(urlparse);
-      setLayout(generateLayout(urlparse));
-    } else {
-      setChannels(url);
-      setLayout(generateLayout(url));
-    }
+    const layoutsSaved = JSON.parse(JSON.stringify(getFromLS("layouts") || {}));
+    const channelsSaved = JSON.parse(
+      JSON.stringify(getFromLS("channels") || [])
+    );
+    if (channelsSaved.length > 0 || urlparse.length > 0) {
+      setSaves({ channels: channelsSaved, layouts: layoutsSaved });
+      if (urlparse.length > 0) {
+        setChannels(urlparse);
+      } else {
+        setChannels(channelsSaved);
+      }
+    } else setChannels([]);
   }, [cookies, getTwitchUser]);
 
   useEffect(() => {
@@ -78,6 +86,66 @@ function App({ cookies }) {
       trackPageView();
     }
   }, [channels, trackPageView]);
+
+  useEffect(() => {
+    if (channels) {
+      setDynamicWelcome((dw) => {
+        if (channels.length === 0 && !dw) {
+          return lazy(() => import("./Welcome"));
+        }
+        return dw;
+      });
+      setDynamicGridTwitch((dgt) => {
+        if (channels.length > 0 && !dgt) {
+          return lazy(() => import("./GridTwitch"));
+        }
+        return dgt;
+      });
+      martin(channels);
+    }
+  }, [channels, martin]);
+
+  const martin = useCallback(
+    async (channels) => {
+      setLayouts((la) => {
+        const isSameAsSaved = isEqual(channels.sort(), saves?.channels.sort());
+        return !isAutoSize
+          ? merge({}, la, isSameAsSaved && saves?.layouts)
+          : transform(
+              isSameAsSaved ? saves?.layouts : {},
+              (result, value, key) => {
+                const d = value.filter(
+                  ({ i }) => !channels.some((v) => v.i === i)
+                );
+                if (d.length > 0) result[key] = d;
+                else omit(result, key);
+              }
+            );
+      });
+      if (channels.length > 0) {
+        let mo;
+        if (!generateLayout) {
+          const module = await import("./gridLayout");
+          setGenerateLayout(() => module.default);
+          mo = module.default;
+        } else {
+          mo = generateLayout;
+        }
+        if (isAutoSize) {
+          setLayout(mo(channels));
+        } else {
+          setLayout((la) => {
+            const layoutFiltered = reject(la, (o) => !channels.includes(o.i));
+            const f = mo(
+              channels.filter((c) => !layoutFiltered.some((v) => v.i === c))
+            );
+            return [...layoutFiltered, ...f];
+          });
+        }
+      } else setLayout([]);
+    },
+    [isAutoSize, saves, generateLayout]
+  );
 
   const onLayoutChange = (layout, layouts) => {
     setLayouts(layouts);
@@ -154,14 +222,7 @@ function App({ cookies }) {
       setIsCollapse(false);
       setIsEditMode(true);
     }
-
-    // reset mode layout
-    if (isAutoSize) {
-      setLayouts({});
-      setLayout(generateLayout(pseudos));
-    } else {
-      setLayout((la) => reject(la, { i: l.i }));
-    }
+    deleteLs(`chat_${l.channel}`);
   };
 
   return (
@@ -180,13 +241,14 @@ function App({ cookies }) {
             height: 600,
           }}
         >
-          <h5 style={{ color: "white" }}>Connecting to twitch id</h5>
+          <h5 style={{ color: "white" }}>Loading ...</h5>
         </NewWindow>
       )}
       <Suspense fallback="">
         <Header
           isAuth={isAuth}
           user={user}
+          saves={saves}
           isEditMode={isEditMode}
           isCollapse={isCollapse}
           isAutoSize={isAutoSize}
@@ -217,8 +279,47 @@ function App({ cookies }) {
               action: "click-save-layout",
               name: "save-layout",
             });
-            saveToLS("layouts", layouts);
+            const saveWithoutChannelDeleted = transform(
+              layouts,
+              (result, value, key) => {
+                const d = value.filter(({ i }) => channels.includes(i));
+                if (d.length > 0) result[key] = d;
+                else omit(result, key);
+              }
+            );
+            saveToLS("layouts", saveWithoutChannelDeleted);
             saveToLS("channels", channels);
+            setSaves({
+              channels: channels,
+              layouts: saveWithoutChannelDeleted,
+            });
+          }}
+          handleLoadSave={() => {
+            trackEvent({
+              category: "menu",
+              action: "click-load-save-layout",
+              name: "load-save-layout",
+            });
+            const channelsSaved = JSON.parse(
+              JSON.stringify(getFromLS("channels") || [])
+            );
+            const layoutsSaved = JSON.parse(
+              JSON.stringify(getFromLS("layouts") || {})
+            );
+            if (channelsSaved.length > 0) {
+              setChannels(channelsSaved);
+              setSaves({ channels: channelsSaved, layouts: layoutsSaved });
+            }
+          }}
+          handleDeleteSave={() => {
+            trackEvent({
+              category: "menu",
+              action: "click-delete-save-layout",
+              name: "delete-save-layout",
+            });
+            deleteLs("layouts");
+            deleteLs("channels");
+            setSaves();
           }}
           handleReset={() => {
             trackEvent({
@@ -243,21 +344,14 @@ function App({ cookies }) {
           onAddChannel={(channel) => {
             const _channel = channel.toLowerCase();
             if (!channels.includes(_channel)) {
-              if (isAutoSize) {
-                setLayouts({});
-              }
-              setChannels((c) => {
-                const _channels = uniqBy([...c, _channel]);
-                setLayout(generateLayout(_channels));
-                return _channels;
-              });
+              setChannels((c) => uniqBy([...c, _channel]));
             }
           }}
           logout={logout}
         />
       </Suspense>
 
-      {layouts && channels && channels.length > 0 ? (
+      {layout?.length > 0 ? (
         <ResponsiveGridLayout
           margin={[5, 5]}
           containerPadding={[5, 5]}
@@ -278,43 +372,52 @@ function App({ cookies }) {
           compactType={"vertical"}
           measureBeforeMount={true}
         >
-          {layout.map((l) => (
-            <div
-              key={l.i}
-              data-grid={l}
-              style={
-                isEditMode && {
-                  padding: "5px",
-                  outline: "5px dashed #5a3a93",
-                  outlineOffset: "-5px",
-                  cursor: "move",
+          {layout.map((l) => {
+            return (
+              <div
+                key={l.i}
+                data-grid={l}
+                style={
+                  isEditMode && {
+                    padding: "5px",
+                    outline: "5px dashed #5a3a93",
+                    outlineOffset: "-5px",
+                    cursor: "move",
+                  }
                 }
-              }
-            >
-              <GridTwitch
-                isEditMode={isEditMode}
-                showOverlay={showOverlay}
-                layout={l}
-                onRemoveItem={onRemoveItem}
-              />
-            </div>
-          ))}
+              >
+                <Suspense fallback="">
+                  {DynamicGridTwitch && (
+                    <DynamicGridTwitch
+                      isEditMode={isEditMode}
+                      showOverlay={showOverlay}
+                      layout={l}
+                      showChat={true}
+                      onRemoveItem={onRemoveItem}
+                    />
+                  )}
+                </Suspense>
+              </div>
+            );
+          })}
         </ResponsiveGridLayout>
       ) : (
         <Suspense fallback="">
-          <Welcome
-            isAuth={isAuth}
-            user={user}
-            logout={logout}
-            handleWindow={() => {
-              trackEvent({
-                category: "welcome",
-                action: "click-login-twitch",
-                name: "login-twitch",
-              });
-              setIsOpened(true);
-            }}
-          />
+          {DynamicWelcome && (
+            <DynamicWelcome
+              isAuth={isAuth}
+              user={user}
+              logout={logout}
+              handleWindow={() => {
+                trackEvent({
+                  category: "welcome",
+                  action: "click-login-twitch",
+                  name: "login-twitch",
+                });
+                setIsOpened(true);
+              }}
+            />
+          )}
         </Suspense>
       )}
     </>
@@ -336,6 +439,12 @@ function getFromLS(key) {
 function saveToLS(key, value) {
   if (window.localStorage) {
     window.localStorage.setItem("multitwitch_" + key, JSON.stringify(value));
+  }
+}
+
+function deleteLs(key) {
+  if (window.localStorage) {
+    window.localStorage.removeItem("multitwitch_" + key);
   }
 }
 

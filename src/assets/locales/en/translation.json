@@ -22,10 +22,16 @@
         "title": "Auto size layout"
     },
     "save-button": {
-        "title": "Save layout"
+        "title": "Save layout (save locally in the browser)"
     },
     "logout-button": {
         "text": "Logout"
+    },
+    "load_save-button": {
+        "title": "Load saved layout"
+    },
+    "delete_save-button": {
+        "title": "Delete save data"
     },
     "input-search": {
         "placeholder": "Search a channel",
@@ -35,5 +41,8 @@
         "part1": "Created by Grégoire Joncour - ",
         "part2": "<0></0> view the project on github",
         "part3": " - 2019/{{year}} multitwitch.co:{{version}} - "
+    },
+    "menu": {
+        "save" : "saved channels"
     }
 }

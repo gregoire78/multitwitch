@@ -46,7 +46,7 @@ header button[type="submit"]:disabled {
 
 header input {
   height: 24px;
-  width: 180px;
+  width: 166px;
   padding: 0 5px;
   margin: 0;
   vertical-align: top;
@@ -73,9 +73,9 @@ header {
   border: 1px solid white;
 }*/
 
-.streams {
+.streams, .saves {
   background: #6441a4;
-  max-width: 276px;
+  max-width: 252px;
   border: 5px dashed #b34646;
   border-top: none;
   border-left: none;
@@ -86,25 +86,55 @@ header:hover .streams {
   opacity: 1;
 }
 .streams p {
-  font-family: "Ubuntu";
   padding: 0;
   margin: 0;
   cursor: pointer;
 }
-.streams p .stream-name {
-  vertical-align: middle;
+.stream-list p {
+  display: flex;
+  align-items: center;
 }
-.streams img {
-  vertical-align: middle;
+.stream-list p .stream-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stream-list img {
   height: 22px;
+  width: 22px;
   background: rgba(0, 0, 0, 0.9);
+  margin-right: 5px;
 }
-.streams p:hover {
+.stream-list p:hover {
   color: white;
   padding: 0;
   margin: 0;
   background-color: #b34646;
 }
+.saves .items-saves {
+  padding: 0 0 0 5px;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  background-color: #b34646;
+  cursor: default;
+  align-items: center;
+}
+.saves .items-saves .text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.saves .items-saves .buttons {
+  white-space: nowrap;
+}
+
+.twitch-pseudo {
+  line-height: 24px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: block;
+}
+
 .img-profile {
   padding: 0;
   margin: 0;
@@ -237,7 +267,6 @@ li b {
 }
 
 .header-player {
-  font-family: "Ubuntu";
   width: 100%;
   position: absolute;
   top: 0;
@@ -254,16 +283,21 @@ li b {
   transform: translateX(0);
 }
 .header-enter-active {
-  transform: translateX(-276px);
+  transform: translateX(-252px);
   transition: all 300ms ease-out;
 }
 .header-exit,
 .header-enter-done {
-  transform: translateX(-276px);
+  transform: translateX(-252px);
 }
 .header-exit-active {
   transform: translateX(0);
   transition: all 300ms ease-out;
+}
+
+.stream-list {
+  max-height: calc(100vh / 2);
+  overflow: auto;
 }
 
 .main-welcome {

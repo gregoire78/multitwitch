@@ -17,13 +17,16 @@ let commitHash = require("child_process")
 
 const config = (env, argv) => ({
   devtool: argv.mode === "production" ? false : "source-map",
-  entry: ["./src/index.js"],
+  entry: {
+    main: "./src/index.js",
+    //grid: "./src/components/gridLayout.js",
+  },
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "[name].[contenthash].bundle.js",
     chunkFilename: "[id].[chunkhash].js",
     clean: true,
-    publicPath: '/'
+    publicPath: "/",
   },
   module: {
     rules: [
@@ -57,23 +60,23 @@ const config = (env, argv) => ({
   },
   optimization: {
     splitChunks: {
+      chunks: "all",
+      minSize: 20000,
+      minRemainingSize: 0,
+      minChunks: 1,
+      maxAsyncRequests: 30,
+      maxInitialRequests: 30,
+      enforceSizeThreshold: 50000,
       cacheGroups: {
-        /*vendor: {
-            enforce: true,
-            test: /[\\/]node_modules[\\/]((?!(antd)).*)[\\/]/,
-            name: 'vendor',
-            chunks: 'all',
-        },
-        antd: {
-            enforce: true,
-            test: /[\\/]node_modules[\\/](antd)[\\/]/,
-            name: 'antd',
-            chunks: 'all',
-        },*/
-        vendor: {
+        defaultVendors: {
           test: /[\\/]node_modules[\\/]/,
-          name: "vendor",
-          chunks: "all",
+          priority: -10,
+          reuseExistingChunk: true,
+        },
+        default: {
+          minChunks: 2,
+          priority: -20,
+          reuseExistingChunk: true,
         },
       },
     },
@@ -110,7 +113,9 @@ const config = (env, argv) => ({
       NODE_ENV: argv.mode,
     }),
     new Dotenv(),
-    new CompressionPlugin(),
+    new CompressionPlugin({
+      deleteOriginalAssets: argv.mode === "production",
+    }),
     new webpack.HotModuleReplacementPlugin(),
     new ReactRefreshWebpackPlugin(),
     new HtmlWebpackPlugin({

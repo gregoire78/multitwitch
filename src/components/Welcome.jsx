@@ -40,6 +40,7 @@ export default function Welcome({ isAuth, user, logout, handleWindow }) {
       layouts={layouts}
       onLayoutChange={onLayoutChange}
       isDraggable={true}
+      useCSSTransforms={true}
     >
       <div
         key="welcome"
@@ -113,6 +114,7 @@ export default function Welcome({ isAuth, user, logout, handleWindow }) {
                 src={user?.profile_image_url}
                 alt=""
                 style={{
+                  width: "21px",
                   height: "21px",
                   verticalAlign: "top",
                   backgroundColor: "black",
