@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
-import debounce from "lodash.debounce";
 import axios from "axios";
 import process from "process";
 import { components } from "react-select";
@@ -10,6 +9,7 @@ import "./SearchBox.css";
 
 function SearchBox({ onAddChannel }) {
   const { t } = useTranslation();
+  const [debounce, setDebounce] = useState();
   const searchTwitchChannel = async (query) => {
     const channels = (
       await axios.get(
@@ -30,15 +30,24 @@ function SearchBox({ onAddChannel }) {
     }));
   };
 
-  const loadSuggestedOptions = debounce((inputValue, callback) => {
-    searchTwitchChannel(inputValue).then((options) => callback(options));
-  }, 500);
+  const loadSuggestedOptions =
+    debounce &&
+    debounce((inputValue, callback) => {
+      searchTwitchChannel(inputValue).then((options) => callback(options));
+    }, 500);
   return (
     <AsyncSelect
       loadOptions={loadSuggestedOptions}
       placeholder={t("input-search.placeholder")}
       onChange={(value, action) => {
         if (action.action === "select-option") onAddChannel(value.value);
+      }}
+      onFocus={() => {
+        import("lodash.debounce").then((module) => {
+          setDebounce(() => {
+            return module.default;
+          });
+        });
       }}
       openMenuOnClick={false}
       openMenuOnFocus={false}

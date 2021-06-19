@@ -1,9 +1,7 @@
-import map from "lodash.map";
-
 const generateLayout = (channels) => {
   switch (channels.length) {
     case 1:
-      return map(channels, (item) => {
+      return channels.map((item) => {
         const w = 12;
         const h = 64;
         return {
@@ -18,7 +16,7 @@ const generateLayout = (channels) => {
       });
 
     case 2:
-      return map(channels, (item, i) => {
+      return channels.map((item, i) => {
         const w = 6;
         const h = 64;
         return {
@@ -33,7 +31,7 @@ const generateLayout = (channels) => {
       });
 
     case 3:
-      return map(channels, (item, i) => {
+      return channels.map((item, i) => {
         const w = 4;
         const h = 64;
         return {
@@ -48,7 +46,7 @@ const generateLayout = (channels) => {
       });
 
     case 4:
-      return map(channels, (item, i) => {
+      return channels.map((item, i) => {
         const w = 6;
         const h = 33;
         return {
@@ -63,7 +61,7 @@ const generateLayout = (channels) => {
       });
 
     case 5:
-      return map(channels, (item, i) => {
+      return channels.map((item, i) => {
         if (i >= 2) {
           return {
             x: Math.floor(((i * 12) / 3) % 12),
@@ -88,7 +86,7 @@ const generateLayout = (channels) => {
       });
 
     case 6:
-      return map(channels, (item, i) => {
+      return channels.map((item, i) => {
         return {
           x: Math.floor(((i * 12) / 3) % 12),
           y: Infinity,
@@ -101,7 +99,7 @@ const generateLayout = (channels) => {
       });
 
     default:
-      return map(channels, (item, i) => {
+      return channels.map((item, i) => {
         const w = 6;
         const h = 28;
         return {

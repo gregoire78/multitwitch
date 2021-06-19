@@ -8,26 +8,25 @@ import omit from "lodash.omit";
 import merge from "lodash.merge";
 import isEqual from "lodash.isequal";
 import { withCookies } from "react-cookie";
-import { WidthProvider, Responsive } from "react-grid-layout";
-import NewWindow from "react-new-window";
 import process from "process";
-import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
 import axios from "axios";
 import ReactGA from "react-ga";
 import { useMatomo } from "@datapunt/matomo-tracker-react";
+import { useTranslation } from "react-i18next";
+import { ToastContainer, toast } from "react-toastify";
 const Header = lazy(() => import("./Header"));
+const DynamicGridLayout = lazy(() => import("./GridLayout"));
+const DynamicWelcome = lazy(() => import("./Welcome"));
+const DynamicNewWindow = lazy(() => import("react-new-window"));
 import "/node_modules/react-resizable/css/styles.css";
 import "/node_modules/react-grid-layout/css/styles.css";
+import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
-const ResponsiveGridLayout = WidthProvider(Responsive);
-dayjs.extend(duration);
-
 function App({ cookies }) {
+  const { t } = useTranslation();
   const [channels, setChannels] = useState();
   const [layout, setLayout] = useState();
-  const [showOverlay, setShowOverlay] = useState();
   const [isAutoSize, setIsAutoSize] = useState(getFromLS("auto_size") ?? true);
   const [isCollapse, setIsCollapse] = useState();
   const [isEditMode, setIsEditMode] = useState(true);
@@ -38,8 +37,6 @@ function App({ cookies }) {
   const [saves, setSaves] = useState();
   const [generateLayout, setGenerateLayout] = useState();
   const { trackPageView, trackEvent } = useMatomo();
-  const [DynamicWelcome, setDynamicWelcome] = useState();
-  const [DynamicGridTwitch, setDynamicGridTwitch] = useState();
 
   useEffect(() => {
     ReactGA.initialize(process.env.GTAG_ID, {
@@ -47,7 +44,7 @@ function App({ cookies }) {
     });
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
-      if (!["44a68ce"].includes(version)) {
+      if (!["44a68ce", "842d8f3"].includes(version)) {
         localStorage.clear();
       }
       saveToLS("version", __COMMIT_HASH__);
@@ -89,18 +86,6 @@ function App({ cookies }) {
 
   useEffect(() => {
     if (channels) {
-      setDynamicWelcome((dw) => {
-        if (channels.length === 0 && !dw) {
-          return lazy(() => import("./Welcome"));
-        }
-        return dw;
-      });
-      setDynamicGridTwitch((dgt) => {
-        if (channels.length > 0 && !dgt) {
-          return lazy(() => import("./GridTwitch"));
-        }
-        return dgt;
-      });
       martin(channels);
     }
   }, [channels, martin]);
@@ -176,41 +161,19 @@ function App({ cookies }) {
   }, [cookies]);
 
   const logout = async () => {
-    await axios.post(
-      `https://id.twitch.tv/oauth2/revoke?client_id=${
-        process.env.TWITCH_CLIENTID
-      }&token=${cookies.get("token")}`
-    );
-    setIsAuth(false);
-    setUser();
-    cookies.remove("token", { domain: window.location.hostname });
     trackEvent({
       category: "user",
       action: "click-logout-twitch",
       name: "logout-twitch",
     });
-  };
-
-  const onResize = (
-    layout,
-    oldLayoutItem,
-    layoutItem,
-    placeholder,
-    e,
-    element
-  ) => {
-    element.style.cursor = "se-resize";
-  };
-
-  const onDragStart = (layout, oldItem, newItem, placeholder, e, element) => {
-    setShowOverlay(true);
-    element.style.cursor = "grabbing";
-  };
-
-  const onDragStop = (layout, oldItem, newItem, placeholder, e, element) => {
-    setShowOverlay(false);
-    //element.style.cursor = "grab";
-    element.style.cursor = "move";
+    setIsAuth(false);
+    setUser();
+    await axios.post(
+      `https://id.twitch.tv/oauth2/revoke?client_id=${
+        process.env.TWITCH_CLIENTID
+      }&token=${cookies.get("token")}`
+    );
+    cookies.remove("token", { domain: window.location.hostname });
   };
 
   const onRemoveItem = (l) => {
@@ -228,21 +191,23 @@ function App({ cookies }) {
   return (
     <>
       {isOpened && (
-        <NewWindow
-          onUnload={() => {
-            getTwitchUser();
-            setIsOpened(false);
-          }}
-          url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.TWITCH_CLIENTID}&redirect_uri=${window.location.origin}/redirect&response_type=token&scope=user_read`}
-          features={{
-            left: window.innerWidth / 2 - 600 / 2,
-            top: window.innerHeight / 2 - 600 / 2,
-            width: 600,
-            height: 600,
-          }}
-        >
-          <h5 style={{ color: "white" }}>Loading ...</h5>
-        </NewWindow>
+        <Suspense fallback="">
+          <DynamicNewWindow
+            onUnload={() => {
+              getTwitchUser();
+              setIsOpened(false);
+            }}
+            url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.TWITCH_CLIENTID}&redirect_uri=${window.location.origin}/redirect&response_type=token&scope=user_read`}
+            features={{
+              left: window.innerWidth / 2 - 600 / 2,
+              top: window.innerHeight / 2 - 600 / 2,
+              width: 600,
+              height: 600,
+            }}
+          >
+            <h5 style={{ color: "white" }}>Loading ...</h5>
+          </DynamicNewWindow>
+        </Suspense>
       )}
       <Suspense fallback="">
         <Header
@@ -252,6 +217,7 @@ function App({ cookies }) {
           isEditMode={isEditMode}
           isCollapse={isCollapse}
           isAutoSize={isAutoSize}
+          disabledSave={!channels?.length > 0}
           handleEditMode={() => {
             setIsEditMode((e) => {
               trackEvent({
@@ -292,6 +258,14 @@ function App({ cookies }) {
             setSaves({
               channels: channels,
               layouts: saveWithoutChannelDeleted,
+            });
+            toast.dark(t("toast.save"), {
+              position: "top-right",
+              autoClose: 2000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
             });
           }}
           handleLoadSave={() => {
@@ -351,75 +325,35 @@ function App({ cookies }) {
         />
       </Suspense>
 
-      {layout?.length > 0 ? (
-        <ResponsiveGridLayout
-          margin={[5, 5]}
-          containerPadding={[5, 5]}
-          onLayoutChange={onLayoutChange}
-          onResize={onResize}
-          layouts={layouts}
-          onResizeStart={() => setShowOverlay(true)}
-          onResizeStop={() => setShowOverlay(false)}
-          onDrag={onDragStart}
-          onDragStop={onDragStop}
-          isDraggable={true}
-          isResizable={true}
-          rowHeight={10}
-          cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-          preventCollision={false}
-          autoSize={true}
-          verticalCompact={true}
-          compactType={"vertical"}
-          measureBeforeMount={true}
-        >
-          {layout.map((l) => {
-            return (
-              <div
-                key={l.i}
-                data-grid={l}
-                style={
-                  isEditMode && {
-                    padding: "5px",
-                    outline: "5px dashed #5a3a93",
-                    outlineOffset: "-5px",
-                    cursor: "move",
-                  }
-                }
-              >
-                <Suspense fallback="">
-                  {DynamicGridTwitch && (
-                    <DynamicGridTwitch
-                      isEditMode={isEditMode}
-                      showOverlay={showOverlay}
-                      layout={l}
-                      showChat={true}
-                      onRemoveItem={onRemoveItem}
-                    />
-                  )}
-                </Suspense>
-              </div>
-            );
-          })}
-        </ResponsiveGridLayout>
-      ) : (
+      {layout?.length > 0 && (
         <Suspense fallback="">
-          {DynamicWelcome && (
-            <DynamicWelcome
-              isAuth={isAuth}
-              user={user}
-              logout={logout}
-              handleWindow={() => {
-                trackEvent({
-                  category: "welcome",
-                  action: "click-login-twitch",
-                  name: "login-twitch",
-                });
-                setIsOpened(true);
-              }}
-            />
-          )}
+          <DynamicGridLayout
+            onLayoutChange={onLayoutChange}
+            layouts={layouts}
+            layout={layout}
+            isEditMode={isEditMode}
+            onRemoveItem={onRemoveItem}
+          />
         </Suspense>
       )}
+      {channels?.length === 0 && (
+        <Suspense fallback="">
+          <DynamicWelcome
+            isAuth={isAuth}
+            user={user}
+            logout={logout}
+            handleWindow={() => {
+              trackEvent({
+                category: "welcome",
+                action: "click-login-twitch",
+                name: "login-twitch",
+              });
+              setIsOpened(true);
+            }}
+          />
+        </Suspense>
+      )}
+      <ToastContainer />
     </>
   );
 }

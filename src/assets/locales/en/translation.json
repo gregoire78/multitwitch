@@ -33,6 +33,9 @@
     "delete_save-button": {
         "title": "Delete save data"
     },
+    "collapse-button": {
+        "title": "Collpase/Expand menu"
+    },
     "input-search": {
         "placeholder": "Search a channel",
         "no-options": "No channels"
@@ -44,5 +47,8 @@
     },
     "menu": {
         "save" : "saved channels"
+    },
+    "toast": {
+        "save": "Channels and layouts saved locally in the browser"
     }
 }

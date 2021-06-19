@@ -39,7 +39,7 @@ header button:hover {
   color: white;
 }
 
-header button[type="submit"]:disabled {
+header button:disabled {
   color: lightgrey;
   pointer-events: none;
 }
@@ -138,6 +138,8 @@ header:hover .streams {
 .img-profile {
   padding: 0;
   margin: 0;
+  height: 24px;
+  width: 24px;
 }
 
 #content {

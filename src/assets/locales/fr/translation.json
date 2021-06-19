@@ -33,6 +33,9 @@
     "delete_save-button": {
         "title": "Supprimer la sauvegarde"
     },
+    "collapse-button": {
+        "title": "Reduire/Restaurer le menu"
+    },
     "input-search": {
         "placeholder": "Rechercher une chaine",
         "no-options": "Pas de chaines"
@@ -44,5 +47,8 @@
     },
     "menu": {
         "save" : "chaines sauvegardées"
+    },
+    "toast": {
+        "save": "Chaines et dispositions sauvegardées localement dans le navigateur"
     }
 }
