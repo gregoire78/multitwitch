@@ -44,7 +44,7 @@ function App({ cookies }) {
     });
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
-      if (!["44a68ce", "842d8f3"].includes(version)) {
+      if (!["44a68ce", "842d8f3", "b70d564"].includes(version)) {
         localStorage.clear();
       }
       saveToLS("version", __COMMIT_HASH__);
@@ -93,7 +93,9 @@ function App({ cookies }) {
   const martin = useCallback(
     async (channels) => {
       setLayouts((la) => {
-        const isSameAsSaved = isEqual(channels.sort(), saves?.channels.sort());
+        const isSameAsSaved = saves
+          ? isEqual([...channels].sort(), [...saves.channels].sort())
+          : false;
         return !isAutoSize
           ? merge({}, la, isSameAsSaved && saves?.layouts)
           : transform(
