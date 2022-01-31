@@ -40,7 +40,11 @@ function App({ cookies }) {
   useEffect(() => {
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
-      if (!["44a68ce", "842d8f3", "b70d564", "24fd5a5"].includes(version)) {
+      if (
+        !["44a68ce", "842d8f3", "b70d564", "24fd5a5", "bcfff2f"].includes(
+          version
+        )
+      ) {
         localStorage.clear();
       }
       saveToLS("version", __COMMIT_HASH__);
@@ -194,7 +198,7 @@ function App({ cookies }) {
               getTwitchUser();
               setIsOpened(false);
             }}
-            url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.TWITCH_CLIENTID}&redirect_uri=${window.location.origin}/redirect&response_type=token&scope=user_read`}
+            url={`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.TWITCH_CLIENTID}&redirect_uri=${window.location.origin}/redirect&response_type=token&scope=user:read:follows`}
             features={{
               left: window.innerWidth / 2 - 600 / 2,
               top: window.innerHeight / 2 - 600 / 2,

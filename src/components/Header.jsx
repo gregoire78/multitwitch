@@ -76,10 +76,10 @@ function Header({
   const [orderBy, setOrderBy] = useState();
 
   useEffect(() => {
-    if (!isCollapse && isEditMode && isAuth) {
-      getOrderBy();
+    if (!isCollapse && isEditMode && isAuth && user) {
+      getOrderBy(user);
     }
-  }, [isAuth, isEditMode, isCollapse, getOrderBy]);
+  }, [isAuth, isEditMode, isCollapse, getOrderBy, user]);
 
   useEffect(() => {
     if (isEditMode || saves?.channels?.length > 0 || streams?.length > 0)
@@ -87,36 +87,81 @@ function Header({
   }, [isEditMode, saves, streams]);
 
   useInterval(
-    () => getFollowedStream(orderBy),
-    orderBy && !isCollapse && isEditMode && isAuth ? 10000 : null,
+    () => getFollowedStream(orderBy, user),
+    orderBy && !isCollapse && isEditMode && isAuth ? 20000 : null,
     false
   );
 
-  const getOrderBy = useCallback(() => {
-    if (!orderBy) {
-      import("lodash.orderby").then((module) => {
-        setOrderBy(() => {
-          getFollowedStream(module.default);
-          return module.default;
+  const getOrderBy = useCallback(
+    (user) => {
+      if (!orderBy) {
+        import("lodash.orderby").then((module) => {
+          setOrderBy(() => {
+            getFollowedStream(module.default, user);
+            return module.default;
+          });
         });
-      });
-    } else getFollowedStream(orderBy);
-  }, [orderBy, getFollowedStream]);
+      } else getFollowedStream(orderBy, user);
+    },
+    [orderBy, getFollowedStream]
+  );
 
   const getFollowedStream = useCallback(
-    (orderBy) => {
+    (orderBy, user) => {
       axios
-        .get(`https://api.twitch.tv/kraken/streams/followed`, {
-          headers: {
-            Accept: "application/vnd.twitchtv.v5+json",
-            Authorization: `OAuth ${cookies.get("token")}`,
-            "Client-ID": process.env.TWITCH_CLIENTID,
-          },
-        })
-        .then((res) => {
-          setStreams(orderBy(res.data.streams, "channel.name"));
+        .get(
+          `https://api.twitch.tv/helix/streams/followed?user_id=${user?.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${cookies.get("token")}`,
+              "Client-ID": process.env.TWITCH_CLIENTID,
+            },
+          }
+        )
+        .then(async (res) => {
+          const users = await getUsers(res.data.data.map((s) => s.user_id));
+          const games = await getGames(res.data.data.map((s) => s.game_id));
+          const streams = res.data.data;
+          const result = streams.map((s) => ({
+            ...s,
+            game: games.find((g) => g.id === s.game_id),
+            user: users.find((u) => u.id === s.user_id),
+          }));
+          setStreams(orderBy(result, "user_login"));
         })
         .catch(() => setStreams());
+    },
+    [cookies, getGames, getUsers]
+  );
+
+  const getUsers = useCallback(
+    async (users) => {
+      const res = await axios.get(
+        `https://api.twitch.tv/helix/users?id=${users.join("&id=")}`,
+        {
+          headers: {
+            Authorization: `Bearer ${cookies.get("token")}`,
+            "Client-ID": process.env.TWITCH_CLIENTID,
+          },
+        }
+      );
+      return res.data.data;
+    },
+    [cookies]
+  );
+
+  const getGames = useCallback(
+    async (games) => {
+      const res = await axios.get(
+        `https://api.twitch.tv/helix/games?id=${games.join("&id=")}`,
+        {
+          headers: {
+            Authorization: `Bearer ${cookies.get("token")}`,
+            "Client-ID": process.env.TWITCH_CLIENTID,
+          },
+        }
+      );
+      return res.data.data;
     },
     [cookies]
   );
@@ -231,15 +276,21 @@ function Header({
                 {streams.map((v) => {
                   return (
                     <p
-                      key={v.channel.name}
-                      onClick={() => onAddChannel(v.channel.name)}
+                      key={v.id}
+                      onClick={() => onAddChannel(v.user_login)}
                       data-for="status"
                       data-tip={JSON.stringify(v)}
                     >
-                      <img alt="" height={22} width={22} src={v.channel.logo} />
-                      <span className="stream-name">
-                        {v.channel.display_name}
-                      </span>
+                      <img
+                        alt=""
+                        height={22}
+                        width={22}
+                        src={v.user.profile_image_url.replace(
+                          "300x300",
+                          "150x150"
+                        )}
+                      />
+                      <span className="stream-name">{v.user_name}</span>
                     </p>
                   );
                 })}

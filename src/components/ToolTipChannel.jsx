@@ -30,7 +30,7 @@ function ToolTipChannel({ FontAwesomeIcon }) {
               <img
                 style={{ display: "inline-block" }}
                 alt=""
-                src={`https://static-cdn.jtvnw.net/ttv-boxart/${v.game}-40x55.jpg`}
+                src={v.game.box_art_url.replace("{width}x{height}", "40x55")}
               />
               <div
                 style={{
@@ -41,23 +41,27 @@ function ToolTipChannel({ FontAwesomeIcon }) {
                   whiteSpace: "nowrap",
                 }}
               >
-                <b style={{ display: "block" }}>{v.channel.status}</b>
-                {v.game} - {v.channel.broadcaster_language.toUpperCase()}
-                {v.channel.mature ? " - 🔞" : ""}
+                <b style={{ display: "block" }}>{v.title}</b>
+                {v.game_name} - {v.language.toUpperCase()}
+                {v.is_mature ? " - 🔞" : ""}
                 <br />
                 <small>
                   <FontAwesomeIcon icon="clock" />{" "}
                   {`${dayjs
-                    .utc(dayjs() - dayjs(v.created_at))
+                    .utc(dayjs() - dayjs(v.started_at))
                     .format("HH[h]mm")}`}{" "}
                   - <FontAwesomeIcon icon="user" />{" "}
-                  {v.viewers.toLocaleString(i18n.language, {
+                  {v.viewer_count.toLocaleString(i18n.language, {
                     minimumFractionDigits: 0,
                   })}
                 </small>
               </div>
             </div>
-            <img style={{ display: "block" }} alt="" src={v.preview.small} />
+            <img
+              style={{ display: "block" }}
+              alt=""
+              src={v.thumbnail_url.replace("{width}x{height}", "80x45")}
+            />
           </div>
         );
       }}

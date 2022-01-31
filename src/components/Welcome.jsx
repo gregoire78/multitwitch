@@ -169,7 +169,7 @@ export default function Welcome({ isAuth, user, logout, handleWindow }) {
             }}
             onChange={(e) => i18n.changeLanguage(e.target.value)}
             className="lang-select"
-            defaultValue={i18n.language}
+            defaultValue={i18n.resolvedLanguage}
           >
             {
               /*Object.keys(i18n.services.resourceStore.data)*/ [
