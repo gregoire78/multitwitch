@@ -79,12 +79,15 @@ function SearchBox({ onAddChannel }) {
           borderRadius: 0,
           padding: "0 5px",
         }),
-        input: () => ({
-          height: 24,
-        }),
         valueContainer: (provided) => ({
           ...provided,
           padding: 0,
+          margin: 0,
+        }),
+        input: (provided) => ({
+          ...provided,
+          padding: 0,
+          margin: 0,
         }),
         multiValue: (provided) => ({
           ...provided,
@@ -112,6 +115,8 @@ function SearchBox({ onAddChannel }) {
         placeholder: (provided) => ({
           ...provided,
           fontSize: 15,
+          padding: 0,
+          margin: 0,
         }),
       }}
     />

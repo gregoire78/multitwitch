@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { withCookies } from "react-cookie";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 dayjs.extend(duration);
 
 function Redirect({ cookies }) {
-  const history = useHistory();
+  const navigate = useNavigate();
   useEffect(() => {
     let search = window.location.hash.substring(1);
     if (search != "") {
@@ -32,8 +32,8 @@ function Redirect({ cookies }) {
     if (window.opener && window.opener !== window) {
       window.close();
     }
-    history.replace("/");
-  }, [cookies, history]);
+    navigate("/", { replace: true });
+  }, [cookies, navigate]);
   return null;
 }
 

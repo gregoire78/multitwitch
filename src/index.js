@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from "react";
 import ReactDOM from "react-dom";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { CookiesProvider } from "react-cookie";
 import { MatomoProvider, createInstance } from "@datapunt/matomo-tracker-react";
 import process from "process";
@@ -19,27 +19,27 @@ const instance = createInstance({
 ReactDOM.render(
   <CookiesProvider>
     <MatomoProvider value={instance}>
-      <Router>
-        <Switch>
+      <BrowserRouter>
+        <Routes>
           <Route
             exact
             path="/redirect"
-            render={() => (
+            element={
               <Suspense fallback="">
                 <RedirPage />
               </Suspense>
-            )}
+            }
           />
           <Route
-            path="/"
-            render={() => (
+            path="/*"
+            element={
               <Suspense fallback="">
                 <App />
               </Suspense>
-            )}
+            }
           />
-        </Switch>
-      </Router>
+        </Routes>
+      </BrowserRouter>
     </MatomoProvider>
   </CookiesProvider>,
   document.getElementById("root")

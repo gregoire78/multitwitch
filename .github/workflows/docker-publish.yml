@@ -50,7 +50,6 @@ jobs:
       - name: Build image
         run: docker build . --file Dockerfile --tag $IMAGE_NAME
           --build-arg TWITCH_CLIENTID=${{ secrets.TWITCH_CLIENTID }}
-          --build-arg GTAG_ID=${{ secrets.GTAG_ID }}
           --build-arg MATOMO_URL=${{ secrets.MATOMO_URL }}
           --build-arg MATOMO_ID=${{ secrets.MATOMO_ID }}
 

@@ -10,7 +10,6 @@ import isEqual from "lodash.isequal";
 import { withCookies } from "react-cookie";
 import process from "process";
 import axios from "axios";
-import ReactGA from "react-ga";
 import { useMatomo } from "@datapunt/matomo-tracker-react";
 import { useTranslation } from "react-i18next";
 import { ToastContainer, toast } from "react-toastify";
@@ -39,12 +38,9 @@ function App({ cookies }) {
   const { trackPageView, trackEvent } = useMatomo();
 
   useEffect(() => {
-    ReactGA.initialize(process.env.GTAG_ID, {
-      debug: process.env.NODE_ENV !== "production",
-    });
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
-      if (!["44a68ce", "842d8f3", "b70d564"].includes(version)) {
+      if (!["44a68ce", "842d8f3", "b70d564", "24fd5a5"].includes(version)) {
         localStorage.clear();
       }
       saveToLS("version", __COMMIT_HASH__);
@@ -79,7 +75,6 @@ function App({ cookies }) {
         "",
         `${window.origin}/${channels.join("/")}`
       );
-      ReactGA.pageview(window.location.pathname);
       trackPageView();
     }
   }, [channels, trackPageView]);
@@ -263,7 +258,7 @@ function App({ cookies }) {
             });
             toast.dark(t("toast.save"), {
               position: "top-right",
-              autoClose: 2000,
+              autoClose: 5000,
               hideProgressBar: false,
               closeOnClick: true,
               pauseOnHover: true,

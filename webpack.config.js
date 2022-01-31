@@ -88,13 +88,13 @@ const config = (env, argv) => ({
     new ESLintPlugin({
       extensions: ["js", "jsx"],
     }),
-    new WorkboxPlugin.GenerateSW({
+    ...[argv.mode === "production" && new WorkboxPlugin.GenerateSW({
       // these options encourage the ServiceWorkers to get in there fast
       // and not allow any straggling "old" SWs to hang around
       clientsClaim: true,
       skipWaiting: true,
       maximumFileSizeToCacheInBytes: 5000000,
-    }),
+    })].filter(Boolean),
     new CopyPlugin({
       patterns: [
         //{ from: "src/index.html" },
@@ -116,7 +116,7 @@ const config = (env, argv) => ({
     new CompressionPlugin({
       deleteOriginalAssets: argv.mode === "production",
     }),
-    new webpack.HotModuleReplacementPlugin(),
+    //new webpack.HotModuleReplacementPlugin(),
     new ReactRefreshWebpackPlugin(),
     new HtmlWebpackPlugin({
       inject: "body",
@@ -125,7 +125,9 @@ const config = (env, argv) => ({
     //new BundleAnalyzerPlugin()
   ],
   devServer: {
-    contentBase: "./dist",
+    //hot: true,
+    port: 3000,
+    //static: path.resolve(__dirname, "./dist")
   },
 });
 
