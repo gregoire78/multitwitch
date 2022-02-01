@@ -41,9 +41,14 @@ function App({ cookies }) {
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
       if (
-        !["44a68ce", "842d8f3", "b70d564", "24fd5a5", "bcfff2f"].includes(
-          version
-        )
+        ![
+          "44a68ce",
+          "842d8f3",
+          "b70d564",
+          "24fd5a5",
+          "bcfff2f",
+          "d251ca5",
+        ].includes(version)
       ) {
         localStorage.clear();
       }

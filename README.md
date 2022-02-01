@@ -2,6 +2,8 @@
 
 ## multiTwitch template
 
+MultiTwitch.co is not affiliate witch Twitch.tv
+
 ![screenshot](https://user-images.githubusercontent.com/11161511/121823879-4b9bb600-cca8-11eb-9c84-58feee9e8d38.png)
 
 [📺🔴.ws](http://📺🔴.ws)

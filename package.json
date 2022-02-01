@@ -1,5 +1,5 @@
 {
-  "version": "2.2.0",
+  "version": "2.3.0",
   "name": "multitwitch",
   "browser": {
     "[module-name]": false
@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@datapunt/matomo-tracker-react": "^0.5.1",
+    "@fontsource/ubuntu": "^4.5.1",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
     "@fortawesome/free-brands-svg-icons": "^5.15.4",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",

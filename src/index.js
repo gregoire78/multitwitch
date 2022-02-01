@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { CookiesProvider } from "react-cookie";
 import { MatomoProvider, createInstance } from "@datapunt/matomo-tracker-react";
 import process from "process";
+import "@fontsource/ubuntu";
 import "./index.css";
 import "./i18n";
 const App = lazy(() => import("./components/App"));
