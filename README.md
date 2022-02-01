@@ -4,7 +4,7 @@
 
 ![screenshot](https://user-images.githubusercontent.com/11161511/121823879-4b9bb600-cca8-11eb-9c84-58feee9e8d38.png)
 
-[📺🔴.ws/aypierre](http://📺🔴.ws/aypierre)
+[📺🔴.ws](http://📺🔴.ws)
 
 If you have sugestion to submit please contact me, it would be a pleasure . 😉
 
