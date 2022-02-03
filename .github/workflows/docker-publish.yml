@@ -43,7 +43,7 @@ jobs:
 
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-
+    environment: build
     steps:
       - uses: actions/checkout@v2
 
@@ -52,6 +52,7 @@ jobs:
           --build-arg TWITCH_CLIENTID=${{ secrets.TWITCH_CLIENTID }}
           --build-arg MATOMO_URL=${{ secrets.MATOMO_URL }}
           --build-arg MATOMO_ID=${{ secrets.MATOMO_ID }}
+          --build-arg TOUAPI=${{ secrets.TOUAPI }}
 
       - name: Log into registry
         run: echo "${{ secrets.REGISTRY_TOKEN }}" | docker login registry.joncour.xyz -u ${{ secrets.REGISTRY_USER }} --password-stdin

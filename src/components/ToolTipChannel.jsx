@@ -41,17 +41,17 @@ function ToolTipChannel({ FontAwesomeIcon }) {
                   whiteSpace: "nowrap",
                 }}
               >
-                <b style={{ display: "block" }}>{v.title}</b>
-                {v.game_name} - {v.language.toUpperCase()}
-                {v.is_mature ? " - 🔞" : ""}
+                <b style={{ display: "block" }}>{v.stream.title}</b>
+                {v.stream.game_name} - {v.stream.language.toUpperCase()}
+                {v.stream.is_mature ? " - 🔞" : ""}
                 <br />
                 <small>
                   <FontAwesomeIcon icon="clock" />{" "}
                   {`${dayjs
-                    .utc(dayjs() - dayjs(v.started_at))
+                    .utc(dayjs() - dayjs(v.stream.started_at))
                     .format("HH[h]mm")}`}{" "}
                   - <FontAwesomeIcon icon="user" />{" "}
-                  {v.viewer_count.toLocaleString(i18n.language, {
+                  {v.stream.viewer_count.toLocaleString(i18n.language, {
                     minimumFractionDigits: 0,
                   })}
                 </small>
@@ -60,7 +60,7 @@ function ToolTipChannel({ FontAwesomeIcon }) {
             <img
               style={{ display: "block" }}
               alt=""
-              src={v.thumbnail_url.replace("{width}x{height}", "80x45")}
+              src={v.stream.thumbnail_url.replace("{width}x{height}", "80x45")}
             />
           </div>
         );

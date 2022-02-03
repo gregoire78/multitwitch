@@ -1,3 +1,13 @@
+@keyframes hop {
+  from {
+    transform:rotate(-360deg) scale(0);
+  }
+  to {
+    transform:rotate(360deg) scale(1);
+  }
+}
+
+
 * {
   outline: none;
 }
@@ -314,6 +324,7 @@ li b {
   height: 100vh;
 }
 .welcome {
+  /*animation: hop .5s ease-in-out;*/
   background-color: #6441a4;
   padding: 20px;
   color: white;

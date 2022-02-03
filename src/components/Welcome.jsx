@@ -111,7 +111,7 @@ export default function Welcome({ isAuth, user, logout, handleWindow }) {
               }}
             >
               <img
-                src={user?.profile_image_url}
+                src={user?.profile_image_url.replace(/\d+x\d+/, "70x70")}
                 alt=""
                 style={{
                   width: "21px",

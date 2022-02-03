@@ -48,6 +48,8 @@ function App({ cookies }) {
           "24fd5a5",
           "bcfff2f",
           "d251ca5",
+          "b1e4b33",
+          "4304746",
         ].includes(version)
       ) {
         localStorage.clear();

@@ -123,11 +123,11 @@ function Header({
           const games = await getGames(res.data.data.map((s) => s.game_id));
           const streams = res.data.data;
           const result = streams.map((s) => ({
-            ...s,
+            stream: s,
             game: games.find((g) => g.id === s.game_id),
             user: users.find((u) => u.id === s.user_id),
           }));
-          setStreams(orderBy(result, "user_login"));
+          setStreams(orderBy(result, "stream.viewer_count", "desc"));
         })
         .catch(() => setStreams());
     },
@@ -201,7 +201,7 @@ function Header({
           {isAuth ? (
             <button onClick={handleCollapse} className="img-profile">
               <img
-                src={user?.profile_image_url}
+                src={user?.profile_image_url.replace(/\d+x\d+/, "70x70")}
                 height={24}
                 width={24}
                 alt="profile"
@@ -276,8 +276,8 @@ function Header({
                 {streams.map((v) => {
                   return (
                     <p
-                      key={v.id}
-                      onClick={() => onAddChannel(v.user_login)}
+                      key={v.user.id}
+                      onClick={() => onAddChannel(v.user.login)}
                       data-for="status"
                       data-tip={JSON.stringify(v)}
                     >
@@ -286,11 +286,11 @@ function Header({
                         height={22}
                         width={22}
                         src={v.user.profile_image_url.replace(
-                          "300x300",
-                          "150x150"
+                          /\d+x\d+/,
+                          "70x70"
                         )}
                       />
-                      <span className="stream-name">{v.user_name}</span>
+                      <span className="stream-name">{v.user.display_name}</span>
                     </p>
                   );
                 })}
