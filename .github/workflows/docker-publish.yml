@@ -13,23 +13,20 @@ on:
   # Run tests for any PRs.
   pull_request:
 
-env:
-  IMAGE_NAME: multitwitch
-
 jobs:
   push:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     environment: build
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      - name: Build image
-        run: docker build . --file Dockerfile --tag $IMAGE_NAME
-          --build-arg TWITCH_CLIENTID=${{ secrets.TWITCH_CLIENTID }}
-          --build-arg MATOMO_URL=${{ secrets.MATOMO_URL }}
-          --build-arg MATOMO_ID=${{ secrets.MATOMO_ID }}
-          --build-arg TOUAPI=${{ secrets.TOUAPI }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
       - name: Login to registry
         uses: docker/login-action@v1
@@ -38,21 +35,15 @@ jobs:
           username: ${{ secrets.REGISTRY_USER }}
           password: ${{ secrets.REGISTRY_TOKEN }}
 
-      - name: Push image
-        run: |
-          IMAGE_ID=registry.joncour.xyz/$IMAGE_NAME
-
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
-
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: registry.joncour.xyz/multitwitch:latest
+          build-args: |
+            "TWITCH_CLIENTID=${{ secrets.TWITCH_CLIENTID }}"
+            "MATOMO_URL=${{ secrets.MATOMO_URL }}"
+            "MATOMO_ID=${{ secrets.MATOMO_ID }}"
+            "TOUAPI=${{ secrets.TOUAPI }}"
