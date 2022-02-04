@@ -17,30 +17,7 @@ env:
   IMAGE_NAME: multitwitch
 
 jobs:
-  # Run tests.
-  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
-  # test:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - uses: actions/checkout@v2
-
-  #     - name: Run tests
-  #       run: |
-  #         if [ -f docker-compose.test.yml ]; then
-  #           docker-compose --file docker-compose.test.yml build
-  #           docker-compose --file docker-compose.test.yml run sut
-  #         else
-  #           docker build . --file Dockerfile
-  #         fi
-
-  # Push image to GitHub Packages.
-  # See also https://docs.docker.com/docker-hub/builds/
-
   push:
-    # Ensure test job passes before pushing image.
-    # needs: test
-
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     environment: build
@@ -53,9 +30,6 @@ jobs:
           --build-arg MATOMO_URL=${{ secrets.MATOMO_URL }}
           --build-arg MATOMO_ID=${{ secrets.MATOMO_ID }}
           --build-arg TOUAPI=${{ secrets.TOUAPI }}
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.REGISTRY_TOKEN }}" | docker login registry.joncour.xyz -u ${{ secrets.REGISTRY_USER }} --password-stdin
 
       - name: Login to registry
         uses: docker/login-action@v1
