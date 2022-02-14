@@ -33,7 +33,7 @@ body {
   background-repeat: no-repeat;
   background-size: contain;
   background-attachment: fixed;
-  width: 100wh;
+  width: 100vw;
   height: 100vh;
   font-family: "Ubuntu";
 }

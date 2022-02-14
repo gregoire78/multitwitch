@@ -16,7 +16,7 @@ i18n
         //"https://raw.githubusercontent.com/gregoire78/multitwitch/2.0.0/src/assets/locales/{{lng}}/{{ns}}.json",
         "/assets/locales/{{lng}}/{{ns}}.json",
     },
-    whitelist: ["en", "fr"],
+    supportedLngs: ["en", "fr"],
     fallbackLng: "en",
     debug: process.env.NODE_ENV !== "production",
 

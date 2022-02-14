@@ -40,18 +40,7 @@ function App({ cookies }) {
   useEffect(() => {
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
-      if (
-        ![
-          "44a68ce",
-          "842d8f3",
-          "b70d564",
-          "24fd5a5",
-          "bcfff2f",
-          "d251ca5",
-          "b1e4b33",
-          "4304746",
-        ].includes(version)
-      ) {
+      if (!["b1e4b33", "4304746", "005b070"].includes(version)) {
         localStorage.clear();
       }
       saveToLS("version", __COMMIT_HASH__);
@@ -176,11 +165,12 @@ function App({ cookies }) {
     });
     setIsAuth(false);
     setUser();
-    await axios.post(
-      `https://id.twitch.tv/oauth2/revoke?client_id=${
-        process.env.TWITCH_CLIENTID
-      }&token=${cookies.get("token")}`
-    );
+    await axios.post(`https://id.twitch.tv/oauth2/revoke`, null, {
+      params: {
+        client_id: process.env.TWITCH_CLIENTID,
+        token: cookies.get("token"),
+      },
+    });
     cookies.remove("token", { domain: window.location.hostname });
   };
 
