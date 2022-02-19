@@ -40,7 +40,7 @@ function App({ cookies }) {
   useEffect(() => {
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
-      if (!["b1e4b33", "4304746", "005b070"].includes(version)) {
+      if (!["4304746", "005b070", "dfb63b2"].includes(version)) {
         localStorage.clear();
       }
       saveToLS("version", __COMMIT_HASH__);
@@ -107,7 +107,7 @@ function App({ cookies }) {
       if (channels.length > 0) {
         let mo;
         if (!generateLayout) {
-          const module = await import("./gridLayout");
+          const module = await import("./layout.js");
           setGenerateLayout(() => module.default);
           mo = module.default;
         } else {

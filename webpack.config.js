@@ -19,7 +19,7 @@ const config = (env, argv) => ({
   devtool: argv.mode === "production" ? false : "source-map",
   entry: {
     main: "./src/index.js",
-    //grid: "./src/components/gridLayout.js",
+    //grid: "./src/components/layout.js",
   },
   output: {
     path: path.resolve(__dirname, "dist"),

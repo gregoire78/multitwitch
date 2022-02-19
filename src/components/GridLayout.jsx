@@ -1,7 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { Suspense, lazy } from "react";
-import { useState } from "react";
-import { useEffect } from "react";
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import { WidthProvider, Responsive } from "react-grid-layout";
 const DynamicGridTwitch = lazy(() => import("./GridTwitch"));
 const ResponsiveGridLayout = WidthProvider(Responsive);
