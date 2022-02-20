@@ -31,8 +31,8 @@ body {
   );
   /*background-position: center;
   background-repeat: no-repeat;
-  background-size: contain;
-  background-attachment: fixed;*/
+  background-size: contain;*/
+  background-attachment: fixed;
   width: 100%;
   height: 100vh;
   font-family: "Ubuntu";
