@@ -36,11 +36,12 @@ function App({ cookies }) {
   const [saves, setSaves] = useState();
   const [generateLayout, setGenerateLayout] = useState();
   const { trackPageView, trackEvent } = useMatomo();
+  const [channelsSettings, setChannelsSettings] = useState(new Map());
 
   useEffect(() => {
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
-      if (!["4304746", "005b070", "dfb63b2", "4ddac5b"].includes(version)) {
+      if (!["005b070", "dfb63b2", "4ddac5b"].includes(version)) {
         localStorage.clear();
       }
       saveToLS("version", __COMMIT_HASH__);
@@ -51,9 +52,11 @@ function App({ cookies }) {
       compact(window.location.pathname.split("/").map((v) => v.toLowerCase()))
     );
     const layoutsSaved = JSON.parse(JSON.stringify(getFromLS("layouts") || {}));
-    const channelsSaved = JSON.parse(
-      JSON.stringify(getFromLS("channels") || [])
+    const settingsSaved = new Map(
+      JSON.parse(JSON.stringify(getFromLS("settings") || []))
     );
+    const channelsSaved = [...settingsSaved.keys()];
+    setChannelsSettings(settingsSaved);
     if (channelsSaved.length > 0 || urlparse.length > 0) {
       setSaves({ channels: channelsSaved, layouts: layoutsSaved });
       if (urlparse.length > 0) {
@@ -177,13 +180,15 @@ function App({ cookies }) {
   const onRemoveItem = (l) => {
     let pseudos = reject(channels, (value) => value === l.channel);
     setChannels(pseudos);
+    /*if (!pseudos.includes(l.channel)) {
+      channelsSettings.delete(l.channel);
+    }*/
 
     // open menu if all close
     if (pseudos.length === 0) {
       setIsCollapse(false);
       setIsEditMode(true);
     }
-    deleteLs(`chat_${l.channel}`);
   };
 
   return (
@@ -251,8 +256,13 @@ function App({ cookies }) {
                 else omit(result, key);
               }
             );
+            for (const channel of channelsSettings.keys()) {
+              if (!channels.includes(channel)) {
+                channelsSettings.delete(channel);
+              }
+            }
             saveToLS("layouts", saveWithoutChannelDeleted);
-            saveToLS("channels", channels);
+            saveToLS("settings", [...channelsSettings.entries()]);
             setSaves({
               channels: channels,
               layouts: saveWithoutChannelDeleted,
@@ -272,13 +282,15 @@ function App({ cookies }) {
               action: "click-load-save-layout",
               name: "load-save-layout",
             });
-            const channelsSaved = JSON.parse(
-              JSON.stringify(getFromLS("channels") || [])
-            );
             const layoutsSaved = JSON.parse(
               JSON.stringify(getFromLS("layouts") || {})
             );
+            const channelsSettingsSaved = new Map(
+              JSON.parse(JSON.stringify(getFromLS("settings") || []))
+            );
+            const channelsSaved = [...channelsSettingsSaved.keys()];
             if (channelsSaved.length > 0) {
+              setChannelsSettings(channelsSettingsSaved);
               setChannels(channelsSaved);
               setSaves({ channels: channelsSaved, layouts: layoutsSaved });
             }
@@ -290,7 +302,7 @@ function App({ cookies }) {
               name: "delete-save-layout",
             });
             deleteLs("layouts");
-            deleteLs("channels");
+            deleteLs("settings");
             setSaves();
           }}
           handleReset={() => {
@@ -331,6 +343,7 @@ function App({ cookies }) {
             layout={layout}
             isEditMode={isEditMode}
             onRemoveItem={onRemoveItem}
+            channelsSettings={channelsSettings}
           />
         </Suspense>
       )}

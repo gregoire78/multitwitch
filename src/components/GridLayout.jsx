@@ -10,6 +10,7 @@ function GridLayout({
   layout,
   isEditMode,
   onRemoveItem,
+  channelsSettings,
 }) {
   const [isTwitchScriptLoaded, setIsTwitchScriptLoaded] = useState(false);
   const [showOverlay, setShowOverlay] = useState();
@@ -83,8 +84,9 @@ function GridLayout({
                   isEditMode={isEditMode}
                   showOverlay={showOverlay}
                   layout={l}
-                  showChat={true}
                   onRemoveItem={onRemoveItem}
+                  channelSettings={channelsSettings?.get(l.channel)}
+                  handleSettings={(c, v) => channelsSettings?.set(c, v)}
                 />
               </Suspense>
             </div>

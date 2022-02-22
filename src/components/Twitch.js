@@ -1,3 +1,6 @@
+/**
+ * Doc https://dev.twitch.tv/docs/embed/video-and-clips#interactive-frames-for-live-streams-and-vods
+ */
 import React, { PureComponent } from "react";
 import PropTypes from "prop-types";
 

@@ -1,4 +1,4 @@
-import React, { useState, Fragment, lazy } from "react";
+import React, { Fragment, lazy, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { library } from "@fortawesome/fontawesome-svg-core";
@@ -11,9 +11,34 @@ function GridTwitch({
   layout,
   showOverlay,
   onRemoveItem,
-  showChat,
+  channelSettings,
+  handleSettings,
 }) {
-  const [isVideoWChat, setIsVideoWChat] = useState(showChat);
+  const [chat, setChat] = useState(true);
+  const [quality, setQuality] = useState("480p");
+  const [muted, setMuted] = useState(false);
+  useEffect(() => {
+    if (channelSettings) {
+      setChat(channelSettings?.chat);
+      setQuality(channelSettings?.quality);
+      setMuted(channelSettings?.muted);
+    } else {
+      handleSettings(layout.channel, {
+        chat: true,
+        quality: "480p",
+        muted: false,
+      });
+    }
+  }, [channelSettings, handleSettings, layout.channel]);
+
+  const handleChat = () => {
+    setChat(!chat);
+    handleSettings(layout.channel, {
+      chat: !chat,
+      quality: "480p",
+      muted: false,
+    });
+  };
   return (
     <Fragment>
       <div
@@ -26,9 +51,11 @@ function GridTwitch({
         style={{ height: "calc(100%)", width: "calc(100%)" }}
         channel={layout.channel}
         targetID={`twitch-embed-${layout.channel}`}
-        layout={isVideoWChat ? "video-with-chat" : "video"}
+        layout={chat ? "video-with-chat" : "video"}
+        muted={muted}
         onPlayerReady={(player) => {
           player.setVolume(0.5);
+          player.setQuality(quality);
         }}
       />
       <div
@@ -77,12 +104,12 @@ function GridTwitch({
             height: "20px",
             padding: 0,
           }}
-          onClick={() => setIsVideoWChat(!isVideoWChat)}
+          onClick={handleChat}
           onTouchStartCapture={(e) => {
             e.stopPropagation();
           }}
         >
-          <FontAwesomeIcon icon={isVideoWChat ? "comment-slash" : "comment"} />
+          <FontAwesomeIcon icon={chat ? "comment-slash" : "comment"} />
         </button>
       )}
     </Fragment>
@@ -95,6 +122,8 @@ GridTwitch.propTypes = {
   showOverlay: PropTypes.bool,
   onRemoveItem: PropTypes.func,
   showChat: PropTypes.bool,
+  channelSettings: PropTypes.any,
+  handleSettings: PropTypes.any,
 };
 
 export default GridTwitch;

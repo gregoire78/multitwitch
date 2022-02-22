@@ -7,7 +7,6 @@
   }
 }
 
-
 * {
   outline: none;
 }
@@ -18,6 +17,15 @@ html {
 
 body {
   background-color: #5a3a93; /*#6441A4;*/
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100vh;
+  font-family: "Ubuntu";
+}
+
+#root {
   overflow-y: scroll;
   overflow-x: hidden;
   padding: 0;
@@ -29,13 +37,9 @@ body {
     #5a3a93 calc((25vh + 25vw)/3),
     #5a3a93 calc((50vh + 50vw)/3)
   );
-  /*background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;*/
   background-attachment: fixed;
   width: 100%;
-  height: 100vh;
-  font-family: "Ubuntu";
+  height: 100%;
 }
 
 header button {
