@@ -15,7 +15,7 @@ ENV MATOMO_ID=${MATOMO_ID}
 ENV TOUAPI=${TOUAPI}
 
 COPY package*.json ./
-RUN npm install --silent
+RUN npm ci
 COPY . .
 RUN npm run build-prod
 

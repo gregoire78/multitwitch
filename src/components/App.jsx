@@ -41,7 +41,7 @@ function App({ cookies }) {
   useEffect(() => {
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
-      if (!["005b070", "dfb63b2", "4ddac5b"].includes(version)) {
+      if (!["6e67571"].includes(version)) {
         localStorage.clear();
       }
       saveToLS("version", __COMMIT_HASH__);
