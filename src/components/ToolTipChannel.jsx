@@ -27,11 +27,13 @@ function ToolTipChannel({ FontAwesomeIcon }) {
                 alignItems: "start",
               }}
             >
-              <img
-                style={{ display: "inline-block" }}
-                alt=""
-                src={v.game.box_art_url.replace("{width}x{height}", "40x55")}
-              />
+              {v?.game?.box_art_url && (
+                <img
+                  style={{ display: "inline-block" }}
+                  alt=""
+                  src={v.game.box_art_url.replace("{width}x{height}", "40x55")}
+                />
+              )}
               <div
                 style={{
                   lineHeight: "16px",
@@ -57,11 +59,16 @@ function ToolTipChannel({ FontAwesomeIcon }) {
                 </small>
               </div>
             </div>
-            <img
-              style={{ display: "block" }}
-              alt=""
-              src={v.stream.thumbnail_url.replace("{width}x{height}", "80x45")}
-            />
+            {v?.stream?.thumbnail_url && (
+              <img
+                style={{ display: "block" }}
+                alt=""
+                src={v.stream.thumbnail_url.replace(
+                  "{width}x{height}",
+                  "80x45"
+                )}
+              />
+            )}
           </div>
         );
       }}

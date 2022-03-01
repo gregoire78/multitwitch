@@ -23,7 +23,8 @@ import { faTwitch, faGithub } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTranslation } from "react-i18next";
 const SearchBox = lazy(() => import("./SearchBox"));
-const DynamicTooltip = lazy(() => import("./ToolTipChannel"));
+const ChannelTooltip = lazy(() => import("./ToolTipChannel"));
+const SavesTooltip = lazy(() => import("./ToolTipSaves"));
 import ReactTooltip from "react-tooltip";
 import axios from "axios";
 import process from "process";
@@ -298,29 +299,11 @@ function Header({
             )}
           </nav>
         )}
-        <ReactTooltip
-          id="saves"
-          place="bottom"
-          border={true}
-          className="extraClass"
-          getContent={(channels) => {
-            if (channels == null) {
-              return;
-            }
-            let v = JSON.parse(channels);
-            return (
-              <div>
-                {v.map((channel) => (
-                  <p style={{ margin: 0, fontSize: "15px" }} key={channel}>
-                    {channel}
-                  </p>
-                ))}
-              </div>
-            );
-          }}
-        />
         <Suspense fallback="">
-          <DynamicTooltip FontAwesomeIcon={FontAwesomeIcon} />
+          <SavesTooltip FontAwesomeIcon={FontAwesomeIcon} />
+        </Suspense>
+        <Suspense fallback="">
+          <ChannelTooltip FontAwesomeIcon={FontAwesomeIcon} />
         </Suspense>
       </header>
     </CSSTransition>

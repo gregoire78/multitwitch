@@ -11,24 +11,13 @@ function SearchBox({ onAddChannel }) {
   const { t } = useTranslation();
   const [debounce, setDebounce] = useState();
   const searchTwitchChannel = async (query) => {
-    let channels = [];
-    try {
-      channels = (
-        await axios.get(
-          `https://api.twitch.tv/kraken/search/channels?query=${query}`,
-          {
-            headers: {
-              Accept: "application/vnd.twitchtv.v5+json",
-              "Content-Type": "application/json",
-              "Client-ID": process.env.TWITCH_CLIENTID,
-            },
-          }
-        )
-      ).data.channels;
-    } catch (error) {
-      channels = (await axios.get(`${process.env.TOUAPI}/search?q=${query}`))
-        .data.channels;
-    }
+    const channels = (
+      await axios.get(`${process.env.TOUAPI}/search`, {
+        params: {
+          q: query,
+        },
+      })
+    ).data.channels;
 
     return channels.map((channel) => ({
       value: channel.name,

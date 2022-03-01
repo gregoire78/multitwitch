@@ -13,6 +13,7 @@ import axios from "axios";
 import { useMatomo } from "@datapunt/matomo-tracker-react";
 import { useTranslation } from "react-i18next";
 import { ToastContainer, toast } from "react-toastify";
+import settingsService from "../services/settings.js";
 const Header = lazy(() => import("./Header"));
 const DynamicGridLayout = lazy(() => import("./GridLayout"));
 const DynamicWelcome = lazy(() => import("./Welcome"));
@@ -41,31 +42,48 @@ function App({ cookies }) {
   useEffect(() => {
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
-      if (!["6e67571"].includes(version)) {
+      if (!["6e67571", "b222af4"].includes(version)) {
         localStorage.clear();
       }
       saveToLS("version", __COMMIT_HASH__);
     }
 
     getTwitchUser();
-    const urlparse = uniqBy(
-      compact(window.location.pathname.split("/").map((v) => v.toLowerCase()))
-    );
-    const layoutsSaved = JSON.parse(JSON.stringify(getFromLS("layouts") || {}));
-    const settingsSaved = new Map(
-      JSON.parse(JSON.stringify(getFromLS("settings") || []))
-    );
-    const channelsSaved = [...settingsSaved.keys()];
-    setChannelsSettings(settingsSaved);
-    if (channelsSaved.length > 0 || urlparse.length > 0) {
-      setSaves({ channels: channelsSaved, layouts: layoutsSaved });
+    const settingsKey = getFromLS("settings_key");
+    if (settingsKey) {
+      getSettingsOnLoad(settingsKey);
+    } else {
+      const urlparse = uniqBy(
+        compact(window.location.pathname.split("/").map((v) => v.toLowerCase()))
+      );
+
+      // save old config to service
+      const layoutsSaved = JSON.parse(
+        JSON.stringify(getFromLS("layouts") || {})
+      );
+      const channelsSettingsSaved = new Map(
+        JSON.parse(JSON.stringify(getFromLS("settings") || []))
+      );
+      const channelsSaved = [...channelsSettingsSaved.keys()];
+      setChannelsSettings(channelsSettingsSaved);
+      if (channelsSaved.length > 0) {
+        setSaves({
+          channels: channelsSaved,
+          layouts: layoutsSaved,
+        });
+      }
       if (urlparse.length > 0) {
         setChannels(urlparse);
-      } else {
+      } else if (channelsSaved.length > 0) {
         setChannels(channelsSaved);
+      } else {
+        setChannels([]);
       }
-    } else setChannels([]);
-  }, [cookies, getTwitchUser]);
+      if (channelsSaved.length > 0) {
+        toSaveSettings([...channelsSettingsSaved.entries()], layoutsSaved);
+      }
+    }
+  }, [cookies, getTwitchUser, getSettingsOnLoad, toSaveSettings]);
 
   useEffect(() => {
     saveToLS("auto_size", isAutoSize);
@@ -160,6 +178,68 @@ function App({ cookies }) {
     }
   }, [cookies]);
 
+  const toSaveSettings = useCallback(async (settings, layouts) => {
+    try {
+      const settingsKey = getFromLS("settings_key");
+      if (settingsKey) {
+        if (settings.length > 0) {
+          await settingsService.update(settingsKey, {
+            settings,
+            layouts,
+          });
+        }
+      } else {
+        if (settings.length > 0) {
+          const { data: key } = await settingsService.save({
+            settings,
+            layouts,
+          });
+          saveToLS("settings_key", key);
+          deleteLs("layouts");
+          deleteLs("settings");
+        }
+      }
+    } catch (error) {
+      saveToLS("layouts", layouts);
+      saveToLS("settings", settings);
+    }
+  }, []);
+
+  const getSettingsOnLoad = useCallback(async (key) => {
+    const urlparse = uniqBy(
+      compact(window.location.pathname.split("/").map((v) => v.toLowerCase()))
+    );
+    try {
+      const { data } = await settingsService.get(key);
+      const layoutsSavedCloud = data.layouts;
+      const settingsSavedCloud = new Map(data.settings);
+      const channelsSaved = [...settingsSavedCloud.keys()];
+      setChannelsSettings(settingsSavedCloud);
+      if (channelsSaved.length > 0) {
+        setSaves({
+          channels: channelsSaved,
+          layouts: layoutsSavedCloud,
+        });
+      }
+      if (urlparse.length > 0) {
+        setChannels(urlparse);
+      } else if (channelsSaved.length > 0) {
+        setChannels(channelsSaved);
+      } else {
+        setChannels([]);
+      }
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        deleteLs("settings_key");
+      }
+      if (urlparse.length > 0) {
+        setChannels(urlparse);
+      } else {
+        setChannels([]);
+      }
+    }
+  }, []);
+
   const logout = async () => {
     trackEvent({
       category: "user",
@@ -189,6 +269,101 @@ function App({ cookies }) {
       setIsCollapse(false);
       setIsEditMode(true);
     }
+  };
+
+  const handleSave = async () => {
+    trackEvent({
+      category: "menu",
+      action: "click-save-layout",
+      name: "save-layout",
+    });
+    const saveWithoutChannelDeleted = transform(
+      layouts,
+      (result, value, key) => {
+        const d = value.filter(({ i }) => channels.includes(i));
+        if (d.length > 0) result[key] = d;
+        else omit(result, key);
+      }
+    );
+    for (const channel of channelsSettings.keys()) {
+      if (!channels.includes(channel)) {
+        channelsSettings.delete(channel);
+      }
+    }
+    const settings = [...channelsSettings.entries()];
+
+    await toSaveSettings(settings, saveWithoutChannelDeleted);
+
+    setSaves({
+      channels: channels,
+      layouts: saveWithoutChannelDeleted,
+    });
+    toast.dark(t("toast.save"), {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
+  };
+
+  const handleLoadSave = async () => {
+    trackEvent({
+      category: "menu",
+      action: "click-load-save-layout",
+      name: "load-save-layout",
+    });
+    const rescue = () => {
+      const layoutsSaved = JSON.parse(
+        JSON.stringify(getFromLS("layouts") || {})
+      );
+      const channelsSettingsSaved = new Map(
+        JSON.parse(JSON.stringify(getFromLS("settings") || []))
+      );
+      const channelsSaved = [...channelsSettingsSaved.keys()];
+      if (channelsSaved.length > 0) {
+        setChannelsSettings(channelsSettingsSaved);
+        setChannels(channelsSaved);
+        setSaves({ channels: channelsSaved, layouts: layoutsSaved });
+      }
+    };
+    try {
+      const settingsKey = getFromLS("settings_key");
+      if (settingsKey) {
+        const { data } = await settingsService.get(settingsKey);
+        const layoutsSavedCloud = data.layouts;
+        const settingsSavedCloud = new Map(data.settings);
+        const channelsSaved = [...settingsSavedCloud.keys()];
+        if (channelsSaved.length > 0) {
+          setChannelsSettings(settingsSavedCloud);
+          setChannels(channelsSaved);
+          setSaves({ channels: channelsSaved, layouts: layoutsSavedCloud });
+        }
+      } else rescue();
+    } catch (error) {
+      rescue();
+    }
+  };
+
+  const handleDeleteSave = async () => {
+    trackEvent({
+      category: "menu",
+      action: "click-delete-save-layout",
+      name: "delete-save-layout",
+    });
+    deleteLs("layouts");
+    deleteLs("settings");
+    const settingsKey = getFromLS("settings_key");
+    if (settingsKey) {
+      try {
+        await settingsService.remove(settingsKey);
+        deleteLs("settings_key");
+      } catch (error) {
+        return;
+      }
+    }
+    setSaves();
   };
 
   return (
@@ -242,69 +417,9 @@ function App({ cookies }) {
             setIsOpened(true);
           }}
           setIsCollapse={setIsCollapse}
-          handleSave={() => {
-            trackEvent({
-              category: "menu",
-              action: "click-save-layout",
-              name: "save-layout",
-            });
-            const saveWithoutChannelDeleted = transform(
-              layouts,
-              (result, value, key) => {
-                const d = value.filter(({ i }) => channels.includes(i));
-                if (d.length > 0) result[key] = d;
-                else omit(result, key);
-              }
-            );
-            for (const channel of channelsSettings.keys()) {
-              if (!channels.includes(channel)) {
-                channelsSettings.delete(channel);
-              }
-            }
-            saveToLS("layouts", saveWithoutChannelDeleted);
-            saveToLS("settings", [...channelsSettings.entries()]);
-            setSaves({
-              channels: channels,
-              layouts: saveWithoutChannelDeleted,
-            });
-            toast.dark(t("toast.save"), {
-              position: "top-right",
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-            });
-          }}
-          handleLoadSave={() => {
-            trackEvent({
-              category: "menu",
-              action: "click-load-save-layout",
-              name: "load-save-layout",
-            });
-            const layoutsSaved = JSON.parse(
-              JSON.stringify(getFromLS("layouts") || {})
-            );
-            const channelsSettingsSaved = new Map(
-              JSON.parse(JSON.stringify(getFromLS("settings") || []))
-            );
-            const channelsSaved = [...channelsSettingsSaved.keys()];
-            if (channelsSaved.length > 0) {
-              setChannelsSettings(channelsSettingsSaved);
-              setChannels(channelsSaved);
-              setSaves({ channels: channelsSaved, layouts: layoutsSaved });
-            }
-          }}
-          handleDeleteSave={() => {
-            trackEvent({
-              category: "menu",
-              action: "click-delete-save-layout",
-              name: "delete-save-layout",
-            });
-            deleteLs("layouts");
-            deleteLs("settings");
-            setSaves();
-          }}
+          handleSave={handleSave}
+          handleLoadSave={handleLoadSave}
+          handleDeleteSave={handleDeleteSave}
           handleReset={() => {
             trackEvent({
               category: "menu",
