@@ -42,7 +42,7 @@ function App({ cookies }) {
   useEffect(() => {
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
-      if (!["6e67571"].includes(version)) {
+      if (!["6e67571", "b222af4"].includes(version)) {
         localStorage.clear();
       }
       saveToLS("version", __COMMIT_HASH__);
@@ -51,7 +51,7 @@ function App({ cookies }) {
     getTwitchUser();
     const settingsKey = getFromLS("settings_key");
     if (settingsKey) {
-      getSettings(settingsKey);
+      getSettingsOnLoad(settingsKey);
     } else {
       const urlparse = uniqBy(
         compact(window.location.pathname.split("/").map((v) => v.toLowerCase()))
@@ -80,72 +80,10 @@ function App({ cookies }) {
         setChannels([]);
       }
       if (channelsSaved.length > 0) {
-        toSave([...channelsSettingsSaved.entries()], layoutsSaved);
+        toSaveSettings([...channelsSettingsSaved.entries()], layoutsSaved);
       }
     }
-  }, [cookies, getTwitchUser, getSettings, toSave]);
-
-  const toSave = useCallback(async (settings, layouts) => {
-    try {
-      const settingsKey = getFromLS("settings_key");
-      if (settingsKey) {
-        if (settings.length > 0) {
-          await settingsService.update(settingsKey, {
-            settings,
-            layouts,
-          });
-        }
-      } else {
-        if (settings.length > 0) {
-          const { data: key } = await settingsService.save({
-            settings,
-            layouts,
-          });
-          saveToLS("settings_key", key);
-          deleteLs("layouts");
-          deleteLs("settings");
-        }
-      }
-    } catch (error) {
-      saveToLS("layouts", layouts);
-      saveToLS("settings", settings);
-    }
-  }, []);
-
-  const getSettings = useCallback(async (key) => {
-    const urlparse = uniqBy(
-      compact(window.location.pathname.split("/").map((v) => v.toLowerCase()))
-    );
-    try {
-      const { data } = await settingsService.get(key);
-      const layoutsSavedCloud = data.layouts;
-      const settingsSavedCloud = new Map(data.settings);
-      const channelsSaved = [...settingsSavedCloud.keys()];
-      setChannelsSettings(settingsSavedCloud);
-      if (channelsSaved.length > 0) {
-        setSaves({
-          channels: channelsSaved,
-          layouts: layoutsSavedCloud,
-        });
-      }
-      if (urlparse.length > 0) {
-        setChannels(urlparse);
-      } else if (channelsSaved.length > 0) {
-        setChannels(channelsSaved);
-      } else {
-        setChannels([]);
-      }
-    } catch (error) {
-      if (error?.response?.status === 404) {
-        deleteLs("settings_key");
-      }
-      if (urlparse.length > 0) {
-        setChannels(urlparse);
-      } else {
-        setChannels([]);
-      }
-    }
-  }, []);
+  }, [cookies, getTwitchUser, getSettingsOnLoad, toSaveSettings]);
 
   useEffect(() => {
     saveToLS("auto_size", isAutoSize);
@@ -240,6 +178,68 @@ function App({ cookies }) {
     }
   }, [cookies]);
 
+  const toSaveSettings = useCallback(async (settings, layouts) => {
+    try {
+      const settingsKey = getFromLS("settings_key");
+      if (settingsKey) {
+        if (settings.length > 0) {
+          await settingsService.update(settingsKey, {
+            settings,
+            layouts,
+          });
+        }
+      } else {
+        if (settings.length > 0) {
+          const { data: key } = await settingsService.save({
+            settings,
+            layouts,
+          });
+          saveToLS("settings_key", key);
+          deleteLs("layouts");
+          deleteLs("settings");
+        }
+      }
+    } catch (error) {
+      saveToLS("layouts", layouts);
+      saveToLS("settings", settings);
+    }
+  }, []);
+
+  const getSettingsOnLoad = useCallback(async (key) => {
+    const urlparse = uniqBy(
+      compact(window.location.pathname.split("/").map((v) => v.toLowerCase()))
+    );
+    try {
+      const { data } = await settingsService.get(key);
+      const layoutsSavedCloud = data.layouts;
+      const settingsSavedCloud = new Map(data.settings);
+      const channelsSaved = [...settingsSavedCloud.keys()];
+      setChannelsSettings(settingsSavedCloud);
+      if (channelsSaved.length > 0) {
+        setSaves({
+          channels: channelsSaved,
+          layouts: layoutsSavedCloud,
+        });
+      }
+      if (urlparse.length > 0) {
+        setChannels(urlparse);
+      } else if (channelsSaved.length > 0) {
+        setChannels(channelsSaved);
+      } else {
+        setChannels([]);
+      }
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        deleteLs("settings_key");
+      }
+      if (urlparse.length > 0) {
+        setChannels(urlparse);
+      } else {
+        setChannels([]);
+      }
+    }
+  }, []);
+
   const logout = async () => {
     trackEvent({
       category: "user",
@@ -292,7 +292,7 @@ function App({ cookies }) {
     }
     const settings = [...channelsSettings.entries()];
 
-    await toSave(settings, saveWithoutChannelDeleted);
+    await toSaveSettings(settings, saveWithoutChannelDeleted);
 
     setSaves({
       channels: channels,
