@@ -18,6 +18,9 @@
     "reset-button": {
         "title": "Reset layout"
     },
+    "sort-button": {
+        "title": "Sort by on live streams"
+    },
     "auto_size-button": {
         "title": "Auto size layout"
     },

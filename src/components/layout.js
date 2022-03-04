@@ -9,8 +9,8 @@ const generateLayout = (channels) => {
           y: Infinity,
           w: w,
           h: h,
-          i: item,
-          channel: item,
+          i: item.channel,
+          channel: item.channel,
           draggableHandle: ".react-grid-dragHandleExample",
         };
       });
@@ -24,8 +24,8 @@ const generateLayout = (channels) => {
           y: Infinity,
           w: w,
           h: h,
-          i: item,
-          channel: item,
+          i: item.channel,
+          channel: item.channel,
           draggableHandle: ".react-grid-dragHandleExample",
         };
       });
@@ -39,8 +39,8 @@ const generateLayout = (channels) => {
           y: Infinity,
           w: w,
           h: h,
-          i: item,
-          channel: item,
+          i: item.channel,
+          channel: item.channel,
           draggableHandle: ".react-grid-dragHandleExample",
         };
       });
@@ -54,8 +54,8 @@ const generateLayout = (channels) => {
           y: Infinity,
           w: w,
           h: h,
-          i: item,
-          channel: item,
+          i: item.channel,
+          channel: item.channel,
           draggableHandle: ".react-grid-dragHandleExample",
         };
       });
@@ -68,8 +68,9 @@ const generateLayout = (channels) => {
             y: Infinity,
             w: 4,
             h: 33,
-            i: item,
-            channel: item,
+            i: item.channel,
+            channel: item.channel,
+            chat: false,
             draggableHandle: ".react-grid-dragHandleExample",
           };
         } else {
@@ -78,8 +79,8 @@ const generateLayout = (channels) => {
             y: 0,
             w: 6,
             h: 33,
-            i: item,
-            channel: item,
+            i: item.channel,
+            channel: item.channel,
             draggableHandle: ".react-grid-dragHandleExample",
           };
         }
@@ -92,26 +93,45 @@ const generateLayout = (channels) => {
           y: Infinity,
           w: 4,
           h: 33,
-          i: item,
-          channel: item,
+          i: item.channel,
+          channel: item.channel,
+          chat: false,
           draggableHandle: ".react-grid-dragHandleExample",
         };
       });
 
-    default:
+    default: {
+      const h = channels.length > 8 ? 18 : 33;
+      const y = Math.round(channels.length / 4 + (channels.length % 4)) * h;
       return channels.map((item, i) => {
-        const w = 6;
-        const h = 28;
+        if (item?.pos >= 0) {
+          return {
+            x: Math.floor(((item.pos * 12) / 4) % 12),
+            y: Math.floor((item.pos * y) / 4),
+            w: 3,
+            h: h,
+            i: item.channel,
+            channel: item.channel,
+            chat: false,
+            quality: "160p",
+            muted: true,
+            draggableHandle: ".react-grid-dragHandleExample",
+          };
+        }
         return {
-          x: Math.floor(((i * 12) / 2) % 12),
+          x: Math.floor(((i * 12) / 4) % 12),
           y: Infinity,
-          w: w,
+          w: 3,
           h: h,
-          i: item,
-          channel: item,
+          i: item.channel,
+          channel: item.channel,
+          chat: false,
+          quality: "160p",
+          muted: true,
           draggableHandle: ".react-grid-dragHandleExample",
         };
       });
+    }
   }
 };
 

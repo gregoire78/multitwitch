@@ -91,7 +91,10 @@ class TwitchEmbedVideo extends PureComponent {
     ) {
       this.setState({ layout: this.props.layout });
       document.getElementById(this.props.targetID).innerHTML = "";
-      new window.Twitch.Embed(this.props.targetID, { ...this.props });
+      let embed = new window.Twitch.Embed(this.props.targetID, {
+        ...this.props,
+      });
+      this._addEventListeners(embed);
     }
   }
 

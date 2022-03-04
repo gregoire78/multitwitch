@@ -18,6 +18,7 @@ import {
   faMagic,
   faDownload,
   faTrash,
+  faSort,
 } from "@fortawesome/free-solid-svg-icons";
 import { faTwitch, faGithub } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -49,7 +50,8 @@ library.add(
   faSyncAlt,
   faMagic,
   faDownload,
-  faTrash
+  faTrash,
+  faSort
 );
 
 function Header({
@@ -120,13 +122,13 @@ function Header({
           }
         )
         .then(async (res) => {
-          const users = await getUsers(res.data.data.map((s) => s.user_id));
-          const games = await getGames(res.data.data.map((s) => s.game_id));
-          const streams = res.data.data;
+          const streams = res.data?.data ?? [];
+          const users = await getUsers(streams.map((s) => s.user_id));
+          const games = await getGames(streams.map((s) => s.game_id));
           const result = streams.map((s) => ({
             stream: s,
-            game: games.find((g) => g.id === s.game_id),
-            user: users.find((u) => u.id === s.user_id),
+            game: games.find((g) => g.id === s.game_id) ?? [],
+            user: users.find((u) => u.id === s.user_id) ?? [],
           }));
           setStreams(orderBy(result, "stream.viewer_count", "desc"));
         })
@@ -137,32 +139,40 @@ function Header({
 
   const getUsers = useCallback(
     async (users) => {
-      const res = await axios.get(
-        `https://api.twitch.tv/helix/users?id=${users.join("&id=")}`,
-        {
-          headers: {
-            Authorization: `Bearer ${cookies.get("token")}`,
-            "Client-ID": process.env.TWITCH_CLIENTID,
-          },
-        }
-      );
-      return res.data.data;
+      try {
+        const res = await axios.get(
+          `https://api.twitch.tv/helix/users?id=${users.join("&id=")}`,
+          {
+            headers: {
+              Authorization: `Bearer ${cookies.get("token")}`,
+              "Client-ID": process.env.TWITCH_CLIENTID,
+            },
+          }
+        );
+        return res.data.data;
+      } catch (error) {
+        return null;
+      }
     },
     [cookies]
   );
 
   const getGames = useCallback(
     async (games) => {
-      const res = await axios.get(
-        `https://api.twitch.tv/helix/games?id=${games.join("&id=")}`,
-        {
-          headers: {
-            Authorization: `Bearer ${cookies.get("token")}`,
-            "Client-ID": process.env.TWITCH_CLIENTID,
-          },
-        }
-      );
-      return res.data.data;
+      try {
+        const res = await axios.get(
+          `https://api.twitch.tv/helix/games?id=${games.join("&id=")}`,
+          {
+            headers: {
+              Authorization: `Bearer ${cookies.get("token")}`,
+              "Client-ID": process.env.TWITCH_CLIENTID,
+            },
+          }
+        );
+        return res.data.data;
+      } catch (error) {
+        return null;
+      }
     },
     [cookies]
   );
@@ -184,6 +194,13 @@ function Header({
           <button onClick={handleReset} title={t("reset-button.title")}>
             <FontAwesomeIcon icon="sync-alt" />
           </button>
+          {/*<button
+            disabled={disabledSort}
+            onClick={handleSort}
+            title={t("sort-button.title")}
+          >
+            <FontAwesomeIcon icon="sort" />
+          </button>*/}
           <button onClick={handleAutoSize} title={t("auto_size-button.title")}>
             <FontAwesomeIcon
               icon="magic"
@@ -322,6 +339,7 @@ Header.propTypes = {
   handleLoadSave: PropTypes.func,
   handleDeleteSave: PropTypes.func,
   handleReset: PropTypes.func,
+  handleSort: PropTypes.func,
   handleAutoSize: PropTypes.func,
   onAddChannel: PropTypes.func,
   setIsCollapse: PropTypes.func,
@@ -329,6 +347,7 @@ Header.propTypes = {
   cookies: PropTypes.any,
   logout: PropTypes.func,
   disabledSave: PropTypes.bool,
+  disabledSort: PropTypes.bool,
 };
 
 export default withCookies(Header);
