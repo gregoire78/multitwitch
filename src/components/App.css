@@ -301,6 +301,7 @@ li b {
   color: white;
   text-align: center;
   cursor: move;
+  text-shadow: 2px 0 0 #5a3a93, -2px 0 0 #5a3a93, 0 2px 0 #5a3a93, 0 -2px 0 #5a3a93, 1px 1px #5a3a93, -1px -1px 0 #5a3a93, 1px -1px 0 #5a3a93, -1px 1px 0 #5a3a93;
 }
 
 .header-enter,

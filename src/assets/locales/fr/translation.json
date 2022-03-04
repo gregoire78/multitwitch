@@ -18,8 +18,11 @@
     "reset-button": {
         "title": "Réinitialiser la disposition"
     },
+    "sort-button": {
+        "title": "Trier par chaines en live"
+    },
     "auto_size-button": {
-        "title": "Taille automatique da la disposition"
+        "title": "Taille automatique de la disposition"
     },
     "save-button": {
         "title": "Sauvegarder la disposition (sauvegarde localement dans le navigateur)"

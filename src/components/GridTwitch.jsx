@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faComment, faCommentSlash } from "@fortawesome/free-solid-svg-icons";
+import { useRef } from "react";
 const Twitch = lazy(() => import("./Twitch"));
 library.add(faComment, faCommentSlash);
 
@@ -14,29 +15,46 @@ function GridTwitch({
   channelSettings,
   handleSettings,
 }) {
-  const [chat, setChat] = useState(true);
-  const [quality, setQuality] = useState("480p");
-  const [muted, setMuted] = useState(false);
+  const [chat, setChat] = useState(
+    channelSettings?.chat ?? layout?.chat ?? true
+  );
+
+  const p = useRef();
+  const isMounted = useRef(false);
+
   useEffect(() => {
-    if (channelSettings) {
-      setChat(channelSettings?.chat);
-      setQuality(channelSettings?.quality);
-      setMuted(channelSettings?.muted);
-    } else {
+    if (!channelSettings) {
       handleSettings(layout.channel, {
-        chat: true,
-        quality: "480p",
-        muted: false,
+        chat: layout?.chat ?? true,
+        quality: layout?.quality ?? "480p",
+        muted: layout?.muted ?? false,
       });
+      isMounted.current = true;
     }
-  }, [channelSettings, handleSettings, layout.channel]);
+    return () => (isMounted.current = false);
+  }, [
+    channelSettings,
+    handleSettings,
+    layout.channel,
+    layout?.chat,
+    layout?.muted,
+    layout?.quality,
+  ]);
+
+  useEffect(() => {
+    if (p.current && channelSettings) {
+      setChat(channelSettings?.chat);
+      p.current.setVolume(channelSettings?.muted ? 0 : 0.5);
+      p.current.setQuality(channelSettings?.quality);
+    }
+  }, [channelSettings]);
 
   const handleChat = () => {
     setChat(!chat);
     handleSettings(layout.channel, {
       chat: !chat,
-      quality: "480p",
-      muted: false,
+      quality: layout?.quality ?? "480p",
+      muted: layout?.muted ?? false,
     });
   };
   return (
@@ -52,10 +70,10 @@ function GridTwitch({
         channel={layout.channel}
         targetID={`twitch-embed-${layout.channel}`}
         layout={chat ? "video-with-chat" : "video"}
-        muted={muted}
         onPlayerReady={(player) => {
-          player.setVolume(0.5);
-          player.setQuality(quality);
+          player.setVolume(layout?.muted ? 0 : 0.5);
+          player.setQuality(layout?.quality ?? "480p");
+          p.current = player;
         }}
       />
       <div

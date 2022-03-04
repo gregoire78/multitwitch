@@ -42,9 +42,9 @@ function App({ cookies }) {
   useEffect(() => {
     const version = getFromLS("version");
     if (version !== __COMMIT_HASH__) {
-      if (!["6e67571", "b222af4"].includes(version)) {
+      /*if (!["6e67571", "b222af4"].includes(version)) {
         localStorage.clear();
-      }
+      }*/
       saveToLS("version", __COMMIT_HASH__);
     }
 
@@ -73,9 +73,9 @@ function App({ cookies }) {
         });
       }
       if (urlparse.length > 0) {
-        setChannels(urlparse);
+        setChannels(urlparse.map((v) => ({ channel: v })));
       } else if (channelsSaved.length > 0) {
-        setChannels(channelsSaved);
+        setChannels(channelsSaved.map((v) => ({ channel: v })));
       } else {
         setChannels([]);
       }
@@ -94,7 +94,7 @@ function App({ cookies }) {
       window.history.replaceState(
         "",
         "",
-        `${window.origin}/${channels.join("/")}`
+        `${window.origin}/${channels.map((v) => v.channel).join("/")}`
       );
       trackPageView();
     }
@@ -102,12 +102,42 @@ function App({ cookies }) {
 
   useEffect(() => {
     if (channels) {
-      martin(channels);
+      martin(channels.map((v) => v.channel));
     }
   }, [channels, martin]);
 
   const martin = useCallback(
     async (channels) => {
+      if (channels.length > 0) {
+        let mo;
+        if (!generateLayout) {
+          const module = await import("./layout.js");
+          setGenerateLayout(() => module.default);
+          mo = module.default;
+        } else {
+          mo = generateLayout;
+        }
+        if (isAutoSize) {
+          let newL;
+          if (channels?.length <= 6) {
+            newL = mo(channels.map((v) => ({ channel: v })));
+          } else {
+            const g = await sortLive(channels);
+            newL = mo(g);
+          }
+          setLayout(newL);
+        } else {
+          setLayout((la) => {
+            const layoutFiltered = reject(la, (o) => !channels.includes(o.i));
+            const f = mo(
+              channels
+                .filter((c) => !layoutFiltered.some((v) => v.i === c))
+                .map((v) => ({ channel: v }))
+            );
+            return [...layoutFiltered, ...f];
+          });
+        }
+      } else setLayout([]);
       setLayouts((la) => {
         const isSameAsSaved = saves
           ? isEqual([...channels].sort(), [...saves.channels].sort())
@@ -125,34 +155,9 @@ function App({ cookies }) {
               }
             );
       });
-      if (channels.length > 0) {
-        let mo;
-        if (!generateLayout) {
-          const module = await import("./layout.js");
-          setGenerateLayout(() => module.default);
-          mo = module.default;
-        } else {
-          mo = generateLayout;
-        }
-        if (isAutoSize) {
-          setLayout(mo(channels));
-        } else {
-          setLayout((la) => {
-            const layoutFiltered = reject(la, (o) => !channels.includes(o.i));
-            const f = mo(
-              channels.filter((c) => !layoutFiltered.some((v) => v.i === c))
-            );
-            return [...layoutFiltered, ...f];
-          });
-        }
-      } else setLayout([]);
     },
-    [isAutoSize, saves, generateLayout]
+    [saves, isAutoSize, generateLayout, sortLive]
   );
-
-  const onLayoutChange = (layout, layouts) => {
-    setLayouts(layouts);
-  };
 
   const getTwitchUser = useCallback(async () => {
     const _token = cookies.get("token");
@@ -222,9 +227,9 @@ function App({ cookies }) {
         });
       }
       if (urlparse.length > 0) {
-        setChannels(urlparse);
+        setChannels(urlparse.map((v) => ({ channel: v })));
       } else if (channelsSaved.length > 0) {
-        setChannels(channelsSaved);
+        setChannels(channelsSaved.map((v) => ({ channel: v })));
       } else {
         setChannels([]);
       }
@@ -233,12 +238,16 @@ function App({ cookies }) {
         deleteLs("settings_key");
       }
       if (urlparse.length > 0) {
-        setChannels(urlparse);
+        setChannels(urlparse.map((v) => ({ channel: v })));
       } else {
         setChannels([]);
       }
     }
   }, []);
+
+  const onLayoutChange = (layout, layouts) => {
+    setLayouts(layouts);
+  };
 
   const logout = async () => {
     trackEvent({
@@ -258,7 +267,7 @@ function App({ cookies }) {
   };
 
   const onRemoveItem = (l) => {
-    let pseudos = reject(channels, (value) => value === l.channel);
+    let pseudos = reject(channels, (value) => value.channel === l.channel);
     setChannels(pseudos);
     /*if (!pseudos.includes(l.channel)) {
       channelsSettings.delete(l.channel);
@@ -277,16 +286,17 @@ function App({ cookies }) {
       action: "click-save-layout",
       name: "save-layout",
     });
+    const _channels = channels.map((v) => v.channel);
     const saveWithoutChannelDeleted = transform(
       layouts,
       (result, value, key) => {
-        const d = value.filter(({ i }) => channels.includes(i));
+        const d = value.filter(({ i }) => _channels.includes(i));
         if (d.length > 0) result[key] = d;
         else omit(result, key);
       }
     );
     for (const channel of channelsSettings.keys()) {
-      if (!channels.includes(channel)) {
+      if (!_channels.includes(channel)) {
         channelsSettings.delete(channel);
       }
     }
@@ -295,7 +305,7 @@ function App({ cookies }) {
     await toSaveSettings(settings, saveWithoutChannelDeleted);
 
     setSaves({
-      channels: channels,
+      channels: _channels,
       layouts: saveWithoutChannelDeleted,
     });
     toast.dark(t("toast.save"), {
@@ -324,7 +334,7 @@ function App({ cookies }) {
       const channelsSaved = [...channelsSettingsSaved.keys()];
       if (channelsSaved.length > 0) {
         setChannelsSettings(channelsSettingsSaved);
-        setChannels(channelsSaved);
+        setChannels(channelsSaved.map((v) => ({ channel: v })));
         setSaves({ channels: channelsSaved, layouts: layoutsSaved });
       }
     };
@@ -337,7 +347,7 @@ function App({ cookies }) {
         const channelsSaved = [...settingsSavedCloud.keys()];
         if (channelsSaved.length > 0) {
           setChannelsSettings(settingsSavedCloud);
-          setChannels(channelsSaved);
+          setChannels(channelsSaved.map((v) => ({ channel: v })));
           setSaves({ channels: channelsSaved, layouts: layoutsSavedCloud });
         }
       } else rescue();
@@ -364,6 +374,72 @@ function App({ cookies }) {
       }
     }
     setSaves();
+  };
+
+  const sortLive = useCallback(async (channels) => {
+    try {
+      const res = await axios.get(`${process.env.TOUAPI}/streams`, {
+        params: {
+          userNames: channels,
+        },
+      });
+      const h = channels
+        .map((c) => ({
+          channel: c,
+          stream: res.data.find((d) => d.user_login === c),
+        }))
+        .sort(
+          (a, b) => (b.stream?.type === "live") - (a.stream?.type === "live")
+        )
+        .map((d) => d.channel);
+
+      return channels.map((c) => {
+        return {
+          channel: c,
+          pos: h.indexOf(c),
+        };
+      });
+    } catch (error) {
+      return channels.map((c, i) => {
+        return {
+          channel: c,
+          pos: i,
+        };
+      });
+    }
+  }, []);
+
+  const handleSetting = (c, v) => {
+    setChannelsSettings((d) => d.set(c, v));
+  };
+
+  const handleReset = async () => {
+    trackEvent({
+      category: "menu",
+      action: "click-reset-layout",
+      name: "reset-layout",
+    });
+    let newL;
+    if (channels?.length <= 6) {
+      newL = generateLayout(channels);
+    } else {
+      const g = await sortLive(channels.map((v) => v.channel));
+      newL = generateLayout(g);
+    }
+    setLayouts({ lg: newL });
+    setLayout(newL);
+  };
+
+  const handleSort = async () => {
+    trackEvent({
+      category: "menu",
+      action: "click-sort-layout",
+      name: "sort-layout",
+    });
+    const g = await sortLive(channels.map((v) => v.channel));
+    const newL = generateLayout(g);
+    setLayouts({ lg: newL });
+    setLayout(newL);
   };
 
   return (
@@ -396,6 +472,7 @@ function App({ cookies }) {
           isCollapse={isCollapse}
           isAutoSize={isAutoSize}
           disabledSave={!channels?.length > 0}
+          disabledSort={channels?.length <= 6}
           handleEditMode={() => {
             setIsEditMode((e) => {
               trackEvent({
@@ -420,15 +497,7 @@ function App({ cookies }) {
           handleSave={handleSave}
           handleLoadSave={handleLoadSave}
           handleDeleteSave={handleDeleteSave}
-          handleReset={() => {
-            trackEvent({
-              category: "menu",
-              action: "click-reset-layout",
-              name: "reset-layout",
-            });
-            setLayouts({});
-            setLayout(generateLayout(channels));
-          }}
+          handleReset={handleReset}
           handleAutoSize={() => {
             setIsAutoSize((r) => {
               saveToLS("auto_size", !r);
@@ -440,10 +509,13 @@ function App({ cookies }) {
               return !r;
             });
           }}
+          handleSort={handleSort}
           onAddChannel={(channel) => {
             const _channel = channel.toLowerCase();
-            if (!channels.includes(_channel)) {
-              setChannels((c) => uniqBy([...c, _channel]));
+            if (!channels.map((v) => v.channel).includes(_channel)) {
+              setChannels((c) =>
+                uniqBy([...c, { channel: _channel }], "channel")
+              );
             }
           }}
           logout={logout}
@@ -459,6 +531,7 @@ function App({ cookies }) {
             isEditMode={isEditMode}
             onRemoveItem={onRemoveItem}
             channelsSettings={channelsSettings}
+            handleSetting={handleSetting}
           />
         </Suspense>
       )}
