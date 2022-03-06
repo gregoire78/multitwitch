@@ -113,8 +113,6 @@ const generateLayout = (channels) => {
             i: item.channel,
             channel: item.channel,
             chat: false,
-            quality: "160p",
-            muted: true,
             draggableHandle: ".react-grid-dragHandleExample",
           };
         }
@@ -126,8 +124,6 @@ const generateLayout = (channels) => {
           i: item.channel,
           channel: item.channel,
           chat: false,
-          quality: "160p",
-          muted: true,
           draggableHandle: ".react-grid-dragHandleExample",
         };
       });

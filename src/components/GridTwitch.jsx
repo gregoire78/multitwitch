@@ -14,11 +14,11 @@ function GridTwitch({
   onRemoveItem,
   channelSettings,
   handleSettings,
+  length,
 }) {
   const [chat, setChat] = useState(
     channelSettings?.chat ?? layout?.chat ?? true
   );
-
   const p = useRef();
   const isMounted = useRef(false);
 
@@ -26,7 +26,7 @@ function GridTwitch({
     if (!channelSettings) {
       handleSettings(layout.channel, {
         chat: layout?.chat ?? true,
-        quality: layout?.quality ?? "480p",
+        quality: layout?.quality ?? "auto",
         muted: layout?.muted ?? false,
       });
       isMounted.current = true;
@@ -44,16 +44,17 @@ function GridTwitch({
   useEffect(() => {
     if (p.current && channelSettings) {
       setChat(channelSettings?.chat);
-      p.current.setVolume(channelSettings?.muted ? 0 : 0.5);
-      p.current.setQuality(channelSettings?.quality);
+      //p.current.setVolume(channelSettings?.muted ? 0 : 0.5);
+      p.current.setQuality(channelSettings?.quality ?? "auto");
     }
-  }, [channelSettings]);
+  }, [channelSettings, length]);
 
   const handleChat = () => {
-    setChat(!chat);
+    const g = !chat;
+    setChat(g);
     handleSettings(layout.channel, {
-      chat: !chat,
-      quality: layout?.quality ?? "480p",
+      chat: g,
+      quality: layout?.quality ?? "auto",
       muted: layout?.muted ?? false,
     });
   };
@@ -71,8 +72,8 @@ function GridTwitch({
         targetID={`twitch-embed-${layout.channel}`}
         layout={chat ? "video-with-chat" : "video"}
         onPlayerReady={(player) => {
-          player.setVolume(layout?.muted ? 0 : 0.5);
-          player.setQuality(layout?.quality ?? "480p");
+          //player.setVolume(layout?.muted ? 0 : 0.5);
+          player.setQuality(layout?.quality ?? "auto");
           p.current = player;
         }}
       />
@@ -142,6 +143,7 @@ GridTwitch.propTypes = {
   showChat: PropTypes.bool,
   channelSettings: PropTypes.any,
   handleSettings: PropTypes.any,
+  length: PropTypes.any,
 };
 
 export default GridTwitch;
