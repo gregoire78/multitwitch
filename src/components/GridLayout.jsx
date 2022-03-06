@@ -85,6 +85,7 @@ function GridLayout({
                   isEditMode={isEditMode}
                   showOverlay={showOverlay}
                   layout={l}
+                  length={layout.length}
                   onRemoveItem={onRemoveItem}
                   channelSettings={channelsSettings?.get(l.channel)}
                   handleSettings={(c, v) => handleSetting(c, v)}

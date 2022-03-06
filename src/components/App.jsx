@@ -269,6 +269,7 @@ function App({ cookies }) {
   const onRemoveItem = (l) => {
     let pseudos = reject(channels, (value) => value.channel === l.channel);
     setChannels(pseudos);
+    channelsSettings.delete(l.channel);
     /*if (!pseudos.includes(l.channel)) {
       channelsSettings.delete(l.channel);
     }*/
