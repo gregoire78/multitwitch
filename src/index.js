@@ -21,7 +21,7 @@ root.render(
         <script
           src={process.env.COUNTER_URL}
           data-id={process.env.COUNTER_ID}
-          data-utcoffset={process.env.COUNTER_UTCOFFSET}
+          data-utcoffset={process.env.COUNTER_UTCOFFSET?.toString()}
         ></script>
       )}
     </Helmet>
