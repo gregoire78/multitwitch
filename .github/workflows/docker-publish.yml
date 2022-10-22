@@ -52,6 +52,7 @@ jobs:
             registry.joncour.xyz/multitwitch:${{ steps.vars.outputs.sha_short }}
           build-args: |
             "TWITCH_CLIENTID=${{ secrets.TWITCH_CLIENTID }}"
-            "MATOMO_URL=${{ secrets.MATOMO_URL }}"
-            "MATOMO_ID=${{ secrets.MATOMO_ID }}"
+            "COUNTER_URL=${{ secrets.COUNTER_URL }}"
+            "COUNTER_ID=${{ secrets.COUNTER_ID }}"
+            "COUNTER_UTCOFFSET=${{ secrets.COUNTER_UTCOFFSET }}"
             "TOUAPI=${{ secrets.TOUAPI }}"
