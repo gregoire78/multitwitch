@@ -10,7 +10,6 @@ import isEqual from "lodash.isequal";
 import { withCookies } from "react-cookie";
 import process from "process";
 import axios from "axios";
-import { useMatomo } from "@datapunt/matomo-tracker-react";
 import { useTranslation } from "react-i18next";
 import { ToastContainer, toast } from "react-toastify";
 import settingsService from "../services/settings.js";
@@ -36,7 +35,6 @@ function App({ cookies }) {
   const [user, setUser] = useState();
   const [saves, setSaves] = useState();
   const [generateLayout, setGenerateLayout] = useState();
-  const { trackPageView, trackEvent } = useMatomo();
   const [channelsSettings, setChannelsSettings] = useState(new Map());
 
   useEffect(() => {
@@ -96,9 +94,8 @@ function App({ cookies }) {
         "",
         `${window.origin}/${channels.map((v) => v.channel).join("/")}`
       );
-      trackPageView();
     }
-  }, [channels, trackPageView]);
+  }, [channels]);
 
   useEffect(() => {
     if (channels) {
@@ -250,11 +247,6 @@ function App({ cookies }) {
   };
 
   const logout = async () => {
-    trackEvent({
-      category: "user",
-      action: "click-logout-twitch",
-      name: "logout-twitch",
-    });
     setIsAuth(false);
     setUser();
     await axios.post(`https://id.twitch.tv/oauth2/revoke`, null, {
@@ -282,11 +274,6 @@ function App({ cookies }) {
   };
 
   const handleSave = async () => {
-    trackEvent({
-      category: "menu",
-      action: "click-save-layout",
-      name: "save-layout",
-    });
     const _channels = channels.map((v) => v.channel);
     const saveWithoutChannelDeleted = transform(
       layouts,
@@ -320,11 +307,6 @@ function App({ cookies }) {
   };
 
   const handleLoadSave = async () => {
-    trackEvent({
-      category: "menu",
-      action: "click-load-save-layout",
-      name: "load-save-layout",
-    });
     const rescue = () => {
       const layoutsSaved = JSON.parse(
         JSON.stringify(getFromLS("layouts") || {})
@@ -358,11 +340,6 @@ function App({ cookies }) {
   };
 
   const handleDeleteSave = async () => {
-    trackEvent({
-      category: "menu",
-      action: "click-delete-save-layout",
-      name: "delete-save-layout",
-    });
     deleteLs("layouts");
     deleteLs("settings");
     const settingsKey = getFromLS("settings_key");
@@ -415,22 +392,12 @@ function App({ cookies }) {
   };
 
   const handleReset = async () => {
-    trackEvent({
-      category: "menu",
-      action: "click-reset-layout",
-      name: "reset-layout",
-    });
     let newL = generateLayout(channels);
     setLayouts({});
     setLayout(newL);
   };
 
   const handleSort = async () => {
-    trackEvent({
-      category: "menu",
-      action: "click-sort-layout",
-      name: "sort-layout",
-    });
     const g = await sortLive(channels.map((v) => v.channel));
     const newL = generateLayout(g);
     setLayouts({ lg: newL });
@@ -470,22 +437,10 @@ function App({ cookies }) {
           disabledSort={channels?.length <= 6}
           handleEditMode={() => {
             setIsEditMode((e) => {
-              trackEvent({
-                category: "menu",
-                action: !e
-                  ? "enable-edit_mode-layout"
-                  : "disable-edit_mode-layout",
-                name: "edit_mode-layout",
-              });
               return !e;
             });
           }}
           handleWindow={() => {
-            trackEvent({
-              category: "menu",
-              action: "click-login-twitch",
-              name: "login-twitch",
-            });
             setIsOpened(true);
           }}
           setIsCollapse={setIsCollapse}
@@ -496,11 +451,6 @@ function App({ cookies }) {
           handleAutoSize={() => {
             setIsAutoSize((r) => {
               saveToLS("auto_size", !r);
-              trackEvent({
-                category: "menu",
-                action: !r ? "enable-reset-layout" : "disable-reset-layout",
-                name: "auto_size-layout",
-              });
               return !r;
             });
           }}
@@ -537,11 +487,6 @@ function App({ cookies }) {
             user={user}
             logout={logout}
             handleWindow={() => {
-              trackEvent({
-                category: "welcome",
-                action: "click-login-twitch",
-                name: "login-twitch",
-              });
               setIsOpened(true);
             }}
           />
