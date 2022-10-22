@@ -119,12 +119,12 @@ function App({ cookies }) {
         }
         if (isAutoSize) {
           let newL;
-          if (channels?.length <= 6) {
-            newL = mo(channels.map((v) => ({ channel: v })));
-          } else {
-            const g = await sortLive(channels);
-            newL = mo(g);
-          }
+          // if (channels?.length <= 6) {
+          newL = mo(channels.map((v) => ({ channel: v })));
+          // } else {
+          //   const g = await sortLive(channels);
+          //   newL = mo(g);
+          // }
           setLayout(newL);
         } else {
           setLayout((la) => {
@@ -156,7 +156,7 @@ function App({ cookies }) {
             );
       });
     },
-    [saves, isAutoSize, generateLayout, sortLive]
+    [saves, isAutoSize, generateLayout]
   );
 
   const getTwitchUser = useCallback(async () => {
@@ -420,14 +420,8 @@ function App({ cookies }) {
       action: "click-reset-layout",
       name: "reset-layout",
     });
-    let newL;
-    if (channels?.length <= 6) {
-      newL = generateLayout(channels);
-    } else {
-      const g = await sortLive(channels.map((v) => v.channel));
-      newL = generateLayout(g);
-    }
-    setLayouts({ lg: newL });
+    let newL = generateLayout(channels);
+    setLayouts({});
     setLayout(newL);
   };
 

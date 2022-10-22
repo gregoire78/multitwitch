@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { CookiesProvider } from "react-cookie";
 import { MatomoProvider, createInstance } from "@datapunt/matomo-tracker-react";
@@ -17,7 +17,10 @@ const instance = createInstance({
   disabled: process.env.NODE_ENV !== "production",
 });
 
-ReactDOM.render(
+const container = document.getElementById("root");
+const root = createRoot(container);
+
+root.render(
   <CookiesProvider>
     <MatomoProvider value={instance}>
       <BrowserRouter>
@@ -42,8 +45,7 @@ ReactDOM.render(
         </Routes>
       </BrowserRouter>
     </MatomoProvider>
-  </CookiesProvider>,
-  document.getElementById("root")
+  </CookiesProvider>
 );
 
 serviceWorker.register();
