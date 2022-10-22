@@ -1,5 +1,5 @@
 {
-  "version": "2.4.0",
+  "version": "2.5.0",
   "name": "multitwitch",
   "browser": {
     "[module-name]": false
@@ -14,7 +14,6 @@
     "update": "npx npm-check --skip-unused"
   },
   "dependencies": {
-    "@datapunt/matomo-tracker-react": "^0.5.1",
     "@fontsource/ubuntu": "^4.5.11",
     "@fortawesome/fontawesome-svg-core": "^6.2.0",
     "@fortawesome/free-brands-svg-icons": "^6.2.0",
@@ -41,6 +40,7 @@
     "react-cookie": "^4.1.1",
     "react-dom": "^18.2.0",
     "react-grid-layout": "^1.3.4",
+    "react-helmet": "^6.1.0",
     "react-i18next": "^12.0.0",
     "react-new-window": "file:packages/react-new-window",
     "react-router-dom": "^6.4.2",
