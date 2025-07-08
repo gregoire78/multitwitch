@@ -119,9 +119,10 @@ const config = (env, argv) => ({
       NODE_ENV: argv.mode,
     }),
     new Dotenv(),
-    new CompressionPlugin({
-      deleteOriginalAssets: argv.mode === "production",
-    }),
+    //new CompressionPlugin({
+    //  deleteOriginalAssets: argv.mode === "production",
+    //  exclude: /index.html|assets\/*/
+    //}),
     //new webpack.HotModuleReplacementPlugin(),
     new ReactRefreshWebpackPlugin(),
     new HtmlWebpackPlugin({

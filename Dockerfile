@@ -1,5 +1,5 @@
 # Stage 1 - the build process
-FROM node:lts-alpine as build-deps
+FROM node:lts-alpine AS build-deps
 LABEL maintainer="gregoire@joncour.dev"
 
 WORKDIR /usr/src/app
@@ -21,26 +21,15 @@ RUN npm ci
 COPY . .
 RUN npm run build-prod
 
-# Stage 2 - the production environment
-FROM nginx:alpine
+# Stage 2 - the production environment with Caddy
+FROM caddy:alpine
 LABEL maintainer="gregoire@joncour.dev"
 
-COPY --from=build-deps /usr/src/app/dist /usr/share/nginx/html
-RUN echo 'server_tokens off;' > /etc/nginx/conf.d/server_tokens.conf
-RUN echo $'server {\n\
-    gzip on; \n\
-    gzip_static on; \n\
-    listen 80;\n\
-    root /usr/share/nginx/html;\n\
-    index index.html index.htm;\n\
-    location ~* \.(?:css|js|png|json|svg)$ { \n\
-    expires 1y;\n\
-    add_header Cache-Control "public"; \n\
-    }\n\
-    location / { \n\
-    try_files $uri $uri/ /index.html; \n\
-    }\n\
-    }'\
-    > /etc/nginx/conf.d/default.conf
+# Copy built files to Caddy's web root
+COPY --from=build-deps /usr/src/app/dist /usr/share/caddy
+
+# Provide a basic Caddyfile
+COPY Caddyfile /etc/caddy/Caddyfile
+
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
