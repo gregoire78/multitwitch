@@ -1,8 +1,8 @@
 :80
 
 root * /usr/share/caddy
-file_server
 encode gzip
+file_server
 
 # Cache long pour les fichiers statiques
 @staticFiles {
